@@ -1,95 +1,154 @@
-<p align="center">
-	<img alt="logo" src="https://oscimg.oschina.net/oscnet/up-d3d0a9303e11d522a06cd263f3079027715.png">
-</p>
-<h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">RuoYi v3.8.9</h1>
-<h4 align="center">基于SpringBoot+Vue前后端分离的Java快速开发框架</h4>
-<p align="center">
-	<a href="https://gitee.com/y_project/RuoYi-Vue/stargazers"><img src="https://gitee.com/y_project/RuoYi-Vue/badge/star.svg?theme=dark"></a>
-	<a href="https://gitee.com/y_project/RuoYi-Vue"><img src="https://img.shields.io/badge/RuoYi-v3.8.9-brightgreen.svg"></a>
-	<a href="https://gitee.com/y_project/RuoYi-Vue/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mashape/apistatus.svg"></a>
-</p>
+# 加密货币监控系统 (Cryptocurrency Monitoring System)
 
-## 平台简介
+## 项目简介
 
-若依是一套全部开源的快速开发平台，毫无保留给个人及企业免费使用。
+这是一个基于若依框架开发的功能完整的加密货币监控系统，集成了微信和Telegram机器人，提供实时价格监控、查询统计、排行榜等功能。系统采用Java + Python双端架构，确保高性能和灵活性。
 
-* 前端采用Vue、Element UI。
-* 后端采用Spring Boot、Spring Security、Redis & Jwt。
-* 权限认证使用Jwt，支持多终端认证系统。
-* 支持加载动态权限菜单，多方式轻松权限控制。
-* 高效率开发，使用代码生成器可以一键生成前后端代码。
-* 提供了技术栈（[Vue3](https://v3.cn.vuejs.org) [Element Plus](https://element-plus.org/zh-CN) [Vite](https://cn.vitejs.dev)）版本[RuoYi-Vue3](https://gitcode.com/yangzongzhuan/RuoYi-Vue3)，保持同步更新。
-* 提供了单应用版本[RuoYi-Vue-fast](https://gitcode.com/yangzongzhuan/RuoYi-Vue-fast)，Oracle版本[RuoYi-Vue-Oracle](https://gitcode.com/yangzongzhuan/RuoYi-Vue-Oracle)，保持同步更新。
-* 不分离版本，请移步[RuoYi](https://gitee.com/y_project/RuoYi)，微服务版本，请移步[RuoYi-Cloud](https://gitee.com/y_project/RuoYi-Cloud)
-* 阿里云折扣场：[点我进入](http://aly.ruoyi.vip)，腾讯云秒杀场：[点我进入](http://txy.ruoyi.vip)&nbsp;&nbsp;
+## 系统架构
 
-## 内置功能
+### 后端服务
+- **Java Web系统** (Spring Boot)
+    - 用户界面管理
+    - 身份认证服务
+    - 监控配置管理
+    - RESTful API服务
 
-1.  用户管理：用户是系统操作者，该功能主要完成系统用户配置。
-2.  部门管理：配置系统组织机构（公司、部门、小组），树结构展现支持数据权限。
-3.  岗位管理：配置系统用户所属担任职务。
-4.  菜单管理：配置系统菜单，操作权限，按钮权限标识等。
-5.  角色管理：角色菜单权限分配、设置角色按机构进行数据范围权限划分。
-6.  字典管理：对系统中经常使用的一些较为固定的数据进行维护。
-7.  参数管理：对系统动态配置常用参数。
-8.  通知公告：系统通知公告信息发布维护。
-9.  操作日志：系统正常操作日志记录和查询；系统异常信息日志记录和查询。
-10. 登录日志：系统登录日志记录查询包含登录异常。
-11. 在线用户：当前系统中活跃用户状态监控。
-12. 定时任务：在线（添加、修改、删除)任务调度包含执行结果日志。
-13. 代码生成：前后端代码的生成（java、html、xml、sql）支持CRUD下载 。
-14. 系统接口：根据业务代码自动生成相关的api接口文档。
-15. 服务监控：监视当前系统CPU、内存、磁盘、堆栈等相关信息。
-16. 缓存监控：对系统的缓存信息查询，命令统计等。
-17. 在线构建器：拖动表单元素生成相应的HTML代码。
-18. 连接池监视：监视当前系统数据库连接池状态，可进行分析SQL找出系统性能瓶颈。
+- **Python服务集群**
+    - 价格/市值监控服务
+    - 微信机器人
+    - Telegram机器人
+    - 数据分析服务
 
-## 在线体验
+### 数据存储
+- MySQL: 用户数据与查询记录
+- Redis: 实时数据缓存
 
-- admin/admin123  
-- 陆陆续续收到一些打赏，为了更好的体验已用于演示服务器升级。谢谢各位小伙伴。
+## 核心功能
 
-演示地址：http://vue.ruoyi.vip  
-文档地址：http://doc.ruoyi.vip
+### 1. 用户管理
+- 用户注册/登录
+- 个人资料管理
+- 权限控制系统
 
-## 演示图
+### 2. 监控配置
+- 创建/编辑/删除监控
+- 自定义监控参数
+- 监控状态管理
 
-<table>
-    <tr>
-        <td><img src="https://oscimg.oschina.net/oscnet/cd1f90be5f2684f4560c9519c0f2a232ee8.jpg"/></td>
-        <td><img src="https://oscimg.oschina.net/oscnet/1cbcf0e6f257c7d3a063c0e3f2ff989e4b3.jpg"/></td>
-    </tr>
-    <tr>
-        <td><img src="https://oscimg.oschina.net/oscnet/up-8074972883b5ba0622e13246738ebba237a.png"/></td>
-        <td><img src="https://oscimg.oschina.net/oscnet/up-9f88719cdfca9af2e58b352a20e23d43b12.png"/></td>
-    </tr>
-    <tr>
-        <td><img src="https://oscimg.oschina.net/oscnet/up-39bf2584ec3a529b0d5a3b70d15c9b37646.png"/></td>
-        <td><img src="https://oscimg.oschina.net/oscnet/up-936ec82d1f4872e1bc980927654b6007307.png"/></td>
-    </tr>
-	<tr>
-        <td><img src="https://oscimg.oschina.net/oscnet/up-b2d62ceb95d2dd9b3fbe157bb70d26001e9.png"/></td>
-        <td><img src="https://oscimg.oschina.net/oscnet/up-d67451d308b7a79ad6819723396f7c3d77a.png"/></td>
-    </tr>	 
-    <tr>
-        <td><img src="https://oscimg.oschina.net/oscnet/5e8c387724954459291aafd5eb52b456f53.jpg"/></td>
-        <td><img src="https://oscimg.oschina.net/oscnet/644e78da53c2e92a95dfda4f76e6d117c4b.jpg"/></td>
-    </tr>
-	<tr>
-        <td><img src="https://oscimg.oschina.net/oscnet/up-8370a0d02977eebf6dbf854c8450293c937.png"/></td>
-        <td><img src="https://oscimg.oschina.net/oscnet/up-49003ed83f60f633e7153609a53a2b644f7.png"/></td>
-    </tr>
-	<tr>
-        <td><img src="https://oscimg.oschina.net/oscnet/up-d4fe726319ece268d4746602c39cffc0621.png"/></td>
-        <td><img src="https://oscimg.oschina.net/oscnet/up-c195234bbcd30be6927f037a6755e6ab69c.png"/></td>
-    </tr>
-    <tr>
-        <td><img src="https://oscimg.oschina.net/oscnet/b6115bc8c31de52951982e509930b20684a.jpg"/></td>
-        <td><img src="https://oscimg.oschina.net/oscnet/up-5e4daac0bb59612c5038448acbcef235e3a.png"/></td>
-    </tr>
-</table>
+### 3. 价格监控
+- 单币种价格监控
+- 市值监控
+- 价格波动预警
 
+### 4. 查询记录系统
+- 用户查询日志
+- 价格历史记录
+- 涨跌倍数计算
+- 群聊活跃度统计
 
-## 若依前后端分离交流群
+### 5. 排行榜系统
+- 查询次数排行
+- 币种热度排行
+- 价格涨幅排行
+- 用户预测准确率排行
 
-QQ群： [![加入QQ群](https://img.shields.io/badge/已满-937441-blue.svg)](https://jq.qq.com/?_wv=1027&k=5bVB1og) [![加入QQ群](https://img.shields.io/badge/已满-887144332-blue.svg)](https://jq.qq.com/?_wv=1027&k=5eiA4DH) [![加入QQ群](https://img.shields.io/badge/已满-180251782-blue.svg)](https://jq.qq.com/?_wv=1027&k=5AxMKlC) [![加入QQ群](https://img.shields.io/badge/已满-104180207-blue.svg)](https://jq.qq.com/?_wv=1027&k=51G72yr) [![加入QQ群](https://img.shields.io/badge/已满-186866453-blue.svg)](https://jq.qq.com/?_wv=1027&k=VvjN2nvu) [![加入QQ群](https://img.shields.io/badge/已满-201396349-blue.svg)](https://jq.qq.com/?_wv=1027&k=5vYAqA05) [![加入QQ群](https://img.shields.io/badge/已满-101456076-blue.svg)](https://jq.qq.com/?_wv=1027&k=kOIINEb5) [![加入QQ群](https://img.shields.io/badge/已满-101539465-blue.svg)](https://jq.qq.com/?_wv=1027&k=UKtX5jhs) [![加入QQ群](https://img.shields.io/badge/已满-264312783-blue.svg)](https://jq.qq.com/?_wv=1027&k=EI9an8lJ) [![加入QQ群](https://img.shields.io/badge/已满-167385320-blue.svg)](https://jq.qq.com/?_wv=1027&k=SWCtLnMz) [![加入QQ群](https://img.shields.io/badge/已满-104748341-blue.svg)](https://jq.qq.com/?_wv=1027&k=96Dkdq0k) [![加入QQ群](https://img.shields.io/badge/已满-160110482-blue.svg)](https://jq.qq.com/?_wv=1027&k=0fsNiYZt) [![加入QQ群](https://img.shields.io/badge/已满-170801498-blue.svg)](https://jq.qq.com/?_wv=1027&k=7xw4xUG1) [![加入QQ群](https://img.shields.io/badge/已满-108482800-blue.svg)](https://jq.qq.com/?_wv=1027&k=eCx8eyoJ) [![加入QQ群](https://img.shields.io/badge/已满-101046199-blue.svg)](https://jq.qq.com/?_wv=1027&k=SpyH2875) [![加入QQ群](https://img.shields.io/badge/已满-136919097-blue.svg)](https://jq.qq.com/?_wv=1027&k=tKEt51dz) [![加入QQ群](https://img.shields.io/badge/已满-143961921-blue.svg)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0vBbSb0ztbBgVtn3kJS-Q4HUNYwip89G&authKey=8irq5PhutrZmWIvsUsklBxhj57l%2F1nOZqjzigkXZVoZE451GG4JHPOqW7AW6cf0T&noverify=0&group_code=143961921) [![加入QQ群](https://img.shields.io/badge/已满-174951577-blue.svg)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=ZFAPAbp09S2ltvwrJzp7wGlbopsc0rwi&authKey=HB2cxpxP2yspk%2Bo3WKTBfktRCccVkU26cgi5B16u0KcAYrVu7sBaE7XSEqmMdFQp&noverify=0&group_code=174951577) [![加入QQ群](https://img.shields.io/badge/已满-161281055-blue.svg)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=Fn2aF5IHpwsy8j6VlalNJK6qbwFLFHat&authKey=uyIT%2B97x2AXj3odyXpsSpVaPMC%2Bidw0LxG5MAtEqlrcBcWJUA%2FeS43rsF1Tg7IRJ&noverify=0&group_code=161281055) [![加入QQ群](https://img.shields.io/badge/已满-138988063-blue.svg)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=XIzkm_mV2xTsUtFxo63bmicYoDBA6Ifm&authKey=dDW%2F4qsmw3x9govoZY9w%2FoWAoC4wbHqGal%2BbqLzoS6VBarU8EBptIgPKN%2FviyC8j&noverify=0&group_code=138988063) [![加入QQ群](https://img.shields.io/badge/已满-151450850-blue.svg)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=DkugnCg68PevlycJSKSwjhFqfIgrWWwR&authKey=pR1Pa5lPIeGF%2FFtIk6d%2FGB5qFi0EdvyErtpQXULzo03zbhopBHLWcuqdpwY241R%2F&noverify=0&group_code=151450850) [![加入QQ群](https://img.shields.io/badge/已满-224622315-blue.svg)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=F58bgRa-Dp-rsQJThiJqIYv8t4-lWfXh&authKey=UmUs4CVG5OPA1whvsa4uSespOvyd8%2FAr9olEGaWAfdLmfKQk%2FVBp2YU3u2xXXt76&noverify=0&group_code=224622315) [![加入QQ群](https://img.shields.io/badge/已满-287842588-blue.svg)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=Nxb2EQ5qozWa218Wbs7zgBnjLSNk_tVT&authKey=obBKXj6SBKgrFTJZx0AqQnIYbNOvBB2kmgwWvGhzxR67RoRr84%2Bus5OadzMcdJl5&noverify=0&group_code=287842588) [![加入QQ群](https://img.shields.io/badge/已满-187944233-blue.svg)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=numtK1M_I4eVd2Gvg8qtbuL8JgX42qNh&authKey=giV9XWMaFZTY%2FqPlmWbkB9g3fi0Ev5CwEtT9Tgei0oUlFFCQLDp4ozWRiVIzubIm&noverify=0&group_code=187944233) [![加入QQ群](https://img.shields.io/badge/228578329-blue.svg)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=G6r5KGCaa3pqdbUSXNIgYloyb8e0_L0D&authKey=4w8tF1eGW7%2FedWn%2FHAypQksdrML%2BDHolQSx7094Agm7Luakj9EbfPnSTxSi2T1LQ&noverify=0&group_code=228578329) 点击按钮入群。
+### 6. 通知系统
+- 微信群通知
+- 微信个人通知
+- Telegram通知
+
+## 技术栈
+
+### Java端
+- Spring Boot
+- Spring Security
+- Spring Data JPA
+- Thymeleaf/Vue.js
+- MySQL
+
+### Python端
+- FastAPI/Flask
+- APScheduler
+- WeChatpy
+- python-telegram-bot
+- requests/ccxt
+
+### 前端
+- Bootstrap
+- Vue.js/React (可选)
+- Charts.js
+
+### 运维
+- Docker
+- Docker Compose
+
+## 快速开始
+
+### 环境要求
+- JDK 17+
+- Python 3.8+
+- MySQL 8.0+
+- Redis 6.0+
+- Docker & Docker Compose
+
+## 机器人命令
+
+### 微信机器人
+- `/<币种>`: 查询币种当前价格
+- `ca`: 查询当前ca信息
+- `/top`: 查询当天发送ca涨跌倍数
+- `设置提醒 ca <价格>`: 设置价格提醒
+
+## 配置说明
+
+### 机器人配置
+```yaml
+bot:
+  wechat:
+    token: your_wechat_token
+  telegram:
+    token: your_telegram_token
+```
+
+## 项目结构说明
+
+```
+├── ruoyi-ui              // 前端框架 [80]
+├── ruoyi-gateway         // 网关模块 [8080]
+├── ruoyi-auth           // 认证中心 [9200]
+├── ruoyi-api           // 接口模块
+│       └── ruoyi-api-system                          // 系统接口
+├── ruoyi-common         // 通用模块
+│       └── ruoyi-common-core                         // 核心模块
+│       └── ruoyi-common-datascope                    // 权限范围
+│       └── ruoyi-common-datasource                   // 多数据源
+│       └── ruoyi-common-log                          // 日志记录
+│       └── ruoyi-common-redis                        // 缓存服务
+│       └── ruoyi-common-security                     // 安全模块
+│       └── ruoyi-common-swagger                      // 系统接口
+├── ruoyi-modules         // 业务模块
+│       └── ruoyi-system                              // 系统模块 [9201]
+│       └── ruoyi-gen                                 // 代码生成 [9202]
+│       └── ruoyi-job                                 // 定时任务 [9203]
+│       └── ruoyi-file                                // 文件服务 [9300]
+│       └── crypto-monitor                            // 加密货币监控模块 [9204]
+├── ruoyi-visual         // 图形化管理模块
+│       └── ruoyi-visual-monitor                      // 监控中心 [9100]
+├── docker               // 容器化部署脚本
+└── python-service      // Python服务集群
+        └── price_monitor                             // 价格监控服务
+        └── wechat_bot                                // 微信机器人服务
+        └── telegram_bot                              // Telegram机器人服务
+        └── data_analysis                             // 数据分析服务
+```
+
+## 致谢
+
+感谢以下开源项目的支持：
+- RuoYi-Vue 
+- Spring Boot
+- FastAPI
+- WeChatpy
+- python-telegram-bot
+- Vue.js
+- 等其他开源社区的贡献者
