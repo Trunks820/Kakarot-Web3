@@ -1,0 +1,283 @@
+/**
+ * 强制覆盖暗黑模式样式
+ */
+
+/* 亮色模式下特定元素的强制样式 */
+html:not(.dark) .data-card .card-body,
+html:not(.dark) .market-chart .chart-container,
+html:not(.dark) [class*="jca-"],
+html:not(.dark) [class*="tg-"] {
+  background-color: #ffffff !important;
+  color: #303133 !important;
+}
+
+html:not(.dark) .data-card .stat-item h3,
+html:not(.dark) .data-card .card-header span {
+  color: #303133 !important;
+}
+
+html:not(.dark) .data-card .stat-item .label,
+html:not(.dark) .data-card .stat-label .mr8 {
+  color: #606266 !important;
+}
+
+/* 热门JCA区域 - 亮色模式 */
+html:not(.dark) [class*="pepe"],
+html:not(.dark) [class*="wojak"],
+html:not(.dark) [class*="doge"],
+html:not(.dark) [class*="shib"] {
+  background-color: #ffffff !important;
+  color: #303133 !important;
+  border: 1px solid #e4e7ed !important;
+}
+
+/* 强制卡片样式 - 暗黑模式 */
+html.dark .el-card {
+  background-color: #1d1e1f !important;
+  color: #ffffff !important; 
+  border-color: #434343 !important;
+}
+
+html.dark .el-card .el-card__header {
+  background-color: #141414 !important;
+  color: #ffffff !important;
+  border-color: #434343 !important;
+}
+
+html.dark .el-card__body {
+  background-color: #1d1e1f !important;
+  color: #ffffff !important;
+}
+
+/* 数据卡片组件覆盖 */
+html.dark .data-card {
+  background-color: #1d1e1f !important;
+  border-color: #434343 !important;
+}
+
+html.dark .data-card .card-header {
+  background-color: #141414 !important;
+  border-color: #434343 !important;
+}
+
+html.dark .data-card .card-header span {
+  color: #ffffff !important;
+}
+
+html.dark .data-card .card-body {
+  background-color: #1d1e1f !important;
+}
+
+html.dark .data-card .stat-item h3 {
+  color: #ffffff !important;
+}
+
+html.dark .data-card .stat-item .label {
+  color: #d0d0d0 !important;
+}
+
+/* 市场图表组件覆盖 */
+html.dark .market-chart {
+  background-color: #1d1e1f !important;
+  border-color: #434343 !important;
+}
+
+html.dark .market-chart .el-card__header {
+  background-color: #141414 !important;
+  border-color: #434343 !important;
+}
+
+html.dark .market-chart .card-header span {
+  color: #ffffff !important;
+}
+
+html.dark .market-chart .chart-container {
+  background-color: #1d1e1f !important;
+}
+
+/* TradingView 和图表区域 */
+html.dark .tradingview-widget-container {
+  background-color: #1d1e1f !important;
+}
+
+html.dark .chart-container {
+  background-color: #1d1e1f !important; 
+}
+
+/* 按钮和选项卡 */
+html.dark .el-tabs__item {
+  color: #d0d0d0 !important;
+}
+
+html.dark .el-tabs__item.is-active {
+  color: #409EFF !important;
+}
+
+html.dark .el-button {
+  background-color: #1d1e1f !important;
+  border-color: #434343 !important;
+  color: #d0d0d0 !important;
+}
+
+html.dark .el-button--primary {
+  background-color: #409EFF !important;
+  border-color: #409EFF !important;
+  color: #ffffff !important;
+}
+
+/* 市场行情区域 */
+html.dark .btc-container,
+html.dark .market-container {
+  background-color: #1d1e1f !important;
+  color: #ffffff !important;
+  border-color: #434343 !important;
+}
+
+/* 确保所有卡片标题区域 */
+html.dark .el-card__header {
+  background-color: #141414 !important;
+  border-bottom-color: #434343 !important;
+}
+
+/* 确保所有卡片内容区域 */
+html.dark .el-card__body {
+  background-color: #1d1e1f !important;
+}
+
+/* 热门 JCA 区域 */
+html.dark [class*="jca-"],
+html.dark [class*="tg-"] {
+  background-color: #1d1e1f !important;
+  color: #ffffff !important;
+  border-color: #434343 !important;
+}
+
+/* JCA 加密货币区域 */
+html.dark [class*="pepe"],
+html.dark [class*="wojak"],
+html.dark [class*="doge"],
+html.dark [class*="shib"] {
+  background-color: #1d1e1f !important;
+  color: #ffffff !important;
+  border-color: #434343 !important;
+}
+
+/* 标签颜色 */
+html.dark .el-tag {
+  border-color: transparent !important;
+}
+
+/* 确保所有容器背景 */
+html.dark .app-container,
+html.dark .app-main,
+html.dark .main-container,
+html.dark .sidebar-container {
+  background-color: #141414 !important;
+}
+
+/* 强制设置元素背景色 */
+html.dark * {
+  background-color: inherit;
+}
+
+/* 确保行情按钮区域 */
+html.dark .el-radio-group,
+html.dark .el-radio-button {
+  background-color: #1d1e1f !important;
+}
+
+html.dark .el-radio-button__inner {
+  background-color: #1d1e1f !important;
+  color: #d0d0d0 !important;
+  border-color: #434343 !important;
+}
+
+html.dark .el-radio-button__original-radio:checked + .el-radio-button__inner {
+  background-color: #409EFF !important;
+  color: #ffffff !important;
+}
+
+/* 强制设置亮色模式卡片 - 特殊类 */
+html:not(.dark) .data-card .card-body {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) .data-card .card-body .stat-item h3 {
+  color: #303133 !important;
+}
+
+html:not(.dark) .data-card .card-body .stat-item .label,
+html:not(.dark) .data-card .card-body .stat-label .mr8 {
+  color: #606266 !important;
+}
+
+/* 强制JCA卡片使用亮色模式 */
+html:not(.dark) .ca-item {
+  background-color: #f5f7fa !important;
+}
+
+html:not(.dark) .ca-item .token-name {
+  color: #303133 !important;
+}
+
+html:not(.dark) .ca-item .ca-address {
+  background-color: #ffffff !important;
+  color: #606266 !important;
+}
+
+/* 强制处理任何嵌套深层背景色 */
+.ca-item * {
+  color: inherit !important;
+}
+
+/* 针对特定组件的紧急修复 */
+.data-card {
+  background-color: #ffffff !important;
+}
+.data-card .card-body {
+  background-color: #ffffff !important;
+}
+.data-card .card-body * {
+  color: #303133 !important;
+}
+.data-card .card-body .label,
+.data-card .card-body .mr8,
+.data-card .card-body .stat-label * {
+  color: #606266 !important;
+}
+
+/* 紧急修复JCA卡片 */
+.ca-item {
+  background-color: #f5f7fa !important;
+}
+.ca-item * {
+  color: #303133 !important;
+}
+.ca-item .ca-address {
+  background-color: #ffffff !important;
+}
+
+/* 暗黑模式覆盖上面的样式 */
+html.dark .data-card,
+html.dark .data-card .card-body {
+  background-color: #1d1e1f !important;
+}
+html.dark .data-card .card-body * {
+  color: #ffffff !important;
+}
+html.dark .data-card .card-body .label,
+html.dark .data-card .card-body .mr8,
+html.dark .data-card .card-body .stat-label * {
+  color: #d0d0d0 !important;
+}
+
+html.dark .ca-item {
+  background-color: #1d1e1f !important;
+}
+html.dark .ca-item * {
+  color: #ffffff !important;
+}
+html.dark .ca-item .ca-address {
+  background-color: #141414 !important;
+  color: #d0d0d0 !important;
+} 

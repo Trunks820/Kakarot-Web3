@@ -28,6 +28,9 @@ import './permission' // permission control
 import { useDict } from '@/utils/dict'
 import { parseTime, resetForm, addDateRange, handleTree, selectDictLabel, selectDictLabels } from '@/utils/ruoyi'
 
+// Import dark theme overrides last to ensure highest priority
+import '@/assets/styles/dark-theme-overrides.css' // dark theme overrides
+
 // 分页组件
 import Pagination from '@/components/Pagination'
 // 自定义表格工具组件
