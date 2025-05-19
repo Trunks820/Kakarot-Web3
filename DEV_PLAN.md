@@ -5,117 +5,147 @@
 
 ## 开发阶段与时间规划
 
-### 阶段一：核心模块扩展（2周）
+### 阶段一：核心模块扩展（1周）
 - **第1-2周：基础框架扩展**
   - 创建crypto-monitor模块（Java模块）
   - 设计并创建数据库表结构（监控配置、价格记录、查询日志等）
   - 集成现有用户管理系统
-  - 创建Python服务基础环境
+  - 整合已有微信机器人和TG播报功能
+  - 创建统一的Python服务环境
 
-### 阶段二：核心功能开发（6周）
+### 阶段二：核心功能开发（3周）
 
-#### 第3-4周：价格监控服务
-- 开发Python价格监控服务
-- 实现币种价格数据获取（使用ccxt或其他API）
-- 建立价格数据存储与缓存机制
-- 设计监控配置管理界面
-- 开发价格波动预警机制
+#### 第2周：价格监控服务
+- 优化现有价格数据获取服务
+  - 扩展币种价格数据获取（整合更多API源）
+  - 建立价格数据存储与缓存机制
+  - 设计监控配置管理界面
+  - 开发价格波动预警机制
 
-#### 第5-6周：机器人服务
-- 开发微信机器人服务
-  - 实现基础命令系统
-  - 实现`ca`命令价格查询功能
-  - 开发价格提醒设置功能
-- 开发Telegram机器人服务（基本功能）
-- 实现机器人与核心系统的数据交互
+#### 第3周：机器人服务
+- 扩展现有微信机器人功能
+  - 增加更多命令支持
+  - 优化价格查询功能
+  - 开发新的价格提醒设置
+- 增强Telegram机器人功能
+  - 整合现有聪明钱播报
+  - 添加更多交互功能
+- 统一机器人与核心系统的数据交互
 
-#### 第7-8周：数据记录与分析
-- 实现查询记录系统
+#### 第4周：数据记录与分析
+- 实现统一查询记录系统
 - 开发价格历史记录功能
 - 实现涨跌倍数计算
 - 开发群聊活跃度统计功能
 - 设计基础数据分析服务
 
-### 阶段三：高级功能与UI优化（4周）
+### 阶段三：高级功能与UI优化（2周）
 
-#### 第9-10周：排行榜系统
+#### 第5周：排行榜系统
 - 开发查询次数排行功能
 - 实现币种热度排行
 - 开发价格涨幅排行
 - 实现用户预测准确率排行
 - 开发自定义排行生成功能
 
-#### 第11-12周：界面优化与数据可视化
+#### 第6周：界面优化与数据可视化
 - 开发监控列表页面
 - 实现查询统计图表
 - 开发价格走势对比功能
 - 设计排行榜展示界面
 - 对整体UI进行优化
 
-### 阶段四：系统集成与优化（3周）
+### 阶段四：系统集成与优化（1周）
 
-#### 第13-14周：通知系统完善与Docker容器化
-- 完善微信群通知功能
-- 开发微信个人通知功能
-- 优化Telegram通知系统
-- 实现Docker容器化配置
-
-#### 第15周：部署与性能优化
+#### 第7周：系统优化与部署
+- 完善通知系统
 - 优化数据库查询性能
-- 完善Docker Compose配置
-- 进行系统负载测试
-- 优化API响应速度
+- 实现Docker容器化配置
 - 完成系统部署文档
+- 进行系统负载测试
 
 ## 功能优先级分类
 
 ### 最高优先级（第一阶段必须完成）
 1. crypto-monitor模块创建
 2. 数据库表结构设计
-3. Python服务基础环境搭建
-4. 价格监控基础服务
+3. 已有机器人功能整合
+4. 统一的价格监控服务
 
 ### 高优先级（第二阶段关键功能）
-1. 微信机器人的`ca`命令查询功能
-2. 价格数据获取与存储
+1. 扩展现有机器人功能
+2. 增强价格数据获取与存储
 3. 涨跌倍数计算
-4. 基础查询记录系统
+4. 统一查询记录系统
 
 ### 中优先级（第三阶段增强功能）
 1. 排行榜系统
-2. Telegram机器人服务
-3. 数据可视化与图表
-4. 价格波动预警
+2. 数据可视化与图表
+3. 价格波动预警
+4. UI优化
 
 ### 低优先级（最后阶段完善功能）
-1. 用户预测准确率排行
-2. 高级数据分析
-3. Docker容器化配置
-4. 系统性能优化
+1. 高级数据分析
+2. Docker容器化配置
+3. 系统性能优化
+4. 部署文档完善
+
 
 ## 数据库设计初步规划
 
 ### 核心表结构
-1. **crypto_coin**：币种信息表
+1. **crypto_coin**：CA基础信息表
    - id: 主键
+   - address: 合约地址
    - symbol: 币种符号
    - name: 币种名称
-   - initial_price: 初始价格
-   - current_price: 当前价格
-   - logo_url: 币种图标
-   - contract_address: 合约地址
+   - logo_url: 币种图标(如果有)
+   - created_at: 创建时间
+   - updated_at: 更新时间
+   - chain_type: 链类型
+   - description: 描述
+
+2. **crypto_ca_record**: 查询记录表
+   - id: 主键
+   - ca_id: 关联的CA ID
+   - first_query_user_id: 首次查询用户ID
+   - first_query_group_id: 首次查询群组ID
+   - first_query_time: 首次查询时间
+   - first_market_cap: 首次查询时市值
+   - first_price: 首次查询时价格
+   - highest_market_cap: 历史最高市值
+   - highest_market_cap_time: 达到最高市值时间
+   - highest_price: 历史最高价格
+   - highest_price_time: 达到最高价格时间
+   - max_multiple: 最大倍数（最高市值/首次查询市值）
+   - is_successful: 是否成功（涨幅是否超过50%）
+   - query_count: 查询次数
    - created_at: 创建时间
    - updated_at: 更新时间
 
-2. **crypto_price_record**：价格记录表
+3. **crypto_ca_query_record**：CA查询记录表
    - id: 主键
-   - coin_id: 币种ID
-   - price: 价格
-   - market_cap: 市值
-   - volume_24h: 24小时交易量
-   - record_time: 记录时间
+   - ca_id: 关联的CA ID
+   - user_id: 查询用户ID
+   - group_id: 查询群组ID
+   - query_time: 查询时间
+   - market_cap_at_query: 查询时市值
+   - price_at_query: 查询时价格
+   - created_at: 创建时间
+   - multiple_from_first: 与首次查询的倍数
 
-3. **crypto_monitor_config**：监控配置表
+4. **crypto_group_statistics**： 群组CA统计表
+   - id: 主键
+   - group_id: 群组ID
+   - total_ca_queries: 总CA查询次数
+   - unique_ca_count: 不同CA数量(ca去重后)
+   - successful_ca_count: 成功CA数量（涨幅超过50%）
+   - win_rate: 胜率(成功CA数/不同CA数)
+   - last_calculated_time: 最后计算时间
+   - created_at: 创建时间
+   - updated_at: 更新时间
+
+5. **crypto_monitor_config**：监控配置表
    - id: 主键
    - user_id: 用户ID
    - coin_id: 币种ID
@@ -126,21 +156,15 @@
    - is_active: 是否激活
    - created_at: 创建时间
    - updated_at: 更新时间
+   - last_notification_time: 上次通知时间
+   - notification_target: 通知目标(群ID或用户ID)
 
-4. **crypto_query_log**：查询日志表
-   - id: 主键
-   - user_id: 用户ID (可选，如果是游客则为空)
-   - coin_id: 币种ID
-   - platform: 查询平台(wechat/telegram/web)
-   - group_id: 群组ID(如适用)
-   - query_time: 查询时间
-   - price_at_query: 查询时的价格
-
-5. **crypto_bot_group**：机器人群组表
+6. **crypto_bot_group**：机器人群组表
    - id: 主键
    - platform: 平台(wechat/telegram)
    - group_id: 平台上的群组ID
    - group_name: 群组名称
+   - win_threshold: 胜率计算阈值(默认0.5) 
    - created_at: 创建时间
    - is_active: 是否激活
 
@@ -211,11 +235,3 @@
 - Nginx反向代理
 - 负载均衡
 - 数据备份策略
-
-## 项目里程碑
-
-1. **M1**：基础架构搭建完成 (第2周末)
-2. **M2**：核心功能(价格监控、机器人)完成 (第6周末)
-3. **M3**：数据记录与分析功能完成 (第8周末)
-4. **M4**：高级功能与UI优化完成 (第12周末)
-5. **M5**：系统集成与优化完成，项目上线 (第15周末) 
