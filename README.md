@@ -131,7 +131,7 @@ bot:
 │       └── ruoyi-gen                                 // 代码生成 [9202]
 │       └── ruoyi-job                                 // 定时任务 [9203]
 │       └── ruoyi-file                                // 文件服务 [9300]
-│       └── crypto-monitor                            // 加密货币监控模块 [9204]
+│       └── ruoyi-crypto                          // 加密货币监控模块 [9204]
 ├── ruoyi-visual         // 图形化管理模块
 │       └── ruoyi-visual-monitor                      // 监控中心 [9100]
 ├── docker               // 容器化部署脚本
