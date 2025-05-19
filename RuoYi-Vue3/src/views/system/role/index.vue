@@ -121,9 +121,9 @@
               <el-tooltip content="删除" placement="top" v-if="scope.row.roleId !== 1">
                 <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['system:role:remove']"></el-button>
               </el-tooltip>
-              <el-tooltip content="数据权限" placement="top" v-if="scope.row.roleId !== 1">
-                <el-button link type="primary" icon="CircleCheck" @click="handleDataScope(scope.row)" v-hasPermi="['system:role:edit']"></el-button>
-              </el-tooltip>
+<!--              <el-tooltip content="数据权限" placement="top" v-if="scope.row.roleId !== 1">-->
+<!--                <el-button link type="primary" icon="CircleCheck" @click="handleDataScope(scope.row)" v-hasPermi="['system:role:edit']"></el-button>-->
+<!--              </el-tooltip>-->
               <el-tooltip content="分配用户" placement="top" v-if="scope.row.roleId !== 1">
                 <el-button link type="primary" icon="User" @click="handleAuthUser(scope.row)" v-hasPermi="['system:role:edit']"></el-button>
               </el-tooltip>
@@ -168,21 +168,21 @@
                   >{{ dict.label }}</el-radio>
                </el-radio-group>
             </el-form-item>
-            <el-form-item label="菜单权限">
-               <el-checkbox v-model="menuExpand" @change="handleCheckedTreeExpand($event, 'menu')">展开/折叠</el-checkbox>
-               <el-checkbox v-model="menuNodeAll" @change="handleCheckedTreeNodeAll($event, 'menu')">全选/全不选</el-checkbox>
-               <el-checkbox v-model="form.menuCheckStrictly" @change="handleCheckedTreeConnect($event, 'menu')">父子联动</el-checkbox>
-               <el-tree
-                  class="tree-border"
-                  :data="menuOptions"
-                  show-checkbox
-                  ref="menuRef"
-                  node-key="id"
-                  :check-strictly="!form.menuCheckStrictly"
-                  empty-text="加载中，请稍候"
-                  :props="{ label: 'label', children: 'children' }"
-               ></el-tree>
-            </el-form-item>
+           <el-form-item label="菜单权限">
+             <el-checkbox v-model="menuExpand" @change="handleCheckedTreeExpand($event, 'menu')">展开/折叠</el-checkbox>
+             <el-checkbox v-model="menuNodeAll" @change="handleCheckedTreeNodeAll($event, 'menu')">全选/全不选</el-checkbox>
+             <el-checkbox v-model="form.menuCheckStrictly" @change="handleCheckedTreeConnect($event, 'menu')">父子联动</el-checkbox>
+             <el-tree
+                 class="tree-border"
+                 :data="menuOptions"
+                 show-checkbox
+                 ref="menuRef"
+                 node-key="id"
+                 :check-strictly="!form.menuCheckStrictly"
+                 empty-text="加载中，请稍候"
+                 :props="{ label: 'label', children: 'children' }"
+             ></el-tree>
+           </el-form-item>
             <el-form-item label="备注">
                <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"></el-input>
             </el-form-item>
@@ -273,9 +273,7 @@ const deptRef = ref(null)
 const dataScopeOptions = ref([
   { value: "1", label: "全部数据权限" },
   { value: "2", label: "自定数据权限" },
-  { value: "3", label: "本部门数据权限" },
-  { value: "4", label: "本部门及以下数据权限" },
-  { value: "5", label: "仅本人数据权限" }
+  { value: "3", label: "仅本人数据权限" }
 ])
 
 const data = reactive({

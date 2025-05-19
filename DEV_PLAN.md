@@ -105,7 +105,7 @@
    - chain_type: 链类型
    - description: 描述
 
-2. **crypto_ca_record**: 查询记录表
+2. **crypto_ca_record**: CA查询记录表
    - id: 主键
    - ca_id: 关联的CA ID
    - first_query_user_id: 首次查询用户ID
@@ -123,7 +123,7 @@
    - created_at: 创建时间
    - updated_at: 更新时间
 
-3. **crypto_ca_query_record**：CA查询记录表
+3. **crypto_ca_query_record**：CA查询表
    - id: 主键
    - ca_id: 关联的CA ID
    - user_id: 查询用户ID

@@ -255,7 +255,7 @@ public class SysRoleController extends BaseController
     public AjaxResult deptTree(@PathVariable("roleId") Long roleId)
     {
         AjaxResult ajax = AjaxResult.success();
-        ajax.put("checkedKeys", deptService.selectDeptListByRoleId(roleId));
+//        ajax.put("checkedKeys", deptService.selectDeptListByRoleId(roleId));
         ajax.put("depts", deptService.selectDeptTreeList(new SysDept()));
         return ajax;
     }

@@ -279,11 +279,11 @@ public class SysRoleServiceImpl implements ISysRoleService
     public int authDataScope(SysRole role)
     {
         // 修改角色信息
-        roleMapper.updateRole(role);
+        return roleMapper.updateRole(role);
         // 删除角色与部门关联
-        roleDeptMapper.deleteRoleDeptByRoleId(role.getRoleId());
+//        roleDeptMapper.deleteRoleDeptByRoleId(role.getRoleId());
         // 新增角色和部门信息（数据权限）
-        return insertRoleDept(role);
+//        return insertRoleDept(role);
     }
 
     /**
@@ -374,7 +374,7 @@ public class SysRoleServiceImpl implements ISysRoleService
         // 删除角色与菜单关联
         roleMenuMapper.deleteRoleMenu(roleIds);
         // 删除角色与部门关联
-        roleDeptMapper.deleteRoleDept(roleIds);
+//        roleDeptMapper.deleteRoleDept(roleIds);
         return roleMapper.deleteRoleByIds(roleIds);
     }
 
