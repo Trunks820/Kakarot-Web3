@@ -301,8 +301,6 @@ function getList() {
     };
   }
 
-  console.log("查询参数:", params); // 添加日志便于调试
-
   // 调用API获取数据
   listCoins(params).then(response => {
     if (response && response.rows) {

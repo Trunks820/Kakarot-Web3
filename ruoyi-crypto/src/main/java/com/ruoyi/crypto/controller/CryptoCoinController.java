@@ -6,7 +6,6 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.utils.poi.ExcelUtil;
-import com.ruoyi.crypto.domain.CryptoCoin;
 import com.ruoyi.crypto.domain.vo.CryptoCoinVO;
 import com.ruoyi.crypto.service.CryptoCoinService;
 import io.swagger.annotations.ApiOperation;

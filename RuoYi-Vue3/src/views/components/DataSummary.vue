@@ -1,11 +1,21 @@
 <template>
   <el-row :gutter="20">
     <el-col :span="8">
-      <el-card class="data-card">
+      <el-card class="data-card" v-loading="loading">
         <template #header>
           <div class="card-header">
             <span>平台数据</span>
-            <el-tag type="warning" size="small">今日</el-tag>
+            <div>
+              <el-button 
+                type="text" 
+                @click="fetchDailyStats" 
+                :loading="loading"
+                class="refresh-btn"
+              >
+                <el-icon><Refresh /></el-icon>
+              </el-button>
+              <el-tag type="warning" size="small">今日</el-tag>
+            </div>
           </div>
         </template>
         <div class="card-body">
@@ -80,15 +90,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { Search, User, Warning } from '@element-plus/icons-vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { Search, User, Warning, Refresh } from '@element-plus/icons-vue'
 import useSettingsStore from '@/store/modules/settings'
+import { ElMessage } from 'element-plus'
+import { getDailyActivityStats } from '@/api/crypto/index'
 
 const settingsStore = useSettingsStore()
 
+// 添加loading状态
+const loading = ref(false)
+
 // 数据统计
-const queryCount = ref(1234)
-const activeUsers = ref(89)
+const queryCount = ref(0)
+const activeUsers = ref(0)
 const tgBotStatus = ref({ online: true })
 const wxBotStatus = ref({ online: true })
 
@@ -97,12 +112,48 @@ const alertStats = ref({
   total: 24,
   pending: 8
 })
+
+// 添加API请求方法 - 获取每日统计数据
+const fetchDailyStats = async () => {
+  loading.value = true
+  try {
+    const res = await getDailyActivityStats()
+
+    if (res.code === 200 && res.data) {
+      // 更新组件数据
+      queryCount.value = res.data.totalQueries || 0
+      activeUsers.value = res.data.activeUsers || 0
+      ElMessage.success('平台数据已更新')
+    } else {
+      ElMessage.warning('获取平台数据失败: ' + (res.msg || '未知错误'))
+    }
+  } catch (error) {
+    ElMessage.error('获取平台数据异常，请检查网络连接或后端服务')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchDailyStats()
+
+  // 添加定时刷新(每半分钟刷新一次)
+  const timer = setInterval(() => {
+    fetchDailyStats()
+  }, 30 * 1000)
+
+  // 组件卸载时清除定时器
+  onUnmounted(() => {
+    if (timer) clearInterval(timer)
+  })
+})
 </script>
 
 <style scoped lang="scss">
 /* Light theme styles */
 .data-card {
-  height: 160px;
+  height: 200px;
   background-color: #ffffff;
   border: 1px solid #e4e7ed;
   transition: all 0.3s ease-in-out;
@@ -253,5 +304,12 @@ const alertStats = ref({
     border-color: #434343 !important;
     color: #ffffff !important;
   }
+}
+
+/* 添加刷新按钮样式 */
+.refresh-btn {
+  margin-right: 8px;
+  padding: 2px;
+  font-size: 14px;
 }
 </style> 

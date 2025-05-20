@@ -84,4 +84,12 @@ export function getMonitorConfigs(query) {
     method: 'get',
     params: query
   })
+}
+
+// 获取每日活动统计数据
+export function getDailyActivityStats() {
+  return request({
+    url: '/crypto/record/getDailyActivityStats',
+    method: 'get'
+  })
 } 

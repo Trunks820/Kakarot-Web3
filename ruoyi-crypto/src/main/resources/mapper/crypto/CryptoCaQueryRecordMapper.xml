@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.CryptoCaQueryRecordMapper">
+
+    <resultMap id="CryptoIndexVoResult" type="CryptoIndexVo">
+        <result property="totalQueries" column="total_queries"/>
+        <result property="activeUsers" column="active_users"/>
+    </resultMap>
+
+
+    <select id="getDailyActivityStats" resultMap="CryptoIndexVoResult">
+        SELECT
+            COUNT(id) AS total_queries,
+            COUNT(DISTINCT user_id) AS active_users
+        FROM
+            crypto_ca_query_record
+        WHERE
+            DATE(query_time) = DATE(NOW())
+    </select>
+
+
+
+</mapper>

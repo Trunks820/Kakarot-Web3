@@ -1,0 +1,45 @@
+package com.ruoyi.crypto.controller;
+
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.crypto.domain.vo.CryptoCoinVO;
+import com.ruoyi.crypto.domain.vo.CryptoIndexVo;
+import com.ruoyi.crypto.service.CryptoIndexService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+/**
+ * 系统首页数据
+ */
+@RestController
+@RequestMapping("/crypto/record")
+public class CryptoIndexController extends BaseController {
+
+    @Resource
+    private CryptoIndexService cryptoIndexService;
+
+
+    /**
+     * 平台数据
+     * 1. 微信机器人查询ca总次数
+     * 2. 微信机器人活跃用户
+     */
+    @GetMapping("/getDailyActivityStats")
+    public AjaxResult getDailyActivityStats()
+    {
+        CryptoIndexVo dailyActivityStats = cryptoIndexService.getDailyActivityStats();
+        System.err.println(dailyActivityStats);
+        return success(dailyActivityStats);
+    }
+
+
+
+
+
+}

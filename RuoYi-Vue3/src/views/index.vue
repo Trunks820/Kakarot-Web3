@@ -1,84 +1,7 @@
 <template>
   <div class="app-container home">
     <!-- 顶部数据卡片 -->
-    <el-row :gutter="20">
-      <el-col :span="8">
-        <el-card class="data-card">
-          <template #header>
-            <div class="card-header">
-              <span>平台数据</span>
-              <el-tag type="warning" size="small">今日</el-tag>
-            </div>
-          </template>
-          <div class="card-body">
-            <div class="stat-item">
-              <div class="stat-label">
-                <el-icon class="mr8"><Search /></el-icon>
-                <span class="label">查询次数</span>
-              </div>
-              <h3>{{ queryCount }}</h3>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">
-                <el-icon class="mr8"><User /></el-icon>
-                <span class="label">活跃用户</span>
-              </div>
-              <h3>{{ activeUsers }}</h3>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="8">
-        <el-card class="data-card">
-          <template #header>
-            <div class="card-header">
-              <span>机器人状态</span>
-              <el-tag type="success" size="small">实时</el-tag>
-            </div>
-          </template>
-          <div class="card-body">
-            <div class="stat-item">
-              <span class="label">Telegram</span>
-              <el-tag :type="tgBotStatus.online ? 'success' : 'danger'" size="small">
-                {{ tgBotStatus.online ? '在线' : '离线' }}
-              </el-tag>
-            </div>
-            <div class="stat-item">
-              <span class="label">微信</span>
-              <el-tag :type="wxBotStatus.online ? 'success' : 'danger'" size="small">
-                {{ wxBotStatus.online ? '在线' : '离线' }}
-              </el-tag>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="8">
-        <el-card class="data-card">
-          <template #header>
-            <div class="card-header">
-              <span>告警统计</span>
-              <el-tag type="danger" size="small">今日</el-tag>
-            </div>
-          </template>
-          <div class="card-body">
-            <div class="stat-item">
-              <div class="stat-label">
-                <el-icon class="mr8"><Warning /></el-icon>
-                <span class="label">总告警数</span>
-              </div>
-              <h3>{{ alertStats.total }}</h3>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">
-                <el-icon class="mr8"><Warning /></el-icon>
-                <span class="label">待处理</span>
-              </div>
-              <h3 :class="{ 'warning': alertStats.pending > 5 }">{{ alertStats.pending }}</h3>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+    <DataSummary />
 
     <!-- 主要内容区域 -->
     <el-row :gutter="12" class="mt20">
@@ -173,19 +96,8 @@ import { ref, onMounted, nextTick, computed } from 'vue'
 import * as echarts from 'echarts'
 import TradingViewWidget from '@/components/TradingViewWidget.vue'
 import { ElMessage } from 'element-plus'
+import DataSummary from '@/views/components/DataSummary.vue'
 import { Search, User, Warning } from '@element-plus/icons-vue'
-
-// 数据统计
-const queryCount = ref(1234)
-const activeUsers = ref(89)
-const tgBotStatus = ref({ online: true })
-const wxBotStatus = ref({ online: true })
-
-// 告警统计数据
-const alertStats = ref({
-  total: 24,
-  pending: 8
-})
 
 // 热门CA数据
 const tgPopularCAs = ref([
