@@ -7,12 +7,14 @@ import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.crypto.domain.CryptoCoin;
+import com.ruoyi.crypto.domain.vo.CryptoCoinVO;
 import com.ruoyi.crypto.service.CryptoCoinService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 
@@ -28,25 +30,24 @@ public class CryptoCoinController extends BaseController {
      */
     @PreAuthorize("@ss.hasPermi('crypto:coin:list')")
     @GetMapping("/list")
-    public TableDataInfo list(CryptoCoin cryptoCoin)
+    public TableDataInfo list(CryptoCoinVO cryptoCoin)
     {
         startPage();
-        List<CryptoCoin> list = cryptoCoinService.selectCryptoCoinList(cryptoCoin);
+        List<CryptoCoinVO> list = cryptoCoinService.selectCryptoCoinList(cryptoCoin);
         return getDataTable(list);
     }
 
     /**
      * 导出代币列表
      */
-    @ApiOperation("导出代币列表")
     @PreAuthorize("@ss.hasPermi('crypto:coin:export')")
     @Log(title = "代币", businessType = BusinessType.EXPORT)
-    @GetMapping("/export")
-    public AjaxResult export(CryptoCoin cryptoCoin)
+    @PostMapping("/export")
+    public void export(CryptoCoinVO cryptoCoin, HttpServletResponse response)
     {
-        List<CryptoCoin> list = cryptoCoinService.selectCryptoCoinList(cryptoCoin);
-        ExcelUtil<CryptoCoin> util = new ExcelUtil<>(CryptoCoin.class);
-        return util.exportExcel(list, "代币数据");
+        List<CryptoCoinVO> list = cryptoCoinService.selectCryptoCoinList(cryptoCoin);
+        ExcelUtil<CryptoCoinVO> util = new ExcelUtil<>(CryptoCoinVO.class);
+        util.exportExcel(response, list, "代币数据");
     }
 
     /**
@@ -57,46 +58,9 @@ public class CryptoCoinController extends BaseController {
     @GetMapping(value = "/{coinId}")
     public AjaxResult getInfo(@ApiParam(value = "代币ID", required = true) @PathVariable("coinId") Long coinId)
     {
-        CryptoCoin query = new CryptoCoin();
+        CryptoCoinVO query = new CryptoCoinVO();
         query.setCoinId(coinId);
         return success(cryptoCoinService.selectCryptoCoin(query));
-    }
-
-    /**
-     * 根据代币地址查询代币信息
-     */
-    @ApiOperation("根据代币地址查询代币信息")
-    @PreAuthorize("@ss.hasPermi('crypto:coin:query')")
-    @GetMapping(value = "/address/{address}")
-    public AjaxResult getInfoByAddress(@ApiParam(value = "代币地址", required = true) @PathVariable("address") String address)
-    {
-        CryptoCoin query = new CryptoCoin();
-        query.setAddress(address);
-        return success(cryptoCoinService.selectCryptoCoin(query));
-    }
-
-    /**
-     * 新增代币
-     */
-    @ApiOperation("新增代币")
-    @PreAuthorize("@ss.hasPermi('crypto:coin:add')")
-    @Log(title = "代币", businessType = BusinessType.INSERT)
-    @PostMapping
-    public AjaxResult add(@RequestBody CryptoCoin cryptoCoin)
-    {
-        return toAjax(cryptoCoinService.insertCryptoCoin(cryptoCoin));
-    }
-
-    /**
-     * 修改代币
-     */
-    @ApiOperation("修改代币")
-    @PreAuthorize("@ss.hasPermi('crypto:coin:edit')")
-    @Log(title = "代币", businessType = BusinessType.UPDATE)
-    @PutMapping
-    public AjaxResult edit(@RequestBody CryptoCoin cryptoCoin)
-    {
-        return toAjax(cryptoCoinService.updateCryptoCoin(cryptoCoin));
     }
 
     /**

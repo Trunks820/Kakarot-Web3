@@ -114,9 +114,8 @@
    - first_market_cap: 首次查询时市值
    - first_price: 首次查询时价格
    - highest_market_cap: 历史最高市值
-   - highest_market_cap_time: 达到最高市值时间
    - highest_price: 历史最高价格
-   - highest_price_time: 达到最高价格时间
+   - highest_time: 达到最高价格时间
    - max_multiple: 最大倍数（最高市值/首次查询市值）
    - is_successful: 是否成功（涨幅是否超过50%）
    - query_count: 查询次数

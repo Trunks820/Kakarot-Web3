@@ -1,6 +1,8 @@
 package com.ruoyi.crypto.service.impl;
 
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.crypto.domain.CryptoCoin;
+import com.ruoyi.crypto.domain.vo.CryptoCoinVO;
 import com.ruoyi.crypto.mapper.CryptoCoinMapper;
 import com.ruoyi.crypto.service.CryptoCoinService;
 import org.springframework.stereotype.Service;
@@ -15,28 +17,13 @@ public class CryptoCoinServiceImpl implements CryptoCoinService {
     private CryptoCoinMapper cryptoCoinMapper;
 
     @Override
-    public CryptoCoin selectCryptoCoin(CryptoCoin cryptoCoin) {
+    public CryptoCoinVO selectCryptoCoin(CryptoCoinVO cryptoCoin) {
         return cryptoCoinMapper.selectCryptoCoin(cryptoCoin);
     }
 
     @Override
-    public List<CryptoCoin> selectCryptoCoinList(CryptoCoin cryptoCoin) {
+    public List<CryptoCoinVO> selectCryptoCoinList(CryptoCoinVO cryptoCoin) {
         return cryptoCoinMapper.selectCryptoCoinList(cryptoCoin);
-    }
-
-    @Override
-    public int insertCryptoCoin(CryptoCoin cryptoCoin) {
-        return cryptoCoinMapper.insertCryptoCoin(cryptoCoin);
-    }
-
-    @Override
-    public int updateCryptoCoin(CryptoCoin cryptoCoin) {
-        return cryptoCoinMapper.updateCryptoCoin(cryptoCoin);
-    }
-
-    @Override
-    public int deleteCryptoCoinById(Long coinId) {
-        return cryptoCoinMapper.deleteCryptoCoinById(coinId);
     }
 
     @Override

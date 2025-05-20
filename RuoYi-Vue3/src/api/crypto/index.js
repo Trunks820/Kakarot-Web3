@@ -1,10 +1,7 @@
 import request from '@/utils/request'
-import axios from 'axios'
 
 // 查询代币列表
 export function listCoins(query) {
-  // 常规请求
-
   return request({
     url: '/crypto/coin/list',
     method: 'get',
@@ -16,14 +13,6 @@ export function listCoins(query) {
 export function getCoin(coinId) {
   return request({
     url: '/crypto/coin/' + coinId,
-    method: 'get'
-  })
-}
-
-// 根据代币地址查询代币信息
-export function getCoinByAddress(address) {
-  return request({
-    url: '/crypto/coin/address/' + address,
     method: 'get'
   })
 }

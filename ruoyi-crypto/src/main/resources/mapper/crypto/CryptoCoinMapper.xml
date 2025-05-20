@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.crypto.mapper.CryptoCoinMapper">
 
-    <resultMap id="CryptoCoinResult" type="CryptoCoin">
+    <resultMap id="CryptoCoinVOResult" type="CryptoCoinVO">
         <id property="coinId"    column="coin_id"    />
         <result property="address"     column="address"></result>
         <result property="symbol"      column="symbol"></result>
@@ -17,86 +17,61 @@
         <result property="createTime"  column="create_time" />
         <result property="updateBy"    column="update_by"   />
         <result property="updateTime"  column="update_time" />
+        <result property="queryCount" column="query_count"/>
+        <result property="maxMultiple" column="max_multiple"/>
+        <result property="firstQueryUserId" column="first_query_user_id"/>
+        <result property="firstQueryGroupId" column="first_query_group_id"/>
+        <result property="firstQueryTime" column="first_query_time"/>
+        <result property="firstMarketCap" column="first_market_cap"/>
+        <result property="firstPrice" column="first_price"/>
+        <result property="highestMarketCap" column="highest_market_cap"/>
+        <result property="highestPrice" column="highest_price"/>
+        <result property="highestTime" column="highest_time"/>
     </resultMap>
 
-    <sql id="selectCryptoCoinVo">
-        select coin_id, address, symbol, name, logo_url, chain_type, description, del_flag, create_by, create_time, update_by, update_time
-        from crypto_coin
-    </sql>
-
-    <select id="selectCryptoCoin" parameterType="Long" resultMap="CryptoCoinResult">
-        <include refid="selectCryptoCoinVo"/>
+    <select id="selectCryptoCoin" parameterType="Long" resultMap="CryptoCoinVOResult">
+        SELECT c.*,
+        r.query_count, r.max_multiple
+        FROM crypto_coin c
+        LEFT JOIN crypto_ca_record r ON c.coin_id = r.ca_id
         <where>
-            del_flag = '0'
+            c.del_flag = '0'
             <if test="coinId != null">
-                AND coin_id = #{coinId}
+                AND c.coin_id = #{coinId}
             </if>
             <if test="address != null and address != ''">
-                AND address = #{address}
+                AND c.address = #{address}
             </if>
         </where>
     </select>
 
-    <select id="selectCryptoCoinList" parameterType="CryptoCoin" resultMap="CryptoCoinResult">
-        <include refid="selectCryptoCoinVo"/>
+    <select id="selectCryptoCoinList" parameterType="CryptoCoinVO" resultMap="CryptoCoinVOResult">
+        SELECT c.*,
+        r.query_count, r.max_multiple,
+        r.first_query_user_id, r.first_query_group_id, r.first_query_time, r.first_market_cap, r.first_price,
+        r.highest_market_cap, r.highest_price, r.highest_time
+        FROM crypto_coin c
+        LEFT JOIN crypto_ca_record r ON c.coin_id = r.ca_id
         <where>
-            del_flag = '0'
+            c.del_flag = '0'
             <if test="symbol != null and symbol != ''">
-                AND symbol like concat('%', #{symbol}, '%')
-            </if>
-            <if test="name != null and name != ''">
-                AND name like concat('%', #{name}, '%')
+                AND (c.symbol like concat('%', #{symbol}, '%') OR c.name like concat('%', #{symbol}, '%'))
             </if>
             <if test="chainType != null and chainType != ''">
-                AND chain_type = #{chainType}
+                AND c.chain_type = #{chainType}
+            </if>
+            <if test="address != null and address != ''">
+                AND c.address = #{address}
+            </if>
+            <if test="params.beginTime != null and params.beginTime != ''">
+                AND c.create_time &gt;= CONCAT(#{params.beginTime}, ' 00:00:00')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''">
+                AND c.create_time &lt;= CONCAT(#{params.endTime}, ' 23:59:59')
             </if>
         </where>
-        order by create_time desc
+        order by c.create_time desc
     </select>
-
-    <insert id="insertCryptoCoin" parameterType="CryptoCoin" useGeneratedKeys="true" keyProperty="coinId">
-        insert into crypto_coin (
-        <if test="address != null and address != ''">address,</if>
-        <if test="symbol != null and symbol != ''">symbol,</if>
-        <if test="name != null and name != ''">name,</if>
-        <if test="logoUrl != null and logoUrl != ''">logo_url,</if>
-        <if test="chainType != null and chainType != ''">chain_type,</if>
-        <if test="description != null and description != ''">description,</if>
-        <if test="delFlag != null and delFlag != ''">del_flag,</if>
-        <if test="createBy != null and createBy != ''">create_by,</if>
-        create_time
-        ) values (
-        <if test="address != null and address != ''">#{address},</if>
-        <if test="symbol != null and symbol != ''">#{symbol},</if>
-        <if test="name != null and name != ''">#{name},</if>
-        <if test="logoUrl != null and logoUrl != ''">#{logoUrl},</if>
-        <if test="chainType != null and chainType != ''">#{chainType},</if>
-        <if test="description != null and description != ''">#{description},</if>
-        <if test="delFlag != null and delFlag != ''">#{delFlag},</if>
-        <if test="createBy != null and createBy != ''">#{createBy},</if>
-        sysdate()
-        )
-    </insert>
-
-
-    <update id="updateCryptoCoin" parameterType="CryptoCoin">
-        update crypto_coin
-        <set>
-            <if test="address != null and address != ''">address = #{address},</if>
-            <if test="symbol != null and symbol != ''">symbol = #{symbol},</if>
-            <if test="name != null and name != ''">name = #{name},</if>
-            <if test="logoUrl != null and logoUrl != ''">logo_url = #{logoUrl},</if>
-            <if test="chainType != null and chainType != ''">chain_type = #{chainType},</if>
-            <if test="description != null and description != ''">description = #{description},</if>
-            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
-            update_time = sysdate()
-        </set>
-        where coin_id = #{coinId}
-    </update>
-
-    <update id="deleteCryptoCoinById" parameterType="Long">
-        update crypto_coin set del_flag = '2' where coin_id = #{coinId}
-    </update>
 
     <update id="deleteCryptoCoinByIds" parameterType="Long">
         update crypto_coin set del_flag = '2' where coin_id in
