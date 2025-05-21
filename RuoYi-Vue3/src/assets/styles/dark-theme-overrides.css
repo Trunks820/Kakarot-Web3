@@ -113,6 +113,7 @@ html.dark .el-tabs__item.is-active {
   color: #409EFF !important;
 }
 
+/* 基本按钮样式 */
 html.dark .el-button {
   background-color: #1d1e1f !important;
   border-color: #434343 !important;
@@ -123,6 +124,47 @@ html.dark .el-button--primary {
   background-color: #409EFF !important;
   border-color: #409EFF !important;
   color: #ffffff !important;
+}
+
+/* 顶部导航按钮 - 首页按钮 */
+html.dark .el-button--primary.is-plain {
+  background-color: #18222e !important;
+  border-color: #409EFF !important;
+  color: #409EFF !important;
+}
+
+/* 特别处理顶部蓝色首页按钮 */
+html.dark [class*="首页"] {
+  background-color: #409EFF !important;
+  border-color: #409EFF !important;
+  color: #ffffff !important;
+}
+
+/* 开关按钮样式 */
+html.dark .el-switch__core {
+  background-color: #434343 !important;
+  border-color: #434343 !important;
+}
+
+html.dark .el-switch.is-checked .el-switch__core {
+  background-color: #409EFF !important;
+  border-color: #409EFF !important;
+}
+
+/* 处理卡片上的开关按钮 */
+html.dark .card-header .el-switch .el-switch__core {
+  background-color: #434343 !important;
+  border-color: #434343 !important;
+}
+
+/* 特殊处理首页按钮 */
+html.dark [id^="tab-"] {
+  background-color: transparent !important;
+  color: #d0d0d0 !important;
+}
+
+html.dark [id^="tab-"].is-active {
+  color: #409EFF !important;
 }
 
 /* 市场行情区域 */
@@ -167,6 +209,37 @@ html.dark .el-tag {
   border-color: transparent !important;
 }
 
+/* 修复"今日"标签样式 - 根据HTML结构精确定位 */
+html.dark .el-tag.el-tag--warning.el-tag--small.el-tag--light {
+  background-color: rgba(230, 162, 60, 0.2) !important;
+  color: #E6A23C !important;
+  border-color: transparent !important;
+}
+
+html.dark .el-tag.el-tag--warning .el-tag__content {
+  color: #E6A23C !important;
+}
+
+html.dark .el-tag.el-tag--success.el-tag--small.el-tag--light {
+  background-color: rgba(103, 194, 58, 0.2) !important;
+  color: #67C23A !important;
+  border-color: transparent !important;
+}
+
+html.dark .el-tag.el-tag--success .el-tag__content {
+  color: #67C23A !important;
+}
+
+html.dark .el-tag.el-tag--danger.el-tag--small.el-tag--light {
+  background-color: rgba(245, 108, 108, 0.2) !important;
+  color: #F56C6C !important;
+  border-color: transparent !important;
+}
+
+html.dark .el-tag.el-tag--danger .el-tag__content {
+  color: #F56C6C !important;
+}
+
 /* 确保所有容器背景 */
 html.dark .app-container,
 html.dark .app-main,
@@ -175,10 +248,143 @@ html.dark .sidebar-container {
   background-color: #141414 !important;
 }
 
+/* 添加侧边栏导航样式覆盖 */
+html.dark .sidebar-container {
+  background-color: #1f2d3d !important;
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .sidebar-container .scrollbar-wrapper {
+  background-color: #1f2d3d !important;
+}
+
+html.dark .sidebar-container .el-menu {
+  background-color: #1f2d3d !important;
+}
+
+html.dark .sidebar-container .el-menu-item {
+  color: #bfcbd9 !important;
+}
+
+html.dark .sidebar-container .el-menu-item.is-active {
+  color: #409EFF !important;
+  background-color: #263445 !important;
+}
+
+html.dark .sidebar-container .el-sub-menu__title {
+  color: #bfcbd9 !important;
+}
+
+html.dark .sidebar-container .el-menu-item:hover,
+html.dark .sidebar-container .el-sub-menu__title:hover {
+  background-color: #263445 !important;
+}
+
+html.dark .sidebar-container .el-sub-menu .el-menu {
+  background-color: #1f2d3d !important;
+}
+
+html.dark .sidebar-container .el-sub-menu .el-menu .el-menu-item {
+  background-color: #1f2d3d !important;
+}
+
+html.dark .sidebar-container .el-sub-menu .el-menu .el-menu-item.is-active {
+  background-color: #263445 !important;
+}
+
+/* 菜单图标颜色 */
+html.dark .sidebar-container .el-menu-item svg,
+html.dark .sidebar-container .el-sub-menu__title svg {
+  color: #bfcbd9 !important;
+}
+
+html.dark .sidebar-container .el-menu-item.is-active svg {
+  color: #409EFF !important;
+}
+
+/* 强制设置首页导航栏背景色 */
+html.dark .navbar {
+  background-color: #1f2d3d !important;
+  border-bottom: 1px solid #434343 !important;
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 导航栏中的标题和文字样式 */
+html.dark .navbar .right-menu {
+  color: #bfcbd9 !important;
+}
+
+html.dark .navbar .hamburger-container {
+  background-color: transparent !important;
+}
+
+html.dark .navbar .app-breadcrumb {
+  color: #bfcbd9 !important;
+}
+
+html.dark .navbar .breadcrumb-item {
+  color: #bfcbd9 !important;
+}
+
+html.dark .navbar .breadcrumb-item.no-redirect {
+  color: #bfcbd9 !important;
+}
+
+html.dark .navbar .el-dropdown {
+  color: #bfcbd9 !important;
+}
+
+html.dark .navbar .el-dropdown-link {
+  color: #bfcbd9 !important;
+}
+
+html.dark .navbar .el-icon {
+  color: #bfcbd9 !important;
+}
+
+/* 导航栏Logo */
+html.dark .navbar .logo-container,
+html.dark .sidebar-container .logo-container {
+  background-color: #1f2d3d !important;
+}
+
+html.dark .navbar .logo-container span,
+html.dark .sidebar-container .logo-container span {
+  color: #bfcbd9 !important;
+}
+
+/* 侧边栏Logo区域样式修复 */
+html.dark .sidebar-logo-container {
+  background-color: #1f2d3d !important;
+  border-bottom: 1px solid #263445 !important;
+}
+
+html.dark .sidebar-logo-container .sidebar-logo-link .sidebar-title {
+  color: #ffffff !important;
+}
+
+html.dark .sidebar-logo-container.collapse {
+  background-color: #1f2d3d !important;
+}
+
+/* 确保CSS变量在暗黑模式下的正确值 */
+html.dark {
+  --sidebar-bg: #1f2d3d !important;
+  --sidebar-text: #bfcbd9 !important;
+  --menu-hover: #263445 !important;
+  --menu-active-text: #409eff !important;
+}
+
 /* 强制设置元素背景色 */
+/* 
+ * 注意：这条规则可能会导致问题，因为它会让所有元素继承背景色
+ * 暂时注释掉，使用更精确的选择器替代
+ */
+/*
 html.dark * {
   background-color: inherit;
 }
+*/
 
 /* 确保行情按钮区域 */
 html.dark .el-radio-group,
@@ -230,30 +436,31 @@ html:not(.dark) .ca-item .ca-address {
   color: inherit !important;
 }
 
-/* 针对特定组件的紧急修复 */
-.data-card {
+/* 注意：以下紧急修复样式现在根据主题条件应用 */
+/* 亮色模式下的紧急修复 */
+html:not(.dark) .data-card {
   background-color: #ffffff !important;
 }
-.data-card .card-body {
+html:not(.dark) .data-card .card-body {
   background-color: #ffffff !important;
 }
-.data-card .card-body * {
+html:not(.dark) .data-card .card-body * {
   color: #303133 !important;
 }
-.data-card .card-body .label,
-.data-card .card-body .mr8,
-.data-card .card-body .stat-label * {
+html:not(.dark) .data-card .card-body .label,
+html:not(.dark) .data-card .card-body .mr8,
+html:not(.dark) .data-card .card-body .stat-label * {
   color: #606266 !important;
 }
 
-/* 紧急修复JCA卡片 */
-.ca-item {
+/* 亮色模式下修复JCA卡片 */
+html:not(.dark) .ca-item {
   background-color: #f5f7fa !important;
 }
-.ca-item * {
+html:not(.dark) .ca-item * {
   color: #303133 !important;
 }
-.ca-item .ca-address {
+html:not(.dark) .ca-item .ca-address {
   background-color: #ffffff !important;
 }
 
@@ -280,4 +487,364 @@ html.dark .ca-item * {
 html.dark .ca-item .ca-address {
   background-color: #141414 !important;
   color: #d0d0d0 !important;
+}
+
+/* 处理首页按钮 */
+html.dark .el-button.is-text {
+  color: #d0d0d0 !important;
+  background-color: transparent !important; 
+}
+
+html.dark .el-button.el-button--primary {
+  background-color: #409EFF !important;
+  border-color: #409EFF !important;
+  color: #ffffff !important;
+}
+
+/* 精确处理导航栏首页按钮 */
+html.dark button[class*="首页"] {
+  background-color: #409EFF !important;
+  color: #ffffff !important;
+}
+
+/* 顶部蓝色按钮 */
+html.dark .el-main button.el-button--primary {
+  background-color: #409EFF !important;
+  color: #ffffff !important;
+}
+
+/* 处理卡片开关按钮和状态 */
+html.dark .el-row .el-card .el-switch {
+  --el-switch-off-color: #141414 !important;
+  --el-switch-on-color: #409EFF !important;
+  --el-switch-border-color: #434343 !important;
+}
+
+html.dark .el-row .el-card .el-switch.is-checked {
+  --el-switch-border-color: #409EFF !important;
+}
+
+/* 顶部首页按钮和卡片开关的紧急覆盖样式 - 最高优先级 */
+html.dark button.el-button--primary {
+  background-color: #409EFF !important;
+  color: #ffffff !important;
+  border-color: #409EFF !important;
+}
+
+html.dark button[class*="首页"] {
+  background-color: #409EFF !important;
+  color: #ffffff !important;
+}
+
+/* 紧急修复特定位置的开关元素 */
+html.dark .el-card .card-header .el-switch .el-switch__core {
+  background-color: #141414 !important;
+  border-color: #434343 !important;
+}
+
+html.dark .el-card .card-header .el-switch.is-checked .el-switch__core {
+  background-color: #409EFF !important;
+  border-color: #409EFF !important;
+}
+
+/* 最高优先级选择器尝试匹配首页导航按钮 */
+html.dark .el-button.is-text.active,
+html.dark .el-button.is-plain.active,
+html.dark .el-button.is-link.active,
+html.dark .el-button--primary.active,
+html.dark .el-main button.el-button.is-active,
+html.dark .el-main button.el-button--primary {
+  background-color: #409EFF !important;
+  color: #ffffff !important;
+  border-color: #409EFF !important;
+}
+
+/* 针对含有"今日"文本的标签的特殊处理 */
+html.dark span[class*="el-tag__content"][data-v*="30384"],
+html.dark span[data-v*="30384"],
+html.dark .el-tag--warning span {
+  color: #E6A23C !important;
+}
+
+html.dark .el-tag--success span {
+  color: #67C23A !important;
+}
+
+html.dark .el-tag--danger span {
+  color: #F56C6C !important;
+}
+
+/* 根据标签属性精确匹配 */
+html.dark .el-tag--warning .el-tag__content {
+  color: #E6A23C !important;
+}
+
+html.dark .el-tag--success .el-tag__content {
+  color: #67C23A !important;
+}
+
+html.dark .el-tag--danger .el-tag__content {
+  color: #F56C6C !important;
+}
+
+/* 精确匹配"今日"标签 */
+html.dark span[data-v="k30384"],
+html.dark .el-tag__content[data-v="k30384"] {
+  color: #E6A23C !important;
+}
+
+/* 提高今日标签在卡片头部的选择器优先级 */
+html.dark .card-header .el-tag.el-tag--warning .el-tag__content,
+html.dark .card-header .el-tag.el-tag--warning span,
+html.dark .card-header .el-tag.el-tag--warning {
+  background-color: rgba(230, 162, 60, 0.2) !important;
+  color: #E6A23C !important;
+  border-color: transparent !important;
+}
+
+html.dark .card-header .el-tag--warning span[data-v="k30384"] {
+  color: #E6A23C !important;
+}
+
+/* 标签导航(tags-view)暗黑模式样式 */
+html.dark .tags-view-container {
+  background: #1f2d3d !important;
+  border-bottom: 1px solid #434343 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+html.dark .tags-view-container .tags-view-wrapper .tags-view-item {
+  border: 1px solid #434343 !important;
+  color: #bfcbd9 !important;
+  background: #283544 !important;
+  margin-right: 5px !important;
+}
+
+html.dark .tags-view-container .tags-view-wrapper .tags-view-item.active {
+  background-color: #409EFF !important;
+  color: #ffffff !important;
+  border-color: #409EFF !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .tags-view-container .contextmenu {
+  background: #1d1e1f !important;
+  border: 1px solid #434343 !important;
+  color: #d0d0d0 !important;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .tags-view-container .contextmenu li:hover {
+  background: #141414 !important;
+}
+
+/* 设置CSS变量以供tags-view组件使用 */
+html.dark {
+  --tags-bg: #1f2d3d;
+  --tags-item-border: #434343;
+  --tags-item-text: #bfcbd9;
+  --tags-item-bg: #283544;
+  --tags-item-hover: #263445;
+}
+
+/* 标签导航(tags-view)关闭图标样式 */
+html.dark .tags-view-wrapper .tags-view-item .el-icon-close {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #bfcbd9 !important;
+}
+
+html.dark .tags-view-wrapper .tags-view-item .el-icon-close:hover {
+  background-color: #409EFF !important;
+  color: #ffffff !important;
+}
+
+/* 确保"首页"标签页活跃状态显示正确 */
+html.dark .tags-view-container .tags-view-wrapper .tags-view-item.active[data-path="/index"],
+html.dark .tags-view-container .tags-view-wrapper .tags-view-item.active[data-path*="首页"] {
+  background-color: #409EFF !important;
+  color: #ffffff !important;
+  border-color: #409EFF !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 修复标签页删除按钮 */
+html.dark .tags-view-container .tags-view-item span:last-child svg,
+html.dark .tags-view-container .tags-view-item .el-icon-close {
+  color: #d0d0d0 !important;
+}
+
+/* 修复标签页右键菜单中的图标 */
+html.dark .tags-view-container .contextmenu li svg {
+  color: #bfcbd9 !important;
+  margin-right: 5px !important;
+}
+
+/* 标签导航滚动条样式 */
+html.dark .tags-view-container .scroll-container .el-scrollbar__bar {
+  background-color: #1f2d3d !important;
+}
+
+html.dark .tags-view-container .scroll-container .el-scrollbar__thumb {
+  background-color: #434343 !important;
+}
+
+/* 标签导航内部滚动容器 */
+html.dark .tags-view-container .scroll-container .el-scrollbar__wrap {
+  background-color: #1f2d3d !important;
+}
+
+/* 修复标签页删除按钮 */
+html.dark .tags-view-container .tags-view-item span:last-child svg,
+html.dark .tags-view-container .tags-view-item .el-icon-close {
+  color: #bfcbd9 !important;
+}
+
+/* 汉堡菜单图标样式 */
+html.dark #hamburger-container svg {
+  fill: #bfcbd9 !important;
+}
+
+html.dark .hamburger-container:hover {
+  background-color: #263445 !important;
+}
+
+/* 面包屑导航样式 */
+html.dark .breadcrumb-container .el-breadcrumb__inner,
+html.dark .breadcrumb-container .el-breadcrumb__inner a,
+html.dark .breadcrumb-container .el-breadcrumb__separator {
+  color: #bfcbd9 !important;
+}
+
+/* 顶部导航菜单的悬停效果 */
+html.dark .navbar .right-menu .right-menu-item.hover-effect:hover {
+  background-color: #263445 !important;
+}
+
+/* 确保SVG图标在暗黑模式下可见 */
+html.dark .navbar svg,
+html.dark .navbar .svg-icon {
+  color: #bfcbd9 !important;
+  fill: #bfcbd9 !important;
+}
+
+/* 表格样式覆盖 - 暗黑模式 */
+html.dark .el-table {
+  background-color: #1d1e1f !important;
+  color: #d0d0d0 !important;
+  border-color: #434343 !important;
+}
+
+html.dark .el-table tr {
+  background-color: #1d1e1f !important;
+}
+
+html.dark .el-table th.el-table__cell {
+  background-color: #141414 !important;
+  color: #bfcbd9 !important;
+  border-bottom-color: #434343 !important;
+}
+
+html.dark .el-table td.el-table__cell {
+  border-bottom-color: #434343 !important;
+  color: #d0d0d0 !important;
+}
+
+html.dark .el-table--border .el-table__cell {
+  border-right: 1px solid #434343 !important;
+}
+
+html.dark .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background-color: #18222c !important;
+}
+
+html.dark .el-table__body tr.hover-row > td.el-table__cell {
+  background-color: #263445 !important;
+}
+
+/* 表格固定列与表头样式 */
+html.dark .el-table__fixed,
+html.dark .el-table__fixed-right {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .el-table__fixed-header-wrapper th.el-table__cell {
+  background-color: #141414 !important;
+}
+
+/* 表格展开行样式 */
+html.dark .el-table__expand-icon {
+  color: #bfcbd9 !important;
+}
+
+/* 表格内部组件样式 */
+html.dark .el-table .el-tag {
+  border-color: transparent !important;
+}
+
+/* 表格选择列和复选框 */
+html.dark .el-table-column--selection .el-checkbox__inner {
+  background-color: #141414 !important;
+  border-color: #434343 !important;
+}
+
+html.dark .el-table-column--selection .el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: #409EFF !important;
+  border-color: #409EFF !important;
+}
+
+/* 更精确的表格第一列样式 */
+html.dark .el-table td.el-table__cell.is-center,
+html.dark .el-table th.el-table__cell.is-center {
+  background-color: #1d1e1f !important;
+  color: #d0d0d0 !important;
+}
+
+html.dark .el-table th.el-table__cell.is-center {
+  background-color: #141414 !important;
+}
+
+html.dark .el-table .cell {
+  color: #d0d0d0 !important;
+}
+
+html.dark .el-table th.el-table__cell .cell {
+  color: #bfcbd9 !important;
+}
+
+/* 针对第一列设置更强制的样式 */
+html.dark .el-table td.el-table__cell:first-child,
+html.dark .el-table th.el-table__cell:first-child {
+  background-color: #1d1e1f !important;
+  color: #d0d0d0 !important;
+}
+
+html.dark .el-table th.el-table__cell:first-child {
+  background-color: #141414 !important;
+}
+
+html.dark .el-table td.el-table__cell:first-child .cell,
+html.dark .el-table th.el-table__cell:first-child .cell {
+  color: inherit !important;
+}
+
+/* 表格复选框样式 */
+html.dark .el-checkbox__input .el-checkbox__inner {
+  background-color: #141414 !important;
+  border-color: #434343 !important;
+}
+
+html.dark .el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: #409EFF !important;
+  border-color: #409EFF !important;
+}
+
+/* 表格空数据状态 */
+html.dark .el-table__empty-text {
+  color: #bfcbd9 !important;
+}
+
+/* 表格分页 */
+html.dark .el-pagination {
+  color: #d0d0d0 !important;
+  background-color: #1d1e1f !important;
 } 

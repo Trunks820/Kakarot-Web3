@@ -30,10 +30,7 @@
       <template #header>
         <div class="card-header wx-header">
           <span>热门CA</span>
-          <div class="wx-tag">
-            <i class="wx-icon"></i>
-            <span>微信查询</span>
-          </div>
+          <el-tag type="primary" size="small" class="tag-primary">微信查询</el-tag>
         </div>
       </template>
       <div class="card-body">
@@ -226,7 +223,6 @@ const copyToClipboard = (text) => {
 
 /* 微信查询卡片样式增强 */
 .wx-card {
-  border-color: #07C160 !important;
 
   .wx-header {
     border-bottom-color: rgba(7, 193, 96, 0.2) !important;
@@ -270,8 +266,6 @@ const copyToClipboard = (text) => {
   }
 
   .wx-item {
-    border-left: 2px solid #07C160;
-    
     .wx-rank {
       background-color: #07C160 !important;
     }
@@ -330,5 +324,6 @@ const copyToClipboard = (text) => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
+  height: 16px;
 }
 </style> 

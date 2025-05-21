@@ -31,61 +31,64 @@
         </el-card>
       </el-col>
 
-      <!-- 右侧热门CA列表 -->
-      <el-col :span="7">
-        <!-- TG热门CA列表 -->
-        <el-card class="ca-card mb12">
-          <template #header>
-            <div class="card-header">
-              <div class="left">
-                <span>热门CA</span>
-                <el-tag type="primary" size="small">TG播报</el-tag>
-              </div>
-            </div>
-          </template>
-          <div class="card-body">
-            <div v-for="(ca, index) in tgPopularCAs" :key="ca.address" class="ca-item">
-              <div class="ca-header">
-                <div class="left">
-                  <span class="ca-rank">{{ index + 1 }}</span>
-                  <span class="token-name">{{ ca.tokenName }}</span>
-                </div>
-                <span class="ca-count">{{ ca.count }}次</span>
-              </div>
-              <div class="ca-address" @click="copyToClipboard(ca.address)">
-                {{ ca.address }}
-                <i class="el-icon-document-copy copy-icon"></i>
-              </div>
-            </div>
-          </div>
-        </el-card>
+<!--      &lt;!&ndash; 右侧热门CA列表 &ndash;&gt;-->
+<!--      <el-col :span="7">-->
+<!--        &lt;!&ndash; TG热门CA列表 &ndash;&gt;-->
+<!--        <el-card class="ca-card mb12">-->
+<!--          <template #header>-->
+<!--            <div class="card-header">-->
+<!--              <div class="left">-->
+<!--                <span>热门CA</span>-->
+<!--                <el-tag type="primary" size="small">TG播报</el-tag>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </template>-->
+<!--          <div class="card-body">-->
+<!--            <div v-for="(ca, index) in tgPopularCAs" :key="ca.address" class="ca-item">-->
+<!--              <div class="ca-header">-->
+<!--                <div class="left">-->
+<!--                  <span class="ca-rank">{{ index + 1 }}</span>-->
+<!--                  <span class="token-name">{{ ca.tokenName }}</span>-->
+<!--                </div>-->
+<!--                <span class="ca-count">{{ ca.count }}次</span>-->
+<!--              </div>-->
+<!--              <div class="ca-address" @click="copyToClipboard(ca.address)">-->
+<!--                {{ ca.address }}-->
+<!--                <i class="el-icon-document-copy copy-icon"></i>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </el-card>-->
 
-        <!-- 微信热门CA列表 -->
-        <el-card class="ca-card">
-          <template #header>
-            <div class="card-header">
-              <div class="left">
-                <span>热门CA</span>
-                <el-tag type="success" size="small">微信查询</el-tag>
-              </div>
-            </div>
-          </template>
-          <div class="card-body">
-            <div v-for="(ca, index) in wxPopularCAs" :key="ca.address" class="ca-item">
-              <div class="ca-header">
-                <div class="left">
-                  <span class="ca-rank">{{ index + 1 }}</span>
-                  <span class="token-name">{{ ca.tokenName }}</span>
-                </div>
-                <span class="ca-count">{{ ca.count }}次</span>
-              </div>
-              <div class="ca-address" @click="copyToClipboard(ca.address)">
-                {{ ca.address }}
-                <i class="el-icon-document-copy copy-icon"></i>
-              </div>
-            </div>
-          </div>
-        </el-card>
+<!--        &lt;!&ndash; 微信热门CA列表 &ndash;&gt;-->
+<!--        <el-card class="ca-card">-->
+<!--          <template #header>-->
+<!--            <div class="card-header">-->
+<!--              <div class="left">-->
+<!--                <span>热门CA</span>-->
+<!--                <el-tag type="success" size="small">微信查询</el-tag>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </template>-->
+<!--          <div class="card-body">-->
+<!--            <div v-for="(ca, index) in wxPopularCAs" :key="ca.address" class="ca-item">-->
+<!--              <div class="ca-header">-->
+<!--                <div class="left">-->
+<!--                  <span class="ca-rank">{{ index + 1 }}</span>-->
+<!--                  <span class="token-name">{{ ca.tokenName }}</span>-->
+<!--                </div>-->
+<!--                <span class="ca-count">{{ ca.count }}次</span>-->
+<!--              </div>-->
+<!--              <div class="ca-address" @click="copyToClipboard(ca.address)">-->
+<!--                {{ ca.address }}-->
+<!--                <i class="el-icon-document-copy copy-icon"></i>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </el-card>-->
+<!--      </el-col>-->
+      <el-col :span="7">
+        <PopularCA />
       </el-col>
     </el-row>
   </div>
@@ -98,54 +101,7 @@ import TradingViewWidget from '@/components/TradingViewWidget.vue'
 import { ElMessage } from 'element-plus'
 import DataSummary from '@/views/components/DataSummary.vue'
 import { Search, User, Warning } from '@element-plus/icons-vue'
-
-// 热门CA数据
-const tgPopularCAs = ref([
-  {
-    address: '0x1234567890abcdef1234567890abcdef12345678',
-    tokenName: 'PEPE',
-    count: 15
-  },
-  {
-    address: '0xabcdef1234567890abcdef1234567890abcdef12',
-    tokenName: 'WOJAK',
-    count: 12
-  },
-  {
-    address: '0x7890abcdef1234567890abcdef1234567890abcd',
-    tokenName: 'DOGE20',
-    count: 10
-  },
-  {
-    address: '0xdef1234567890abcdef1234567890abcdef1234',
-    tokenName: 'SHIB2',
-    count: 8
-  },
-])
-
-// 微信热门CA数据
-const wxPopularCAs = ref([
-  {
-    address: '0x9876543210fedcba9876543210fedcba98765432',
-    tokenName: 'PEPE',
-    count: 25
-  },
-  {
-    address: '0xfedcba9876543210fedcba9876543210fedcba98',
-    tokenName: 'DOGE20',
-    count: 18
-  },
-  {
-    address: '0x543210fedcba9876543210fedcba9876543210fe',
-    tokenName: 'SHIB2',
-    count: 15
-  },
-  {
-    address: '0x210fedcba9876543210fedcba9876543210fedcb',
-    tokenName: 'WOJAK',
-    count: 12
-  },
-])
+import PopularCA from "./components/PopularCA.vue";
 
 // K线图配置
 const chartRef = ref(null)
@@ -168,11 +124,6 @@ const currentSymbol = computed(() => {
 // 处理图表切换
 const handleChartChange = (value) => {
   currentChart.value = value
-}
-
-// 处理时间周期切换
-const handleTimeframeChange = (value) => {
-  timeframe.value = value
 }
 
 // 初始化K线图
@@ -222,21 +173,6 @@ watch([currentChart, timeframe], () => {
 window.addEventListener('resize', () => {
   chart && chart.resize()
 })
-
-// 复制到剪贴板
-const copyToClipboard = (text) => {
-  navigator.clipboard.writeText(text).then(() => {
-    ElMessage({
-      message: '地址已复制到剪贴板',
-      type: 'success'
-    })
-  }).catch(() => {
-    ElMessage({
-      message: '复制失败，请手动复制',
-      type: 'error'
-    })
-  })
-}
 
 onMounted(() => {
   initChart()
