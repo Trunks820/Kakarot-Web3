@@ -6,7 +6,7 @@
 ## 开发阶段与时间规划
 
 ### 阶段一：核心模块扩展（1周）
-- **第1-2周：基础框架扩展**
+- **第1周：基础框架扩展**
   - 创建crypto-monitor模块（Java模块）
   - 设计并创建数据库表结构（监控配置、价格记录、查询日志等）
   - 集成现有用户管理系统
@@ -166,6 +166,36 @@
    - win_threshold: 胜率计算阈值(默认0.5) 
    - created_at: 创建时间
    - is_active: 是否激活
+
+###  2025-05-22新增
+1. **crypto_wallet**：钱包表
+   - wallet_address: 钱包地址(主键)
+   - wallet_name: 钱包备注
+   - wallet_level: 重要度分级
+   - wallet_chain_type: 链类型
+   - add_time: 添加时间
+   - last_active_time: 最后活跃时间
+   - monitor_state: 监控状态
+
+2. **crypto_wallet_transactions**：存储钱包交易记录
+   - id: 主键
+   - wallet_address: 钱包地址(外键)
+   - coin_address: 代币地址(关联crypto_coin表)
+   - operation_type: 操作类型(买入/卖出/清仓)
+   - transaction_amount: 交易金额
+   - chain_type: 货币类型(SOL/BNB/USDT)
+   - price: 价格
+   - market: 市值
+   - safe_info: 安全评估信息
+   - transaction_time: 交易时间戳
+
+3. **crypto_price_history** 价格历史表(记录需要监控的代币)
+   - id: 主键
+   - coin_address: 代币地址(关联crypto_coin表)
+   - price: 价格
+   - market: 市值
+   - recording_time: 记录时间
+   - data_source: 数据来源
 
 ### 数据库表关系
 - 用户可以创建多个监控配置
