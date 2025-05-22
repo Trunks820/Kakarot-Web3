@@ -95,13 +95,16 @@
 
 ### 核心表结构
 1. **crypto_coin**：CA基础信息表
-   - id: 主键
+   - coin_id: 主键
    - address: 合约地址
    - symbol: 币种符号
    - name: 币种名称
    - logo_url: 币种图标(如果有)
-   - created_at: 创建时间
-   - updated_at: 更新时间
+   - del_flag: 删除状态
+   - create_by: 创建人
+   - create_time: 创建时间
+   - update_by: 修改人
+   - update_time: 修改时间
    - chain_type: 链类型
    - description: 描述
 
@@ -109,7 +112,9 @@
    - id: 主键
    - ca_id: 关联的CA ID
    - first_query_user_id: 首次查询用户ID
+   - first_query_user_name: 首次查询用户名称
    - first_query_group_id: 首次查询群组ID
+   - first_query_group_name: 首次查询群组名称
    - first_query_time: 首次查询时间
    - first_market_cap: 首次查询时市值
    - first_price: 首次查询时价格
@@ -119,8 +124,11 @@
    - max_multiple: 最大倍数（最高市值/首次查询市值）
    - is_successful: 是否成功（涨幅是否超过50%）
    - query_count: 查询次数
-   - created_at: 创建时间
-   - updated_at: 更新时间
+   - del_flag: 删除状态
+   - create_by: 创建人
+   - create_time: 创建时间
+   - update_by: 修改人
+   - update_time: 修改时间
 
 3. **crypto_ca_query_record**：CA查询表
    - id: 主键
@@ -132,6 +140,12 @@
    - price_at_query: 查询时价格
    - created_at: 创建时间
    - multiple_from_first: 与首次查询的倍数
+   - del_flag: 删除状态
+   - create_by: 创建人
+   - create_time: 创建时间
+   - update_by: 修改人
+   - update_time: 修改时间
+   - chain_type: 链类型
 
 4. **crypto_group_statistics**： 群组CA统计表
    - id: 主键
@@ -140,9 +154,11 @@
    - unique_ca_count: 不同CA数量(ca去重后)
    - successful_ca_count: 成功CA数量（涨幅超过50%）
    - win_rate: 胜率(成功CA数/不同CA数)
-   - last_calculated_time: 最后计算时间
-   - created_at: 创建时间
-   - updated_at: 更新时间
+   - del_flag: 删除状态
+   - create_by: 创建人
+   - create_time: 创建时间
+   - update_by: 修改人
+   - update_time: 修改时间
 
 5. **crypto_monitor_config**：监控配置表
    - id: 主键
@@ -153,10 +169,14 @@
    - percent_change: 波动百分比
    - notification_type: 通知类型
    - is_active: 是否激活
-   - created_at: 创建时间
-   - updated_at: 更新时间
    - last_notification_time: 上次通知时间
    - notification_target: 通知目标(群ID或用户ID)
+   - del_flag: 删除状态
+   - create_by: 创建人
+   - create_time: 创建时间
+   - update_by: 修改人
+   - update_time: 修改时间
+   - chain_type: 链类型
 
 6. **crypto_bot_group**：机器人群组表
    - id: 主键
@@ -164,8 +184,12 @@
    - group_id: 平台上的群组ID
    - group_name: 群组名称
    - win_threshold: 胜率计算阈值(默认0.5) 
-   - created_at: 创建时间
    - is_active: 是否激活
+   - del_flag: 删除状态
+   - create_by: 创建人
+   - create_time: 创建时间
+   - update_by: 修改人
+   - update_time: 修改时间
 
 ###  2025-05-22新增
 1. **crypto_wallet**：钱包表
@@ -176,6 +200,12 @@
    - add_time: 添加时间
    - last_active_time: 最后活跃时间
    - monitor_state: 监控状态
+   - del_flag: 删除状态
+   - create_by: 创建人
+   - create_time: 创建时间
+   - update_by: 修改人
+   - update_time: 修改时间
+   - chain_type: 链类型
 
 2. **crypto_wallet_transactions**：存储钱包交易记录
    - id: 主键
@@ -188,6 +218,12 @@
    - market: 市值
    - safe_info: 安全评估信息
    - transaction_time: 交易时间戳
+   - del_flag: 删除状态
+   - create_by: 创建人
+   - create_time: 创建时间
+   - update_by: 修改人
+   - update_time: 修改时间
+   - chain_type: 链类型
 
 3. **crypto_price_history** 价格历史表(记录需要监控的代币)
    - id: 主键
@@ -196,6 +232,12 @@
    - market: 市值
    - recording_time: 记录时间
    - data_source: 数据来源
+   - del_flag: 删除状态
+   - create_by: 创建人
+   - create_time: 创建时间
+   - update_by: 修改人
+   - update_time: 修改时间
+   - chain_type: 链类型
 
 ### 数据库表关系
 - 用户可以创建多个监控配置
