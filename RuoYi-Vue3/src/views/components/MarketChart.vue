@@ -48,10 +48,6 @@ const handleChartChange = (value) => {
   currentChart.value = value
 }
 
-// 处理时间周期切换
-const handleTimeframeChange = (value) => {
-  timeframe.value = value
-}
 </script>
 
 <style scoped lang="scss">
@@ -60,6 +56,7 @@ const handleTimeframeChange = (value) => {
   border: 1px solid #e4e7ed;
   background-color: #ffffff;
   transition: all 0.3s ease-in-out;
+  height: 655px;
 
   :deep(.el-card__header) {
     padding: 12px 16px;
@@ -85,7 +82,7 @@ const handleTimeframeChange = (value) => {
   }
 
   .chart-container {
-    height: 500px;
+    height: 600px;
     background-color: #ffffff;
     transition: all 0.3s ease-in-out;
   }

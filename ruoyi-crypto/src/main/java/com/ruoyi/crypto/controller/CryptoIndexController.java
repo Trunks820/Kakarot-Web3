@@ -2,11 +2,10 @@ package com.ruoyi.crypto.controller;
 
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
-import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.crypto.domain.vo.CryptoCoinVO;
 import com.ruoyi.crypto.domain.vo.CryptoIndexVo;
+import com.ruoyi.crypto.service.CryptoCaRecordService;
 import com.ruoyi.crypto.service.CryptoIndexService;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,6 +23,9 @@ public class CryptoIndexController extends BaseController {
     @Resource
     private CryptoIndexService cryptoIndexService;
 
+    @Resource
+    private CryptoCaRecordService cryptoCaRecordService;
+
 
     /**
      * 平台数据
@@ -34,8 +36,17 @@ public class CryptoIndexController extends BaseController {
     public AjaxResult getDailyActivityStats()
     {
         CryptoIndexVo dailyActivityStats = cryptoIndexService.getDailyActivityStats();
-        System.err.println(dailyActivityStats);
         return success(dailyActivityStats);
+    }
+
+    /**
+     * 热门Ca (微信查询)
+     */
+    @GetMapping("/getHotCaByWechat")
+    public AjaxResult getHotCaByWechat()
+    {
+        List<CryptoCoinVO> hotCaByWechat = cryptoCaRecordService.getHotCaByWechat();
+        return success(hotCaByWechat);
     }
 
 

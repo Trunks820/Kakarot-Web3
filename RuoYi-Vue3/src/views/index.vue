@@ -7,90 +7,14 @@
     <el-row :gutter="12" class="mt20">
       <!-- 左侧K线图面板 -->
       <el-col :span="17">
-        <el-card>
-          <template #header>
-            <div class="card-header">
-              <div class="left">
-                <span>市场行情</span>
-                <el-radio-group v-model="currentChart" size="small" class="ml20" @change="handleChartChange">
-                  <el-radio-button label="BTC">BTC</el-radio-button>
-                  <el-radio-button label="ETH">ETH</el-radio-button>
-                  <el-radio-button label="BNB">BNB</el-radio-button>
-                  <el-radio-button label="SOL">SOL</el-radio-button>
-                </el-radio-group>
-              </div>
-            </div>
-          </template>
-          <div class="chart-container">
-            <TradingViewWidget 
-              :symbol="currentSymbol" 
-              :interval="timeframe"
-              :theme="theme" 
-            />
-          </div>
-        </el-card>
+        <MarketChart />
       </el-col>
-
-<!--      &lt;!&ndash; 右侧热门CA列表 &ndash;&gt;-->
-<!--      <el-col :span="7">-->
-<!--        &lt;!&ndash; TG热门CA列表 &ndash;&gt;-->
-<!--        <el-card class="ca-card mb12">-->
-<!--          <template #header>-->
-<!--            <div class="card-header">-->
-<!--              <div class="left">-->
-<!--                <span>热门CA</span>-->
-<!--                <el-tag type="primary" size="small">TG播报</el-tag>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </template>-->
-<!--          <div class="card-body">-->
-<!--            <div v-for="(ca, index) in tgPopularCAs" :key="ca.address" class="ca-item">-->
-<!--              <div class="ca-header">-->
-<!--                <div class="left">-->
-<!--                  <span class="ca-rank">{{ index + 1 }}</span>-->
-<!--                  <span class="token-name">{{ ca.tokenName }}</span>-->
-<!--                </div>-->
-<!--                <span class="ca-count">{{ ca.count }}次</span>-->
-<!--              </div>-->
-<!--              <div class="ca-address" @click="copyToClipboard(ca.address)">-->
-<!--                {{ ca.address }}-->
-<!--                <i class="el-icon-document-copy copy-icon"></i>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </el-card>-->
-
-<!--        &lt;!&ndash; 微信热门CA列表 &ndash;&gt;-->
-<!--        <el-card class="ca-card">-->
-<!--          <template #header>-->
-<!--            <div class="card-header">-->
-<!--              <div class="left">-->
-<!--                <span>热门CA</span>-->
-<!--                <el-tag type="success" size="small">微信查询</el-tag>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </template>-->
-<!--          <div class="card-body">-->
-<!--            <div v-for="(ca, index) in wxPopularCAs" :key="ca.address" class="ca-item">-->
-<!--              <div class="ca-header">-->
-<!--                <div class="left">-->
-<!--                  <span class="ca-rank">{{ index + 1 }}</span>-->
-<!--                  <span class="token-name">{{ ca.tokenName }}</span>-->
-<!--                </div>-->
-<!--                <span class="ca-count">{{ ca.count }}次</span>-->
-<!--              </div>-->
-<!--              <div class="ca-address" @click="copyToClipboard(ca.address)">-->
-<!--                {{ ca.address }}-->
-<!--                <i class="el-icon-document-copy copy-icon"></i>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </el-card>-->
-<!--      </el-col>-->
+      <!-- 右侧热门CA面板 -->
       <el-col :span="7">
         <PopularCA />
       </el-col>
     </el-row>
+
   </div>
 </template>
 
@@ -102,6 +26,7 @@ import { ElMessage } from 'element-plus'
 import DataSummary from '@/views/components/DataSummary.vue'
 import { Search, User, Warning } from '@element-plus/icons-vue'
 import PopularCA from "./components/PopularCA.vue";
+import MarketChart from "./components/MarketChart.vue";
 
 // K线图配置
 const chartRef = ref(null)
@@ -110,21 +35,6 @@ const timeframe = ref('60')
 const theme = ref('dark')
 let chart = null
 
-// 计算当前交易对
-const currentSymbol = computed(() => {
-  const symbols = {
-    'BTC': 'BINANCE:BTCUSDT',
-    'ETH': 'BINANCE:ETHUSDT',
-    'BNB': 'BINANCE:BNBUSDT',
-    'SOL': 'BINANCE:SOLUSDT'
-  }
-  return symbols[currentChart.value]
-})
-
-// 处理图表切换
-const handleChartChange = (value) => {
-  currentChart.value = value
-}
 
 // 初始化K线图
 function initChart() {

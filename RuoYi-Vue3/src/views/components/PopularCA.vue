@@ -1,11 +1,21 @@
 <template>
   <div>
     <!-- TG热门CA列表 -->
-    <el-card class="ca-card mb12">
+    <el-card class="ca-card mb12" v-loading="hotTelegramLoading">
       <template #header>
         <div class="card-header">
           <span>热门CA</span>
-          <el-tag type="primary" size="small" class="tag-primary">TG播报</el-tag>
+          <div>
+            <el-button
+                type="text"
+                @click="fetchHotCaByTelegramData"
+                :loading="hotTelegramLoading"
+                class="refresh-btn"
+            >
+              <el-icon><Refresh /></el-icon>
+            </el-button>
+            <el-tag type="primary" size="small" class="tag-primary">TG播报</el-tag>
+          </div>
         </div>
       </template>
       <div class="card-body">
@@ -13,9 +23,9 @@
           <div class="ca-header">
             <div class="left">
               <span class="ca-rank">{{ index + 1 }}</span>
-              <span class="token-name">{{ ca.tokenName }}</span>
+              <span class="token-name">{{ ca.symbol }}</span>
             </div>
-            <span class="ca-count">{{ ca.count }}次</span>
+            <span class="ca-count">{{ ca.queryCount }}次</span>
           </div>
           <div class="ca-address" @click="copyToClipboard(ca.address)">
             {{ ca.address }}
@@ -26,21 +36,32 @@
     </el-card>
 
     <!-- 微信热门CA列表 -->
-    <el-card class="ca-card wx-card">
+    <el-card class="ca-card wx-card" v-loading="hotWechatLoading">
       <template #header>
         <div class="card-header wx-header">
           <span>热门CA</span>
-          <el-tag type="primary" size="small" class="tag-primary">微信查询</el-tag>
+          <div>
+            <el-button
+                type="text"
+                @click="fetchHotCaByWechatData"
+                :loading="hotWechatLoading"
+                class="refresh-btn"
+            >
+              <el-icon><Refresh /></el-icon>
+            </el-button>
+            <el-tag type="primary" size="small" class="tag-primary">微信查询</el-tag>
+          </div>
         </div>
       </template>
+
       <div class="card-body">
         <div v-for="(ca, index) in wxPopularCAs" :key="ca.address" class="ca-item wx-item">
           <div class="ca-header">
             <div class="left">
               <span class="ca-rank wx-rank">{{ index + 1 }}</span>
-              <span class="token-name">{{ ca.tokenName }}</span>
+              <span class="token-name">{{ ca.symbol }}</span>
             </div>
-            <span class="ca-count wx-count">{{ ca.count }}次</span>
+            <span class="ca-count">{{ ca.queryCount }}次</span>
           </div>
           <div class="ca-address" @click="copyToClipboard(ca.address)">
             {{ ca.address }}
@@ -55,54 +76,73 @@
 <script setup>
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { getHotCaByWechat } from '@/api/crypto/index'
+
+const hotWechatLoading = ref(false)
+const hotTelegramLoading = ref(false)
 
 // 热门CA数据
-const tgPopularCAs = ref([
-  {
-    address: '0x1234567890abcdef1234567890abcdef12345678',
-    tokenName: 'PEPE',
-    count: 15
-  },
-  {
-    address: '0xabcdef1234567890abcdef1234567890abcdef12',
-    tokenName: 'WOJAK',
-    count: 12
-  },
-  {
-    address: '0x7890abcdef1234567890abcdef1234567890abcd',
-    tokenName: 'DOGE20',
-    count: 10
-  },
-  {
-    address: '0xdef1234567890abcdef1234567890abcdef1234',
-    tokenName: 'SHIB2',
-    count: 8
-  }
-])
+const tgPopularCAs = ref([])
 
 // 微信热门CA数据
-const wxPopularCAs = ref([
-  {
-    address: '0x9876543210fedcba9876543210fedcba98765432',
-    tokenName: 'PEPE',
-    count: 25
-  },
-  {
-    address: '0xfedcba9876543210fedcba9876543210fedcba98',
-    tokenName: 'DOGE20',
-    count: 18
-  },
-  {
-    address: '0x543210fedcba9876543210fedcba9876543210fe',
-    tokenName: 'SHIB2',
-    count: 15
-  },
-  {
-    address: '0x210fedcba9876543210fedcba9876543210fedcb',
-    tokenName: 'WOJAK',
-    count: 12
+const wxPopularCAs = ref([])
+
+// 添加热门Ca微信查询数据
+const fetchHotCaByWechatData = async () => {
+  hotWechatLoading.value = true
+  try {
+    // 添加模拟延迟，使行为与其他卡片一致
+    const res = await new Promise((resolve) => {
+      setTimeout(async () => {
+        try {
+          const apiRes = await getHotCaByWechat()
+          resolve(apiRes)
+        } catch (err) {
+          resolve({ code: 500, msg: err.message })
+        }
+      }, 600)
+    })
+
+    if (res.code === 200 && res.data) {
+      wxPopularCAs.value = res.data;
+      hotWechatLoading.value = false;
+    } else {
+      ElMessage.warning('获取平台数据失败: ' + (res.msg || '未知错误'))
+    }
+  } catch (error) {
+    ElMessage.error('获取平台数据异常，请检查网络连接或后端服务')
+  } finally {
+    hotWechatLoading.value = false
   }
-])
+}
+
+const fetchHotCaByTelegramData = async () => {
+  hotTelegramLoading.value = true
+  try {
+    // 添加模拟延迟，使行为与其他卡片一致
+    const res = await new Promise((resolve) => {
+      setTimeout(async () => {
+        try {
+          const apiRes = await getHotCaByWechat()
+          resolve(apiRes)
+        } catch (err) {
+          resolve({ code: 500, msg: err.message })
+        }
+      }, 600)
+    })
+
+    if (res.code === 200 && res.data) {
+      tgPopularCAs.value = res.data;
+      hotTelegramLoading.value = false;
+    } else {
+      ElMessage.warning('获取平台数据失败: ' + (res.msg || '未知错误'))
+    }
+  } catch (error) {
+    ElMessage.error('获取平台数据异常，请检查网络连接或后端服务')
+  } finally {
+    hotTelegramLoading.value = false
+  }
+}
 
 // 复制到剪贴板
 const copyToClipboard = (text) => {
@@ -122,7 +162,7 @@ const copyToClipboard = (text) => {
 
 <style scoped lang="scss">
 .ca-card {
-  height: calc(50% - 6px);  // 减去间距的一半
+  height: 321px;
 
   .card-body {
     padding: 6px;
@@ -223,7 +263,7 @@ const copyToClipboard = (text) => {
 
 /* 微信查询卡片样式增强 */
 .wx-card {
-
+  height: 321px;
   .wx-header {
     border-bottom-color: rgba(7, 193, 96, 0.2) !important;
 

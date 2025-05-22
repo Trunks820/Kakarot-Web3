@@ -92,4 +92,12 @@ export function getDailyActivityStats() {
     url: '/crypto/record/getDailyActivityStats',
     method: 'get'
   })
-} 
+}
+
+// 获取每日活动统计数据
+export function getHotCaByWechat() {
+  return request({
+    url: '/crypto/record/getHotCaByWechat',
+    method: 'get'
+  })
+}

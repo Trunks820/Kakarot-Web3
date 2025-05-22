@@ -157,7 +157,6 @@ const fetchDailyStats = async () => {
       // 更新组件数据
       queryCount.value = res.data.totalQueries || 0
       activeUsers.value = res.data.activeUsers || 0
-      ElMessage.success('平台数据已更新')
     } else {
       ElMessage.warning('获取平台数据失败: ' + (res.msg || '未知错误'))
     }
@@ -177,7 +176,6 @@ const fetchBotStatus = async () => {
     setTimeout(() => {
       tgBotStatus.value = { online: Math.random() > 0.2 }
       wxBotStatus.value = { online: Math.random() > 0.2 }
-      ElMessage.success('机器人状态已更新')
       botLoading.value = false
     }, 600)
   } catch (error) {
@@ -197,7 +195,6 @@ const fetchAlertStats = async () => {
         total: Math.floor(Math.random() * 50) + 10,
         pending: Math.floor(Math.random() * 20)
       }
-      ElMessage.success('告警统计已更新')
       alertLoading.value = false
     }, 600)
   } catch (error) {

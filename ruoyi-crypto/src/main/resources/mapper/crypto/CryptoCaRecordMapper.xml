@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.CryptoCaRecordMapper">
+
+    <resultMap id="CryptoCoinVOResult" type="CryptoCoinVO">
+        <id property="coinId"    column="coin_id"    />
+        <result property="address"     column="address"></result>
+        <result property="symbol"      column="symbol"></result>
+        <result property="delFlag"     column="del_flag"    />
+        <result property="createBy"    column="create_by"   />
+        <result property="createTime"  column="create_time" />
+        <result property="updateBy"    column="update_by"   />
+        <result property="updateTime"  column="update_time" />
+        <result property="queryCount" column="query_count"/>
+        <result property="maxMultiple" column="max_multiple"/>
+    </resultMap>
+
+
+    <select id="getHotCaByWechat" parameterType="CryptoCoinVO" resultMap="CryptoCoinVOResult">
+        SELECT
+            ccr.query_count,
+            ccr.max_multiple,
+            c.address,
+            c.symbol
+        FROM
+            crypto_ca_record ccr
+                JOIN crypto_coin c ON c.coin_id = ccr.ca_id
+        ORDER BY
+            ccr.query_count DESC
+            LIMIT 4
+    </select>
+
+
+</mapper>

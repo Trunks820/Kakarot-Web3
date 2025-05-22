@@ -224,6 +224,10 @@
 <script setup name="CryptoCoin">
 import { listCoins, delCoin, addCoin, updateCoin } from "@/api/crypto/index";
 import { ElMessage } from 'element-plus'  // 确保在script开头导入
+import sol from '@/assets/crypto-icons/SOL.png'
+import bnb from '@/assets/crypto-icons/BNB.png'
+import eth from '@/assets/crypto-icons/ETH.png'
+import base from '@/assets/crypto-icons/BASE.png'
 
 const { proxy } = getCurrentInstance();
 
@@ -403,7 +407,6 @@ function submitForm() {
   proxy.$refs["coinRef"].validate(valid => {
     if (valid) {
       if (form.value.coinId != null) {
-        console.log(form.value);
         updateCoin(form.value).then(response => {
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;
@@ -545,10 +548,10 @@ function getChainImageUrl(chainType) {
   if (!chainType) return '';
   
   const CHAIN_LOGOS = {
-    SOL: 'https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/solana/info/logo.png',
-    ETH: 'https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/ethereum/info/logo.png',
-    BNB: 'https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/binance/info/logo.png',
-    BASE: 'https://cdn.jsdelivr.net/gh/trustwallet/assets@master/blockchains/base/info/logo.png',
+    SOL: sol,
+    ETH: eth,
+    BNB: bnb,
+    BASE: base
   };
   
   return CHAIN_LOGOS[chainType] || '';
