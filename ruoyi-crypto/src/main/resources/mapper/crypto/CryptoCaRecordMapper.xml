@@ -32,5 +32,24 @@
             LIMIT 4
     </select>
 
+    <select id="getHotCaByTelegram" parameterType="CryptoCoinVO" resultMap="CryptoCoinVOResult">
+        SELECT
+            coin_address AS address,
+            coin_name AS symbol,
+            COUNT(*) AS query_count
+        FROM
+            crypto_wallet_transactions
+        WHERE
+            operation_type = '买入'
+          AND del_flag = 0
+          AND DATE(transaction_time) = CURDATE()
+        GROUP BY
+            coin_address,
+            coin_name
+        ORDER BY
+            query_count DESC
+            LIMIT 4;
+    </select>
+
 
 </mapper>

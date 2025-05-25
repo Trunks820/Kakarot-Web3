@@ -7,4 +7,6 @@ import java.util.List;
 public interface CryptoCaRecordService {
 
     List<CryptoCoinVO> getHotCaByWechat();
+
+    List<CryptoCoinVO> getHotCaByTelegram();
 }

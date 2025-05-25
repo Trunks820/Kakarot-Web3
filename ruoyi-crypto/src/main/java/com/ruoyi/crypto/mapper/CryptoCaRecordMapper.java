@@ -14,4 +14,7 @@ import org.apache.ibatis.annotations.Mapper;
 public interface CryptoCaRecordMapper
 {
     List<CryptoCoinVO> getHotCaByWechat();
+
+
+    List<CryptoCoinVO> getHotCaByTelegram();
 }

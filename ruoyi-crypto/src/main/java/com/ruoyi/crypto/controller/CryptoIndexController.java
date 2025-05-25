@@ -49,8 +49,21 @@ public class CryptoIndexController extends BaseController {
         return success(hotCaByWechat);
     }
 
+    /**
+     * 热门Ca (Tg查询)
+     */
+    @GetMapping("/getHotCaByTelegram")
+    public AjaxResult getHotCaByTelegram()
+    {
+        List<CryptoCoinVO> hotCaByTelegram = cryptoCaRecordService.getHotCaByTelegram();
+        return success(hotCaByTelegram);
+    }
 
-
+    @GetMapping("/getTgBotStatus")
+    public AjaxResult getTgBotStatus()
+    {
+        return cryptoIndexService.getTgBotStatus();
+    }
 
 
 }

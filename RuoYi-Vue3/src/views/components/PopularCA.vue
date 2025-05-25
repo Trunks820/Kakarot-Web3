@@ -1,71 +1,77 @@
 <template>
   <div>
-    <!-- TG热门CA列表 -->
-    <el-card class="ca-card mb12" v-loading="hotTelegramLoading">
+    <el-card class="ca-card mb20" v-loading="loading">
       <template #header>
         <div class="card-header">
           <span>热门CA</span>
-          <div>
+          <div class="header-controls">
+            <el-radio-group v-model="currentSource" size="small" class="source-toggle">
+              <el-radio-button label="tg">TG播报</el-radio-button>
+              <el-radio-button label="wx">微信查询</el-radio-button>
+            </el-radio-group>
             <el-button
-                type="text"
-                @click="fetchHotCaByTelegramData"
-                :loading="hotTelegramLoading"
-                class="refresh-btn"
+              type="text"
+              @click="refreshData"
+              :loading="loading"
+              class="refresh-btn"
             >
               <el-icon><Refresh /></el-icon>
             </el-button>
-            <el-tag type="primary" size="small" class="tag-primary">TG播报</el-tag>
           </div>
         </div>
       </template>
       <div class="card-body">
-        <div v-for="(ca, index) in tgPopularCAs" :key="ca.address" class="ca-item">
+        <div v-for="(ca, index) in currentCAs" :key="ca.address" 
+          class="ca-item"
+          :class="{ 'wx-item': currentSource === 'wx' }"
+        >
           <div class="ca-header">
             <div class="left">
-              <span class="ca-rank">{{ index + 1 }}</span>
+              <span class="ca-rank" :class="{ 'wx-rank': currentSource === 'wx' }">{{ index + 1 }}</span>
               <span class="token-name">{{ ca.symbol }}</span>
             </div>
-            <span class="ca-count">{{ ca.queryCount }}次</span>
+            <span class="ca-count" :class="{ 'wx-count': currentSource === 'wx' }">{{ ca.queryCount }}次</span>
           </div>
           <div class="ca-address" @click="copyToClipboard(ca.address)">
             {{ ca.address }}
-            <i class="el-icon-document-copy copy-icon"></i>
+            <el-icon class="copy-icon"><DocumentCopy /></el-icon>
           </div>
         </div>
       </div>
     </el-card>
 
-    <!-- 微信热门CA列表 -->
-    <el-card class="ca-card wx-card" v-loading="hotWechatLoading">
+    <!-- CA涨幅榜卡片 -->
+    <el-card class="ca-card" v-loading="priceLoading">
       <template #header>
-        <div class="card-header wx-header">
-          <span>热门CA</span>
-          <div>
+        <div class="card-header">
+          <span>CA涨幅榜</span>
+          <div class="header-controls">
             <el-button
-                type="text"
-                @click="fetchHotCaByWechatData"
-                :loading="hotWechatLoading"
-                class="refresh-btn"
+              type="text"
+              @click="fetchPriceRankingData"
+              :loading="priceLoading"
+              class="refresh-btn"
             >
               <el-icon><Refresh /></el-icon>
             </el-button>
-            <el-tag type="primary" size="small" class="tag-primary">微信查询</el-tag>
           </div>
         </div>
       </template>
-
       <div class="card-body">
-        <div v-for="(ca, index) in wxPopularCAs" :key="ca.address" class="ca-item wx-item">
+        <div v-for="(item, index) in priceRankings" :key="item.address" class="ca-item">
           <div class="ca-header">
             <div class="left">
-              <span class="ca-rank wx-rank">{{ index + 1 }}</span>
-              <span class="token-name">{{ ca.symbol }}</span>
+              <span class="ca-rank">{{ index + 1 }}</span>
+              <span class="token-name">{{ item.symbol }}</span>
             </div>
-            <span class="ca-count">{{ ca.queryCount }}次</span>
+            <div class="price-info">
+              <span :class="getPriceChangeClass(item.change)">{{ item.change }}%</span>
+              <span class="volume">${{ item.volume }}</span>
+            </div>
           </div>
-          <div class="ca-address" @click="copyToClipboard(ca.address)">
-            {{ ca.address }}
-            <i class="el-icon-document-copy copy-icon"></i>
+          <div class="ca-address" @click="copyToClipboard(item.address)">
+            {{ item.address }}
+            <el-icon class="copy-icon"><DocumentCopy /></el-icon>
           </div>
         </div>
       </div>
@@ -74,24 +80,59 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getHotCaByWechat } from '@/api/crypto/index'
+import { getHotCaByWechat, getHotCaByTelegram } from '@/api/crypto/index'
+import { Refresh, DocumentCopy } from '@element-plus/icons-vue'
 
-const hotWechatLoading = ref(false)
-const hotTelegramLoading = ref(false)
+const loading = ref(false)
+const currentSource = ref('tg')
 
 // 热门CA数据
 const tgPopularCAs = ref([])
-
-// 微信热门CA数据
 const wxPopularCAs = ref([])
+
+// 当前显示的数据
+const currentCAs = computed(() => {
+  return currentSource.value === 'tg' ? tgPopularCAs.value : wxPopularCAs.value
+})
+
+// 涨幅榜数据和加载状态
+const priceLoading = ref(false)
+const priceRankings = ref([
+  { 
+    symbol: 'PEPE', 
+    address: '0x123...456',
+    change: 125.5,
+    volume: '256.8K'
+  },
+  { 
+    symbol: 'DOGE',
+    address: '0x789...012',
+    change: 85.3,
+    volume: '128.4K'
+  },
+  { 
+    symbol: 'SHIB',
+    address: '0x345...678',
+    change: -12.6,
+    volume: '64.2K'
+  }
+])
+
+// 刷新数据
+const refreshData = () => {
+  if (currentSource.value === 'tg') {
+    fetchHotCaByTelegramData()
+  } else {
+    fetchHotCaByWechatData()
+  }
+}
 
 // 添加热门Ca微信查询数据
 const fetchHotCaByWechatData = async () => {
-  hotWechatLoading.value = true
+  loading.value = true
   try {
-    // 添加模拟延迟，使行为与其他卡片一致
     const res = await new Promise((resolve) => {
       setTimeout(async () => {
         try {
@@ -104,26 +145,24 @@ const fetchHotCaByWechatData = async () => {
     })
 
     if (res.code === 200 && res.data) {
-      wxPopularCAs.value = res.data;
-      hotWechatLoading.value = false;
+      wxPopularCAs.value = res.data
     } else {
-      ElMessage.warning('获取平台数据失败: ' + (res.msg || '未知错误'))
+      ElMessage.warning('获取微信数据失败: ' + (res.msg || '未知错误'))
     }
   } catch (error) {
-    ElMessage.error('获取平台数据异常，请检查网络连接或后端服务')
+    ElMessage.error('获取微信数据异常，请检查网络连接或后端服务')
   } finally {
-    hotWechatLoading.value = false
+    loading.value = false
   }
 }
 
 const fetchHotCaByTelegramData = async () => {
-  hotTelegramLoading.value = true
+  loading.value = true
   try {
-    // 添加模拟延迟，使行为与其他卡片一致
     const res = await new Promise((resolve) => {
       setTimeout(async () => {
         try {
-          const apiRes = await getHotCaByWechat()
+          const apiRes = await getHotCaByTelegram() // 这里需要改成TG的API
           resolve(apiRes)
         } catch (err) {
           resolve({ code: 500, msg: err.message })
@@ -132,15 +171,14 @@ const fetchHotCaByTelegramData = async () => {
     })
 
     if (res.code === 200 && res.data) {
-      tgPopularCAs.value = res.data;
-      hotTelegramLoading.value = false;
+      tgPopularCAs.value = res.data
     } else {
-      ElMessage.warning('获取平台数据失败: ' + (res.msg || '未知错误'))
+      ElMessage.warning('获取TG数据失败: ' + (res.msg || '未知错误'))
     }
   } catch (error) {
-    ElMessage.error('获取平台数据异常，请检查网络连接或后端服务')
+    ElMessage.error('获取TG数据异常，请检查网络连接或后端服务')
   } finally {
-    hotTelegramLoading.value = false
+    loading.value = false
   }
 }
 
@@ -158,15 +196,89 @@ const copyToClipboard = (text) => {
     })
   })
 }
+
+// 获取涨幅样式
+const getPriceChangeClass = (change) => {
+  return {
+    'price-up': change > 0,
+    'price-down': change < 0,
+    'price-unchanged': change === 0
+  }
+}
+
+// 获取涨幅榜数据
+const fetchPriceRankingData = async () => {
+  priceLoading.value = true
+  try {
+    // 这里添加实际的API调用
+    await new Promise(resolve => setTimeout(resolve, 600))
+    // 模拟数据更新
+    priceRankings.value = [
+      { 
+        symbol: 'PEPE', 
+        address: '0x123...456',
+        change: Math.random() * 200 - 50,
+        volume: '256.8K'
+      },
+      { 
+        symbol: 'DOGE',
+        address: '0x789...012',
+        change: Math.random() * 150 - 30,
+        volume: '128.4K'
+      },
+      { 
+        symbol: 'SHIB',
+        address: '0x345...678',
+        change: Math.random() * 100 - 20,
+        volume: '64.2K'
+      },
+      { 
+        symbol: 'SHIB',
+        address: '0x345...678',
+        change: Math.random() * 100 - 20,
+        volume: '64.2K'
+      }
+    ]
+  } catch (error) {
+    ElMessage.error('获取涨幅数据失败')
+  } finally {
+    priceLoading.value = false
+  }
+}
+
+// 在组件挂载时获取涨幅数据
+onMounted(() => {
+  fetchPriceRankingData()
+})
 </script>
 
 <style scoped lang="scss">
 .ca-card {
   height: 321px;
 
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    height: 16px;
+  }
+
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .source-toggle {
+    .el-radio-button__inner {
+      padding: 4px 12px;
+    }
+  }
+
   .card-body {
     padding: 6px;
-    height: calc(100% - 50px);  // 减去header的高度
+    height: calc(100% - 50px);
     overflow-y: auto;
 
     .ca-item {
@@ -180,6 +292,7 @@ const copyToClipboard = (text) => {
         margin-bottom: 0;
       }
 
+     
       .ca-header {
         display: flex;
         justify-content: space-between;
@@ -205,6 +318,10 @@ const copyToClipboard = (text) => {
             font-weight: bold;
             font-size: 11px;
             flex-shrink: 0;
+
+            &.wx-rank {
+              background-color: #07C160 !important;
+            }
           }
 
           .token-name {
@@ -217,12 +334,14 @@ const copyToClipboard = (text) => {
         }
 
         .ca-count {
-          color: var(--el-color-success);
+          color: var(--el-color-primary);
           font-weight: bold;
           white-space: nowrap;
           font-size: 11px;
           padding-left: 4px;
           flex-shrink: 0;
+
+        
         }
       }
 
@@ -261,61 +380,6 @@ const copyToClipboard = (text) => {
   }
 }
 
-/* 微信查询卡片样式增强 */
-.wx-card {
-  height: 321px;
-  .wx-header {
-    border-bottom-color: rgba(7, 193, 96, 0.2) !important;
-
-    span {
-      color: #333333 !important;
-    }
-
-    .wx-tag {
-      display: flex;
-      align-items: center;
-      background-color: #07C160;
-      color: white;
-      font-weight: bold;
-      padding: 3px 8px;
-      border-radius: 3px;
-      font-size: 11px;
-      box-shadow: 0 2px 4px rgba(7, 193, 96, 0.2);
-
-      .wx-icon {
-        display: inline-block;
-        width: 14px;
-        height: 14px;
-        background-color: white;
-        margin-right: 4px;
-        border-radius: 2px;
-        position: relative;
-
-        &:before {
-          content: "";
-          position: absolute;
-          width: 10px;
-          height: 10px;
-          background-color: #07C160;
-          top: 2px;
-          left: 2px;
-          border-radius: 1px;
-        }
-      }
-    }
-  }
-
-  .wx-item {
-    .wx-rank {
-      background-color: #07C160 !important;
-    }
-    
-    .wx-count {
-      color: #07C160 !important;
-    }
-  }
-}
-
 /* Dark theme styles */
 :global(html.dark) {
   .ca-card .card-body .ca-item {
@@ -333,37 +397,49 @@ const copyToClipboard = (text) => {
         background-color: #2d2d2d !important;
       }
     }
-  }
-  
-  /* 微信查询暗黑模式 */
-  .wx-card {
-    border-color: #07C160 !important;
-    
-    .wx-header span {
-      color: #ffffff !important;
-    }
-    
-    .wx-item {
+
+    &.wx-item {
       border-left: 2px solid #07C160;
-      background-color: #1d1e1f !important;
     }
   }
 }
 
-.tag-primary {
-  font-weight: bold;
-  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.2);
+.mb20 {
+  margin-bottom: 13px !important;
 }
 
-.mb12 {
-  margin-bottom: 12px;
-}
-
-.card-header {
+.price-info {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  height: 16px;
+  gap: 8px;
+  
+  .volume {
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+  }
+}
+
+.price-up {
+  color: #67C23A;
+  font-weight: 600;
+}
+
+.price-down {
+  color: #F56C6C;
+  font-weight: 600;
+}
+
+.price-unchanged {
+  color: var(--el-text-color-regular);
+  font-weight: 600;
+}
+
+/* Dark theme styles */
+:global(html.dark) {
+  .price-info {
+    .volume {
+      color: #909399;
+    }
+  }
 }
 </style> 

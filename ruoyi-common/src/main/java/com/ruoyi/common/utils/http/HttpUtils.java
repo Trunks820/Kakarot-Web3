@@ -11,6 +11,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
+import java.util.Map;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -117,6 +118,66 @@ public class HttpUtils
         }
         return result.toString();
     }
+
+    public static String sendGet(String url, Map<String, String> headers)
+    {
+        StringBuilder result = new StringBuilder();
+        BufferedReader in = null;
+        try
+        {
+            URL realUrl = new URL(url);
+            URLConnection connection = realUrl.openConnection();
+            connection.setRequestProperty("accept", "*/*");
+            connection.setRequestProperty("connection", "Keep-Alive");
+            connection.setRequestProperty("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+            // 添加自定义请求头
+            if (headers != null) {
+                for (Map.Entry<String, String> entry : headers.entrySet()) {
+                    connection.setRequestProperty(entry.getKey(), entry.getValue());
+                }
+            }
+            connection.connect();
+            in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String line;
+            while ((line = in.readLine()) != null)
+            {
+                result.append(line);
+            }
+            log.info("recv - {}", result);
+        }
+        catch (ConnectException e)
+        {
+            log.error("调用HttpUtils.sendGet ConnectException, url=" + url, e);
+        }
+        catch (SocketTimeoutException e)
+        {
+            log.error("调用HttpUtils.sendGet SocketTimeoutException, url=" + url, e);
+        }
+        catch (IOException e)
+        {
+            log.error("调用HttpUtils.sendGet IOException, url=" + url, e);
+        }
+        catch (Exception e)
+        {
+            log.error("调用HttpsUtil.sendGet Exception, url=" + url, e);
+        }
+        finally
+        {
+            try
+            {
+                if (in != null)
+                {
+                    in.close();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.error("调用in.close Exception, url=" + url , ex);
+            }
+        }
+        return result.toString();
+    }
+
 
     /**
      * 向指定 URL 发送POST方法的请求

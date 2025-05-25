@@ -18,4 +18,9 @@ public class CryptoCaRecordServiceImpl implements CryptoCaRecordService {
     public List<CryptoCoinVO> getHotCaByWechat() {
         return cryptoCaRecordMapper.getHotCaByWechat();
     }
+
+    @Override
+    public List<CryptoCoinVO> getHotCaByTelegram() {
+        return cryptoCaRecordMapper.getHotCaByTelegram();
+    }
 }

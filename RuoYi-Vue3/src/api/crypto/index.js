@@ -101,3 +101,27 @@ export function getHotCaByWechat() {
     method: 'get'
   })
 }
+
+// 获取每日活动统计数据
+export function getHotCaByTelegram() {
+  return request({
+    url: '/crypto/record/getHotCaByTelegram',
+    method: 'get'
+  })
+}
+
+// 获取机器人状态
+export function getTgBotStatus() {
+  return request({
+    url: '/crypto/record/getTgBotStatus',
+    method: 'get'
+  })
+}
+
+// 获取系统信息
+export function getSystemInfo() {
+  return request({
+    url: '/crypto/system/info',
+    method: 'get'
+  })
+}

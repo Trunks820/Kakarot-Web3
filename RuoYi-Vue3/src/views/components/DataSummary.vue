@@ -1,6 +1,6 @@
 <template>
   <el-row :gutter="20">
-    <el-col :span="8">
+    <el-col :span="6">
       <el-card class="data-card" v-loading="platformLoading" element-loading-background="rgba(0, 0, 0, 0.1)" element-loading-text="加载中...">
         <template #header>
           <div class="card-header">
@@ -37,16 +37,57 @@
       </el-card>
     </el-col>
 
-    <el-col :span="8">
-      <el-card class="data-card" v-loading="botLoading" element-loading-background="rgba(0, 0, 0, 0.1)" element-loading-text="加载中...">
+    <el-col :span="6">
+      <el-card class="data-card" v-loading="rankLoading" element-loading-background="rgba(0, 0, 0, 0.1)" element-loading-text="加载中...">
+        <template #header>
+          <div class="card-header">
+            <span>用户预测胜率 TOP3</span>
+            <div>
+              <el-button 
+                type="text" 
+                @click="fetchUserRankings" 
+                :loading="rankLoading"
+                class="refresh-btn"
+              >
+                <el-icon><Refresh /></el-icon>
+              </el-button>
+              <el-tag type="warning" size="small" class="status-tag">实时</el-tag>
+            </div>
+          </div>
+        </template>
+        <div class="card-body rank-top3">
+          <div class="rank-list">
+            <div v-for="(user, index) in top3Users" :key="user.username" class="rank-item">
+              <div class="rank-number">{{ index + 1 }}</div>
+              <div class="user-info">
+                <div class="username">{{ user.username }}</div>
+                <div class="stats">
+                  <span :class="getRateClass(user.rate)">{{ user.rate }}%</span>
+                  <span class="prediction-count">({{ user.successCount }}/{{ user.totalCount }})</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="view-all">
+            <router-link to="/rank/predict" class="el-link el-link--primary">
+              <span>查看完整排行榜</span>
+              <el-icon class="el-icon--right"><arrow-right /></el-icon>
+            </router-link>
+          </div>
+        </div>
+      </el-card>
+    </el-col>
+
+    <el-col :span="12">
+      <el-card class="data-card" v-loading="botLoading || wxBotLoading" element-loading-background="rgba(0, 0, 0, 0.1)" element-loading-text="加载中...">
         <template #header>
           <div class="card-header">
             <span>机器人状态</span>
             <div>
               <el-button 
                 type="text" 
-                @click="fetchBotStatus" 
-                :loading="botLoading"
+                @click="fetchBotStatus(); fetchWxBotStatus()" 
+                :loading="botLoading || wxBotLoading"
                 class="refresh-btn"
               >
                 <el-icon><Refresh /></el-icon>
@@ -55,55 +96,56 @@
             </div>
           </div>
         </template>
-        <div class="card-body">
-          <div class="stat-item">
-            <span class="label">Telegram</span>
-            <el-tag :type="tgBotStatus.online ? 'success' : 'danger'" size="small">
-              {{ tgBotStatus.online ? '在线' : '离线' }}
-            </el-tag>
+        <div class="card-body bot-table">
+          <div class="bot-table-header">
+            <div class="col-bot">机器人</div>
+            <div class="col-status">状态</div>
+            <div class="col-uptime">运行时长</div>
+            <div class="col-lastcheck">最后检查</div>
+            <div class="col-errors">错误次数</div>
+            <div class="col-actions">重启按钮</div>
           </div>
-          <div class="stat-item">
-            <span class="label">微信</span>
-            <el-tag :type="wxBotStatus.online ? 'success' : 'danger'" size="small">
-              {{ wxBotStatus.online ? '在线' : '离线' }}
-            </el-tag>
-          </div>
-        </div>
-      </el-card>
-    </el-col>
-    
-    <el-col :span="8">
-      <el-card class="data-card" v-loading="alertLoading" element-loading-background="rgba(0, 0, 0, 0.1)" element-loading-text="加载中...">
-        <template #header>
-          <div class="card-header">
-            <span>告警统计</span>
-            <div>
+          <div class="bot-table-row">
+            <div class="col-bot">TG</div>
+            <div class="col-status">
+              <el-tag :type="getBotStatusType(tgBotStatus.status)" size="small">
+                {{ getBotStatusText(tgBotStatus.status) }}
+              </el-tag>
+            </div>
+            <div class="col-uptime">{{ currentUptime.tg }}</div>
+            <div class="col-lastcheck">{{ tgBotStatus.last_check_time || '-' }}</div>
+            <div class="col-errors">{{ tgBotStatus.restart_count || 0 }}次</div>
+            <div class="col-actions">
               <el-button 
-                type="text" 
-                @click="fetchAlertStats" 
-                :loading="alertLoading"
-                class="refresh-btn"
+                type="primary"
+                link
+                :loading="tgActionLoading"
+                @click="handleTgBotAction('restart')"
               >
-                <el-icon><Refresh /></el-icon>
+                <el-icon><RefreshRight /></el-icon>
               </el-button>
-              <el-tag type="danger" size="small" class="status-tag">今日</el-tag>
             </div>
           </div>
-        </template>
-        <div class="card-body">
-          <div class="stat-item">
-            <div class="stat-label">
-              <el-icon class="mr8"><Warning /></el-icon>
-              <span class="label">总告警数</span>
+          <div class="bot-table-row">
+            <div class="col-bot">WX</div>
+            <div class="col-status">
+              <el-tag :type="wxBotStatus.online ? 'success' : 'danger'" size="small">
+                {{ wxBotStatus.online ? '在线' : '离线' }}
+              </el-tag>
             </div>
-            <h3 class="danger">{{ alertStats.total }}</h3>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">
-              <el-icon class="mr8"><Warning /></el-icon>
-              <span class="label">待处理</span>
+            <div class="col-uptime">{{ currentUptime.wx }}</div>
+            <div class="col-lastcheck">{{ wxBotStatus.lastCheckTime || '-' }}</div>
+            <div class="col-errors">{{ wxBotStatus.restartCount || 0 }}次</div>
+            <div class="col-actions">
+              <el-button 
+                type="primary"
+                link
+                :loading="wxActionLoading"
+                @click="handleWxBotAction('restart')"
+              >
+                <el-icon><RefreshRight /></el-icon>
+              </el-button>
             </div>
-            <h3 :class="{ 'warning': alertStats.pending > 5 }">{{ alertStats.pending }}</h3>
           </div>
         </div>
       </el-card>
@@ -112,30 +154,216 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { Search, User, Warning, Refresh } from '@element-plus/icons-vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { Search, User, Warning, Refresh, RefreshRight, VideoPlay, ArrowRight } from '@element-plus/icons-vue'
 import useSettingsStore from '@/store/modules/settings'
 import { ElMessage } from 'element-plus'
-import { getDailyActivityStats } from '@/api/crypto/index'
+import { getDailyActivityStats, getTgBotStatus, getSystemInfo } from '@/api/crypto/index'
 
 const settingsStore = useSettingsStore()
 
 // 为每个卡片添加独立的loading状态
 const platformLoading = ref(false)
 const botLoading = ref(false)
-const alertLoading = ref(false)
+const wxBotLoading = ref(false)
 
 // 数据统计
 const queryCount = ref(0)
 const activeUsers = ref(0)
-const tgBotStatus = ref({ online: true })
-const wxBotStatus = ref({ online: true })
+const tgBotStatus = ref({
+  status: 'unknown',
+  pid: '-',
+  restart_count: 0,
+  start_time: '-',
+  last_check_time: '-'
+})
+const wxBotStatus = ref({
+  online: true,
+  pid: '-',
+  restartCount: 0,
+  startTime: '-',
+  lastCheckTime: '-'
+})
 
 // 告警统计数据
 const alertStats = ref({
   total: 24,
   pending: 8
 })
+
+// 系统状态相关
+const systemLoading = ref(false)
+const systemStatus = ref({
+  memory: {
+    total: '2G',
+    used: '1G',
+    percentage: 50
+  },
+  uptime: '-',
+  lastOperation: null
+})
+
+// 操作相关的loading状态
+const tgActionLoading = ref(false)
+const wxActionLoading = ref(false)
+
+// 添加用户排行相关的状态
+const rankLoading = ref(false)
+const userRankings = ref([
+  { username: '超哥', rate: 87.5, successCount: 14, totalCount: 16 },
+  { username: '铁头娃', rate: 75.0, successCount: 9, totalCount: 12 },
+  { username: '三点水', rate: 66.7, successCount: 6, totalCount: 9 }
+])
+
+// 获取系统健康状态类型
+const getSystemHealthType = computed(() => {
+  switch (systemStatus.value.health) {
+    case 'normal':
+      return 'success'
+    case 'warning':
+      return 'warning'
+    case 'error':
+      return 'danger'
+    default:
+      return 'info'
+  }
+})
+
+// 获取系统健康状态文本
+const getSystemHealthText = computed(() => {
+  switch (systemStatus.value.health) {
+    case 'normal':
+      return '正常'
+    case 'warning':
+      return '警告'
+    case 'error':
+      return '异常'
+    default:
+      return '未知'
+  }
+})
+
+// 获取内存使用状态
+const getMemoryStatus = (percentage) => {
+  if (!percentage) return ''
+  if (percentage > 80) return 'exception'
+  if (percentage > 60) return 'warning'
+  return 'success'
+}
+
+// 获取系统状态
+const fetchSystemStatus = async () => {
+  systemLoading.value = true
+  try {
+    const res = await getSystemInfo()
+    if (res.code === 200 && res.data) {
+      systemStatus.value = {
+        memory: {
+          total: formatMemorySize(res.data.totalMemory),
+          used: formatMemorySize(res.data.usedMemory),
+          percentage: Math.round((res.data.usedMemory / res.data.totalMemory) * 100)
+        },
+        uptime: formatUptime(res.data.uptime),
+        lastOperation: res.data.lastOperation
+      }
+    }
+  } catch (error) {
+    console.error('获取系统信息失败:', error)
+    // 使用模拟数据
+    systemStatus.value = {
+      memory: {
+        total: '2G',
+        used: '1G',
+        percentage: 50
+      },
+      uptime: '1天 2小时',
+      lastOperation: {
+        action: 'TG机器人重启',
+        detail: '操作人: admin, 时间: 2024-01-01 12:00:00',
+        timestamp: new Date().getTime()
+      }
+    }
+  } finally {
+    systemLoading.value = false
+  }
+}
+
+// 格式化内存大小
+const formatMemorySize = (bytes) => {
+  if (!bytes) return '0B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + sizes[i]
+}
+
+// 添加格式化运行时长的函数
+const formatUptime = (startTimeStr) => {
+  if (!startTimeStr || startTimeStr === '-') return '-'
+  
+  const startTime = new Date(startTimeStr).getTime()
+  const now = new Date().getTime()
+  const diff = now - startTime
+  
+  // 如果时间差异无效，返回 '-'
+  if (diff < 0) return '-'
+  
+  // 计算时、分、秒
+  const hours = Math.floor(diff / (1000 * 60 * 60))
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+  
+  // 构建显示字符串
+  let uptimeStr = ''
+  if (hours > 0) uptimeStr += `${hours}h`
+  if (minutes > 0) uptimeStr += `${minutes}min`
+  if (seconds > 0 && hours === 0) uptimeStr += `${seconds}s`
+  
+  return uptimeStr || '刚刚启动'
+}
+
+// 添加自动更新运行时长的功能
+const uptimeTimer = ref(null)
+const currentUptime = ref({
+  tg: '-',
+  wx: '-'
+})
+
+// 更新运行时长显示
+const updateUptime = () => {
+  currentUptime.value.tg = formatUptime(tgBotStatus.value.start_time)
+  currentUptime.value.wx = formatUptime(wxBotStatus.value.startTime)
+}
+
+// 处理TG机器人操作
+const handleTgBotAction = async (action) => {
+  tgActionLoading.value = true
+  try {
+    // 这里添加实际的API调用
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    ElMessage.success(`TG机器人${action === 'restart' ? '重启' : '停止'}成功`)
+    fetchBotStatus()
+  } catch (error) {
+    ElMessage.error(`TG机器人${action === 'restart' ? '重启' : '停止'}失败`)
+  } finally {
+    tgActionLoading.value = false
+  }
+}
+
+// 处理微信机器人操作
+const handleWxBotAction = async (action) => {
+  wxActionLoading.value = true
+  try {
+    // 这里添加实际的API调用
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    ElMessage.success(`微信机器人${action === 'restart' ? '重启' : '停止'}成功`)
+    fetchWxBotStatus()
+  } catch (error) {
+    ElMessage.error(`微信机器人${action === 'restart' ? '重启' : '停止'}失败`)
+  } finally {
+    wxActionLoading.value = false
+  }
+}
 
 // 添加API请求方法 - 获取每日统计数据
 const fetchDailyStats = async () => {
@@ -167,19 +395,121 @@ const fetchDailyStats = async () => {
   }
 }
 
-// 添加获取机器人状态的方法
+// 添加状态类型判断方法
+const getBotStatusType = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'running':
+      return 'success'
+    case 'starting':
+      return 'info'
+    case 'restarting':
+      return 'warning'
+    case 'stopped':
+      return 'danger'
+    case 'error':
+      return 'danger'
+    default:
+      return 'info'
+  }
+}
+
+// 获取状态显示文本
+const getBotStatusText = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'running':
+      return '运行中'
+    case 'starting':
+      return '启动中'
+    case 'restarting':
+      return '重启中'
+    case 'stopped':
+      return '已停止'
+    case 'error':
+      return '错误'
+    default:
+      return '未知'
+  }
+}
+
+// 添加格式化日期的函数
+const formatDateTime = (date) => {
+  if (!date) return '-'
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return '-'
+  
+  const pad = (num) => String(num).padStart(2, '0')
+  
+  const year = d.getFullYear()
+  const month = pad(d.getMonth() + 1)
+  const day = pad(d.getDate())
+  const hours = pad(d.getHours())
+  const minutes = pad(d.getMinutes())
+  const seconds = pad(d.getSeconds())
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+// 修改微信机器人状态的模拟数据
+const fetchWxBotStatus = async () => {
+  wxBotLoading.value = true
+  try {
+    // 这里添加实际的API调用
+    // 模拟数据更新
+    setTimeout(() => {
+      wxBotStatus.value = {
+        online: true,
+        pid: '12345',
+        restartCount: Math.floor(Math.random() * 5),
+        startTime: '2025-05-24 08:30:00',
+        lastCheckTime: formatDateTime(new Date())
+      }
+      wxBotLoading.value = false
+    }, 600)
+  } catch (error) {
+    wxBotStatus.value = {
+      online: false,
+      pid: '-',
+      restartCount: 0,
+      startTime: '-',
+      lastCheckTime: '-'
+    }
+    ElMessage.error('获取微信机器人状态异常')
+    wxBotLoading.value = false
+  }
+}
+
+// 更新TG机器人状态的模拟数据格式
 const fetchBotStatus = async () => {
   botLoading.value = true
   try {
-    // 这里可以添加实际的API调用
-    // 模拟数据更新
-    setTimeout(() => {
-      tgBotStatus.value = { online: Math.random() > 0.2 }
-      wxBotStatus.value = { online: Math.random() > 0.2 }
-      botLoading.value = false
-    }, 600)
+    const res = await getTgBotStatus()
+    if (res.code === 200 && res.data) {
+      tgBotStatus.value = {
+        ...res.data,
+        last_check_time: formatDateTime(res.data.last_check_time)
+      }
+    } else {
+      // 请求失败时设置为错误状态
+      tgBotStatus.value = {
+        status: 'error',
+        pid: '-',
+        restart_count: 0,
+        start_time: '-',
+        last_check_time: '-'
+      }
+      ElMessage.warning('获取机器人状态失败: ' + (res.msg || '未知错误'))
+    }
   } catch (error) {
-    ElMessage.error('获取机器人状态异常')
+    // 异常时设置为错误状态
+    tgBotStatus.value = {
+      status: 'error',
+      pid: '-',
+      restart_count: 0,
+      start_time: '-',
+      last_check_time: '-'
+    }
+    ElMessage.error('获取机器人状态异常，请检查网络连接或后端服务')
+  } finally {
     botLoading.value = false
   }
 }
@@ -203,25 +533,80 @@ const fetchAlertStats = async () => {
   }
 }
 
-// 刷新所有数据
+// 修改刷新所有数据的方法
 const refreshAllData = () => {
   fetchDailyStats()
   fetchBotStatus()
-  fetchAlertStats()
+  fetchWxBotStatus()
+  fetchSystemStatus()
 }
 
-// 组件挂载时获取数据
+// 添加定时刷新
+let statusTimer = null
+
+// 获取胜率样式
+const getRateClass = (rate) => {
+  if (rate >= 80) return 'rate-excellent'
+  if (rate >= 70) return 'rate-good'
+  return 'rate-normal'
+}
+
+// 获取用户排行数据
+const fetchUserRankings = async () => {
+  rankLoading.value = true
+  try {
+    // 这里添加实际的API调用
+    // const res = await getUserRankings()
+    // if (res.code === 200) {
+    //   userRankings.value = res.data
+    // }
+    await new Promise(resolve => setTimeout(resolve, 600))
+  } catch (error) {
+    console.error('获取用户排行失败:', error)
+  } finally {
+    rankLoading.value = false
+  }
+}
+
+// 计算前三名用户
+const top3Users = computed(() => {
+  return [...userRankings.value]
+    .sort((a, b) => b.rate - a.rate)
+    .slice(0, 3)
+})
+
 onMounted(() => {
+  fetchSystemStatus()
+  fetchBotStatus()
+  fetchWxBotStatus()
+  // 每60秒更新一次状态
+  statusTimer = setInterval(() => {
+    fetchBotStatus()
+    fetchWxBotStatus()
+  }, 60000)
+
+  // 组件挂载时获取数据
   refreshAllData()
 
-  // 添加定时刷新(每半分钟刷新一次)
+  // 添加运行时长更新定时器
+  updateUptime() // 立即执行一次
+  uptimeTimer.value = setInterval(updateUptime, 1000)
+
+  // 添加定时刷新(每分钟刷新一次)
   const timer = setInterval(() => {
     refreshAllData()
-  }, 30 * 1000)
+  }, 60 * 1000)
 
   // 组件卸载时清除定时器
   onUnmounted(() => {
     if (timer) clearInterval(timer)
+    if (statusTimer) {
+      clearInterval(statusTimer)
+    }
+    if (uptimeTimer.value) {
+      clearInterval(uptimeTimer.value)
+      uptimeTimer.value = null
+    }
   })
 })
 </script>
@@ -261,7 +646,7 @@ onMounted(() => {
 
 /* Light theme styles */
 .data-card {
-  height: 200px;
+  height: 200px; 
   background-color: #ffffff;
   border: 1px solid #e4e7ed;
   transition: all 0.3s ease-in-out;
@@ -271,11 +656,19 @@ onMounted(() => {
     border: none;
   }
 
+  :deep(.el-card__body) {
+    padding: 0;  /* 移除默认内边距 */
+    height: calc(100% - 45px);  /* 减去header高度 */
+    display: flex;
+    flex-direction: column;
+  }
+
   .card-header {
+    height: 45px;  /* 固定header高度 */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
+    padding: 0 16px;
     border-bottom: 1px solid #e4e7ed;
     background-color: #f5f7fa;
 
@@ -324,14 +717,14 @@ onMounted(() => {
   }
 
   .card-body {
-    padding: 16px;
+    padding: 4px;
     background-color: #ffffff;
 
     .stat-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 24px;
 
       &:last-child {
         margin-bottom: 0;
@@ -376,6 +769,13 @@ onMounted(() => {
         border-radius: 3px;
       }
     }
+
+    .stat-item-bot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
   }
 }
 
@@ -416,6 +816,14 @@ onMounted(() => {
   color: #F56C6C;
   border: none;
   box-shadow: 0 1px 3px rgba(245, 108, 108, 0.2);
+}
+
+/* 添加新的状态标签样式 */
+.el-tag--info {
+  background: #f4f4f5;
+  color: #909399;
+  border: none;
+  box-shadow: 0 1px 3px rgba(144, 147, 153, 0.2);
 }
 
 /* Dark theme styles - with !important to override any other styles */
@@ -530,5 +938,209 @@ onMounted(() => {
     background: rgba(245, 108, 108, 0.25) !important;
     color: #F56C6C !important;
   }
+  
+  .el-tag--info {
+    background: rgba(144, 147, 153, 0.25) !important;
+    color: #909399 !important;
+  }
 }
-</style> 
+
+.action-btn {
+  margin-right: 4px;
+  padding: 2px;
+  font-size: 14px;
+  color: #909399;
+  transition: all 0.3s;
+  
+  &:hover {
+    color: #409EFF;
+    transform: scale(1.1);
+  }
+}
+
+.alert-text {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #606266;
+  cursor: pointer;
+}
+
+.service-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mr4 {
+  margin-right: 4px;
+}
+
+.memory-usage {
+  width: 120px;
+  .el-progress {
+    margin: 0;
+  }
+}
+
+.operation-text {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #606266;
+  cursor: pointer;
+}
+
+.bot-table {
+  padding: 0 !important;
+}
+
+.bot-table-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  background-color: var(--el-fill-color-light);
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  font-weight: 500;
+  color: var(--el-text-color-regular);
+  font-size: 13px;
+}
+
+.bot-table-row {
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: var(--el-fill-color-lighter);
+  }
+}
+
+.col-bot {
+  width: 80px;
+  flex-shrink: 0;
+  text-align: center;
+  padding-left: 20px;
+}
+
+.col-status {
+  width: 80px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.col-uptime {
+  width: 120px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.col-lastcheck {
+  width: 160px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.col-errors {
+  width: 80px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.col-actions {
+  width: 80px;
+  flex-shrink: 0;
+  text-align: center;
+  padding-right: 20px;
+}
+
+:deep(.el-button--link) {
+  padding: 0;
+  height: auto;
+  
+  .el-icon {
+    font-size: 16px;
+  }
+}
+
+.rank-top3 {
+  height: 100%;  /* 填充整个card body */
+  display: flex;
+  flex-direction: column;
+}
+
+.rank-list {
+  flex: 1;
+  padding: 8px 16px 0;
+  overflow-y: auto;  /* 如果内容过多允许滚动 */
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.rank-item:last-child {
+  border-bottom: none;
+}
+
+.rank-number {
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  background-color: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+  border-radius: 50%;
+  margin-right: 12px;
+  font-weight: bold;
+}
+
+.user-info {
+  flex-grow: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.username {
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prediction-count {
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+}
+
+.view-all {
+  height: 32px;  /* 固定底部按钮区域高度 */
+  padding: 4px 0;
+  margin-top: auto;  /* 推到底部 */
+  text-align: center;
+  border-top: 1px solid var(--el-border-color-lighter);
+  background-color: #fff;
+}
+
+.view-all .el-link {
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+}
+</style>

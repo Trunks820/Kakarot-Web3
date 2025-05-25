@@ -18,4 +18,6 @@ public interface CryptoCaQueryRecordMapper
      * @return 包含总查询数和活跃用户数的VO对象
      */
     CryptoIndexVo getDailyActivityStats();
+
+    CryptoIndexVo getHotCaByTelegram();
 }
