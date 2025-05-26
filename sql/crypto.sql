@@ -221,7 +221,7 @@ CREATE TABLE crypto_price_history (
 INSERT INTO crypto_coin 
 (address, symbol, name, create_time, chain_type, description)
 VALUES
-('EsDZUf7cDUU7FSPjePkksaJ8TzvC9QY5YRqeuiy5pump', 'Mitsuki', 'Doge’s Original Name', NOW(), 'SOL', '我们都知道Doge的名字叫Kabosu'),
+('EsDZUf7cDUU7FSPjePkksaJ8TzvC9QY5YRqeuiy5pump', 'Mitsuki', 'Doge's Original Name', NOW(), 'SOL', '我们都知道Doge的名字叫Kabosu'),
 ('So11111111111111111111111111111111111111112', 'SOL', 'Solana', NOW(), 'SOL', ''),
 ('0x5417994ae69e6ccb283bb6dbdba3006b3d3f9f95', 'ETHCHAN', 'ETH Chan', NOW(), 'ETH', ''),
 ('0x945cd29a40629ada610c2f6eba3f393756aa4444', 'USD1DOGE', 'USD1DOGE', NOW(), 'BSC', '');
@@ -297,6 +297,84 @@ VALUES
 ('So11111111111111111111111111111111111111112', 100.00000000, 100000000.00, DATE_SUB(NOW(), INTERVAL 1 DAY), 'API', NOW(), 'SOL'),
 ('So11111111111111111111111111111111111111112', 105.00000000, 105000000.00, DATE_SUB(NOW(), INTERVAL 12 HOUR), 'API', NOW(), 'SOL'),
 ('So11111111111111111111111111111111111111112', 110.00000000, 110000000.00, DATE_SUB(NOW(), INTERVAL 6 HOUR), 'API', NOW(), 'SOL');
+
+-- ----------------------------
+-- 新增测试数据 - 2024-05-24
+-- ----------------------------
+-- 1. 插入更多CA基础信息
+INSERT INTO crypto_coin 
+(address, symbol, name, create_time, chain_type, description)
+VALUES
+('cPZp4Sk44ecqkwVtED3YPPudQMEe5MbZsavDiwBntAU', 'BOME', 'BOME', NOW(), 'SOL', 'Solana生态代币'),
+('G9sawXjxCbQQPHuJDNptLFuKC7zs8jk97YkBT7BXdHPR', 'PYTH', 'Pyth Network', NOW(), 'SOL', '去中心化预言机网络'),
+('0x52708eb55ff7436cf7f5d50b3ebf26b30be84444', 'PEPE2', 'Pepe 2.0', NOW(), 'ETH', '模因代币'),
+('0x81ab757d9a3d3e59ba15c244d2307c23ce4cb4ea', 'SHIB2', 'Shiba 2.0', NOW(), 'BSC', '社区驱动的代币');
+
+-- 2. 插入CA记录
+INSERT INTO crypto_ca_record 
+(ca_id, first_query_user_id, first_query_user_name, first_query_group_id, first_query_group_name, 
+first_query_time, first_market_cap, first_price, highest_market_cap, highest_price, 
+highest_time, max_multiple, is_successful, query_count, create_time, chain_type) 
+VALUES
+(3, '1003', '小明', '2001', 'SOL猎手', DATE_SUB(NOW(), INTERVAL 10 DAY), 500000.00, 0.50000000, 
+1500000.00, 1.50000000, DATE_SUB(NOW(), INTERVAL 5 DAY), 3.00, 1, 80, NOW(), 'SOL'),
+(4, '1004', '大红', '2002', '币圈先锋', DATE_SUB(NOW(), INTERVAL 8 DAY), 800000.00, 0.80000000, 
+1600000.00, 1.60000000, DATE_SUB(NOW(), INTERVAL 4 DAY), 2.00, 1, 60, NOW(), 'SOL'),
+(5, '1005', '老王', '2003', '链上猎人', DATE_SUB(NOW(), INTERVAL 6 DAY), 300000.00, 0.30000000, 
+900000.00, 0.90000000, DATE_SUB(NOW(), INTERVAL 2 DAY), 3.00, 1, 40, NOW(), 'ETH'),
+(6, '1006', '小李', '2001', 'SOL猎手', DATE_SUB(NOW(), INTERVAL 5 DAY), 400000.00, 0.40000000, 
+600000.00, 0.60000000, DATE_SUB(NOW(), INTERVAL 1 DAY), 1.50, 1, 30, NOW(), 'BSC');
+
+-- 3. 插入更多CA查询记录
+INSERT INTO crypto_ca_query_record 
+(ca_id, user_id, user_name, group_id, group_name, query_time, market_cap_at_query, price_at_query, 
+multiple_from_first, create_time, chain_type) 
+VALUES
+-- 用户1的查询记录（成功率80%）
+(3, '1003', '小明', '2001', 'SOL猎手', DATE_SUB(NOW(), INTERVAL 9 DAY), 600000.00, 0.60000000, 1.20, NOW(), 'SOL'),
+(3, '1003', '小明', '2001', 'SOL猎手', DATE_SUB(NOW(), INTERVAL 8 DAY), 700000.00, 0.70000000, 1.40, NOW(), 'SOL'),
+(4, '1003', '小明', '2001', 'SOL猎手', DATE_SUB(NOW(), INTERVAL 7 DAY), 900000.00, 0.90000000, 1.13, NOW(), 'SOL'),
+(5, '1003', '小明', '2001', 'SOL猎手', DATE_SUB(NOW(), INTERVAL 6 DAY), 400000.00, 0.40000000, 1.33, NOW(), 'ETH'),
+(6, '1003', '小明', '2001', 'SOL猎手', DATE_SUB(NOW(), INTERVAL 5 DAY), 500000.00, 0.50000000, 1.25, NOW(), 'BSC'),
+
+-- 用户2的查询记录（成功率60%）
+(3, '1004', '大红', '2002', '币圈先锋', DATE_SUB(NOW(), INTERVAL 7 DAY), 1000000.00, 1.00000000, 1.25, NOW(), 'SOL'),
+(4, '1004', '大红', '2002', '币圈先锋', DATE_SUB(NOW(), INTERVAL 6 DAY), 1200000.00, 1.20000000, 1.50, NOW(), 'SOL'),
+(5, '1004', '大红', '2002', '币圈先锋', DATE_SUB(NOW(), INTERVAL 5 DAY), 400000.00, 0.40000000, 1.33, NOW(), 'ETH'),
+(6, '1004', '大红', '2002', '币圈先锋', DATE_SUB(NOW(), INTERVAL 4 DAY), 500000.00, 0.50000000, 1.25, NOW(), 'BSC'),
+(3, '1004', '大红', '2002', '币圈先锋', DATE_SUB(NOW(), INTERVAL 3 DAY), 800000.00, 0.80000000, 1.60, NOW(), 'SOL'),
+
+-- 用户3的查询记录（成功率40%）
+(4, '1005', '老王', '2003', '链上猎人', DATE_SUB(NOW(), INTERVAL 5 DAY), 500000.00, 0.50000000, 1.67, NOW(), 'SOL'),
+(5, '1005', '老王', '2003', '链上猎人', DATE_SUB(NOW(), INTERVAL 4 DAY), 600000.00, 0.60000000, 2.00, NOW(), 'ETH'),
+(6, '1005', '老王', '2003', '链上猎人', DATE_SUB(NOW(), INTERVAL 3 DAY), 500000.00, 0.50000000, 1.25, NOW(), 'BSC'),
+(3, '1005', '老王', '2003', '链上猎人', DATE_SUB(NOW(), INTERVAL 2 DAY), 700000.00, 0.70000000, 1.40, NOW(), 'SOL'),
+(4, '1005', '老王', '2003', '链上猎人', DATE_SUB(NOW(), INTERVAL 1 DAY), 900000.00, 0.90000000, 1.13, NOW(), 'SOL');
+
+-- 4. 更新群组统计
+INSERT INTO crypto_group_statistics 
+(group_id, total_ca_queries, unique_ca_count, successful_ca_count, win_rate, create_time) 
+VALUES
+('2001', 150, 25, 15, 60.00, NOW()),
+('2002', 120, 20, 12, 60.00, NOW()),
+('2003', 90, 15, 8, 53.33, NOW());
+
+-- 5. 添加更多监控配置
+INSERT INTO crypto_monitor_config 
+(coin_id, user_id, min_price, max_price, percent_change, notification_type, 
+is_active, notification_target, last_notification_time, create_time, chain_type) 
+VALUES
+(3, '1003', 0.45, 0.55, 5.00, 'TELEGRAM', 1, '2001', DATE_SUB(NOW(), INTERVAL 3 HOUR), NOW(), 'SOL'),
+(4, '1004', 0.75, 0.85, 5.00, 'WECHAT', 1, '2002', DATE_SUB(NOW(), INTERVAL 4 HOUR), NOW(), 'SOL'),
+(5, '1005', 0.25, 0.35, 5.00, 'TELEGRAM', 1, '2003', DATE_SUB(NOW(), INTERVAL 5 HOUR), NOW(), 'ETH'),
+(6, '1006', 0.35, 0.45, 5.00, 'WECHAT', 1, '2001', DATE_SUB(NOW(), INTERVAL 6 HOUR), NOW(), 'BSC');
+
+-- 6. 添加更多机器人群组
+INSERT INTO crypto_bot_group 
+(platform, group_id, group_name, win_threshold, is_active, create_time) 
+VALUES
+('telegram', '2003', 'TG群组B', 0.50, 1, NOW()),
+('wechat', '2004', '微信群组B', 0.50, 1, NOW());
 
 
 
