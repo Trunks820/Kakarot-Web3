@@ -134,7 +134,9 @@
    - id: 主键
    - ca_id: 关联的CA ID
    - user_id: 查询用户ID
+   - user_name: 查询用户名
    - group_id: 查询群组ID
+   - group_name: 查询群组名
    - query_time: 查询时间
    - market_cap_at_query: 查询时市值
    - price_at_query: 查询时价格
