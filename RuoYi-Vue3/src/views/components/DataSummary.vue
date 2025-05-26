@@ -41,7 +41,7 @@
       <el-card class="data-card" v-loading="rankLoading" element-loading-background="rgba(0, 0, 0, 0.1)" element-loading-text="加载中...">
         <template #header>
           <div class="card-header">
-            <span>用户预测胜率 TOP3</span>
+            <span>用户胜率 TOP3</span>
             <div>
               <el-button 
                 type="text" 
@@ -57,13 +57,15 @@
         </template>
         <div class="card-body rank-top3">
           <div class="rank-list">
-            <div v-for="(user, index) in top3Users" :key="user.username" class="rank-item">
-              <div class="rank-number">{{ index + 1 }}</div>
+            <div v-for="(user, index) in top3Users" :key="user.user_id" class="rank-item">
+              <div class="rank-number" :class="`rank-${index + 1}`">{{ index + 1 }}</div>
               <div class="user-info">
-                <div class="username">{{ user.username }}</div>
+                <div class="username">{{ user.user_id }}</div>
                 <div class="stats">
-                  <span :class="getRateClass(user.rate)">{{ user.rate }}%</span>
-                  <span class="prediction-count">({{ user.successCount }}/{{ user.totalCount }})</span>
+                  <span :class="getRateClass((user.success/user.count) * 100)">
+                    {{ ((user.success/user.count) * 100).toFixed(1) }}%
+                  </span>
+                  <span class="prediction-count">({{ user.success }}/{{ user.count }})</span>
                 </div>
               </div>
             </div>
@@ -155,10 +157,10 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { Search, User, Warning, Refresh, RefreshRight, VideoPlay, ArrowRight } from '@element-plus/icons-vue'
+import { Search, User, Refresh, RefreshRight, ArrowRight } from '@element-plus/icons-vue'
 import useSettingsStore from '@/store/modules/settings'
 import { ElMessage } from 'element-plus'
-import { getDailyActivityStats, getTgBotStatus, getSystemInfo } from '@/api/crypto/index'
+import { getDailyActivityStats, getTgBotStatus, getUserRange } from '@/api/crypto/index'
 
 const settingsStore = useSettingsStore()
 
@@ -214,88 +216,6 @@ const userRankings = ref([
   { username: '铁头娃', rate: 75.0, successCount: 9, totalCount: 12 },
   { username: '三点水', rate: 66.7, successCount: 6, totalCount: 9 }
 ])
-
-// 获取系统健康状态类型
-const getSystemHealthType = computed(() => {
-  switch (systemStatus.value.health) {
-    case 'normal':
-      return 'success'
-    case 'warning':
-      return 'warning'
-    case 'error':
-      return 'danger'
-    default:
-      return 'info'
-  }
-})
-
-// 获取系统健康状态文本
-const getSystemHealthText = computed(() => {
-  switch (systemStatus.value.health) {
-    case 'normal':
-      return '正常'
-    case 'warning':
-      return '警告'
-    case 'error':
-      return '异常'
-    default:
-      return '未知'
-  }
-})
-
-// 获取内存使用状态
-const getMemoryStatus = (percentage) => {
-  if (!percentage) return ''
-  if (percentage > 80) return 'exception'
-  if (percentage > 60) return 'warning'
-  return 'success'
-}
-
-// 获取系统状态
-const fetchSystemStatus = async () => {
-  systemLoading.value = true
-  try {
-    const res = await getSystemInfo()
-    if (res.code === 200 && res.data) {
-      systemStatus.value = {
-        memory: {
-          total: formatMemorySize(res.data.totalMemory),
-          used: formatMemorySize(res.data.usedMemory),
-          percentage: Math.round((res.data.usedMemory / res.data.totalMemory) * 100)
-        },
-        uptime: formatUptime(res.data.uptime),
-        lastOperation: res.data.lastOperation
-      }
-    }
-  } catch (error) {
-    console.error('获取系统信息失败:', error)
-    // 使用模拟数据
-    systemStatus.value = {
-      memory: {
-        total: '2G',
-        used: '1G',
-        percentage: 50
-      },
-      uptime: '1天 2小时',
-      lastOperation: {
-        action: 'TG机器人重启',
-        detail: '操作人: admin, 时间: 2024-01-01 12:00:00',
-        timestamp: new Date().getTime()
-      }
-    }
-  } finally {
-    systemLoading.value = false
-  }
-}
-
-// 格式化内存大小
-const formatMemorySize = (bytes) => {
-  if (!bytes) return '0B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + sizes[i]
-}
 
 // 添加格式化运行时长的函数
 const formatUptime = (startTimeStr) => {
@@ -514,31 +434,11 @@ const fetchBotStatus = async () => {
   }
 }
 
-// 添加获取告警统计的方法
-const fetchAlertStats = async () => {
-  alertLoading.value = true
-  try {
-    // 这里可以添加实际的API调用
-    // 模拟数据更新
-    setTimeout(() => {
-      alertStats.value = {
-        total: Math.floor(Math.random() * 50) + 10,
-        pending: Math.floor(Math.random() * 20)
-      }
-      alertLoading.value = false
-    }, 600)
-  } catch (error) {
-    ElMessage.error('获取告警统计异常')
-    alertLoading.value = false
-  }
-}
-
 // 修改刷新所有数据的方法
 const refreshAllData = () => {
   fetchDailyStats()
   fetchBotStatus()
   fetchWxBotStatus()
-  fetchSystemStatus()
 }
 
 // 添加定时刷新
@@ -547,7 +447,7 @@ let statusTimer = null
 // 获取胜率样式
 const getRateClass = (rate) => {
   if (rate >= 80) return 'rate-excellent'
-  if (rate >= 70) return 'rate-good'
+  if (rate >= 60) return 'rate-good'
   return 'rate-normal'
 }
 
@@ -555,12 +455,10 @@ const getRateClass = (rate) => {
 const fetchUserRankings = async () => {
   rankLoading.value = true
   try {
-    // 这里添加实际的API调用
-    // const res = await getUserRankings()
-    // if (res.code === 200) {
-    //   userRankings.value = res.data
-    // }
-    await new Promise(resolve => setTimeout(resolve, 600))
+    const res = await getUserRange()
+    if (res.code === 200) {
+      userRankings.value = res.data
+    }
   } catch (error) {
     console.error('获取用户排行失败:', error)
   } finally {
@@ -571,12 +469,20 @@ const fetchUserRankings = async () => {
 // 计算前三名用户
 const top3Users = computed(() => {
   return [...userRankings.value]
-    .sort((a, b) => b.rate - a.rate)
+    .sort((a, b) => {
+      // 首先按胜率排序
+      const rateA = (a.success / a.count) * 100;
+      const rateB = (b.success / b.count) * 100;
+      if (rateB !== rateA) {
+        return rateB - rateA;  // 胜率降序
+      }
+      // 胜率相同时，按查询总数降序
+      return b.count - a.count;
+    })
     .slice(0, 3)
 })
 
 onMounted(() => {
-  fetchSystemStatus()
   fetchBotStatus()
   fetchWxBotStatus()
   // 每60秒更新一次状态
@@ -1085,47 +991,75 @@ onMounted(() => {
 .rank-item {
   display: flex;
   align-items: center;
-  padding: 4px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--el-border-color-lighter);
-}
-
-.rank-item:last-child {
-  border-bottom: none;
-}
-
-.rank-number {
-  width: 24px;
-  height: 24px;
-  line-height: 24px;
-  text-align: center;
-  background-color: var(--el-color-primary-light-9);
-  color: var(--el-color-primary);
-  border-radius: 50%;
-  margin-right: 12px;
-  font-weight: bold;
-}
-
-.user-info {
-  flex-grow: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.username {
-  font-weight: 500;
-  color: var(--el-text-color-primary);
-}
-
-.stats {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.prediction-count {
-  color: var(--el-text-color-secondary);
-  font-size: 13px;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  .rank-number {
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    margin-right: 12px;
+    font-weight: bold;
+    
+    &.rank-1 {
+      background-color: #FFD700;
+      color: #fff;
+    }
+    
+    &.rank-2 {
+      background-color: #C0C0C0;
+      color: #fff;
+    }
+    
+    &.rank-3 {
+      background-color: #CD7F32;
+      color: #fff;
+    }
+  }
+  
+  .user-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .username {
+      font-weight: 500;
+      color: var(--el-text-color-primary);
+    }
+    
+    .stats {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      
+      .rate-excellent {
+        color: #67C23A;
+        font-weight: bold;
+      }
+      
+      .rate-good {
+        color: #E6A23C;
+        font-weight: bold;
+      }
+      
+      .rate-normal {
+        color: #909399;
+        font-weight: bold;
+      }
+      
+      .prediction-count {
+        color: var(--el-text-color-secondary);
+        font-size: 13px;
+      }
+    }
+  }
 }
 
 .view-all {
@@ -1142,5 +1076,22 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   height: 24px;
+}
+
+/* 暗黑模式适配 */
+:global(html.dark) {
+  .rank-number {
+    &.rank-1 {
+      background-color: rgba(255, 215, 0, 0.8) !important;
+    }
+    
+    &.rank-2 {
+      background-color: rgba(192, 192, 192, 0.8) !important;
+    }
+    
+    &.rank-3 {
+      background-color: rgba(205, 127, 50, 0.8) !important;
+    }
+  }
 }
 </style>

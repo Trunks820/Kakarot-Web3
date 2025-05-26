@@ -3,6 +3,9 @@ package com.ruoyi.crypto.service;
 import cn.hutool.json.JSONObject;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.crypto.domain.vo.CryptoIndexVo;
+import com.ruoyi.crypto.domain.vo.CryptoUserVo;
+
+import java.util.List;
 
 public interface CryptoIndexService {
 
@@ -14,4 +17,6 @@ public interface CryptoIndexService {
     CryptoIndexVo getDailyActivityStats();
 
     AjaxResult getTgBotStatus();
+
+    List<CryptoUserVo> getUserRange();
 }

@@ -4,6 +4,7 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.crypto.domain.vo.CryptoCoinVO;
 import com.ruoyi.crypto.domain.vo.CryptoIndexVo;
+import com.ruoyi.crypto.domain.vo.CryptoUserVo;
 import com.ruoyi.crypto.service.CryptoCaRecordService;
 import com.ruoyi.crypto.service.CryptoIndexService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -65,5 +66,11 @@ public class CryptoIndexController extends BaseController {
         return cryptoIndexService.getTgBotStatus();
     }
 
+    @GetMapping("/getUserRange")
+    public AjaxResult getUserRange()
+    {
+        List<CryptoUserVo> userRange = cryptoIndexService.getUserRange();
+        return success(userRange);
+    }
 
 }

@@ -119,9 +119,9 @@ export function getTgBotStatus() {
 }
 
 // 获取系统信息
-export function getSystemInfo() {
+export function getUserRange() {
   return request({
-    url: '/crypto/system/info',
+    url: '/crypto/record/getUserRange',
     method: 'get'
   })
 }

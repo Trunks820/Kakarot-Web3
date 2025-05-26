@@ -11,13 +11,12 @@ import org.apache.ibatis.annotations.Mapper;
  * @author ruoyi
  */
 @Mapper
-public interface CryptoCaQueryRecordMapper
-{
+public interface CryptoCaQueryRecordMapper {
     /**
      * 获取当日活动统计
+     *
      * @return 包含总查询数和活跃用户数的VO对象
      */
     CryptoIndexVo getDailyActivityStats();
 
-    CryptoIndexVo getHotCaByTelegram();
 }

@@ -5,12 +5,15 @@ import cn.hutool.json.JSONUtil;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.utils.http.HttpUtils;
 import com.ruoyi.crypto.domain.vo.CryptoIndexVo;
+import com.ruoyi.crypto.domain.vo.CryptoUserVo;
 import com.ruoyi.crypto.mapper.CryptoCaQueryRecordMapper;
+import com.ruoyi.crypto.mapper.CryptoUserMapper;
 import com.ruoyi.crypto.service.CryptoIndexService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -18,6 +21,9 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
 
     @Resource
     private CryptoCaQueryRecordMapper cryptoCaQueryRecordMapper;
+
+    @Resource
+    private CryptoUserMapper cryptoUserMapper;
 
     @Override
     public CryptoIndexVo getDailyActivityStats() {
@@ -47,6 +53,11 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
         }catch (Exception e){
             return AjaxResult.error("机器人状态请求异常");
         }
+    }
+
+    @Override
+    public List<CryptoUserVo> getUserRange(){
+        return cryptoUserMapper.getUserRange();
     }
 
 }
