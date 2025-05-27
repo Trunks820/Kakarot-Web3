@@ -51,5 +51,20 @@
             LIMIT 4;
     </select>
 
-
+    <select id="getMaxMultipleCa" parameterType="CryptoCoinVO" resultMap="CryptoCoinVOResult">
+        SELECT
+            c.coin_id,
+            r.max_multiple,
+            c.address,
+            c.symbol
+        FROM
+            crypto_ca_record r
+                JOIN ( SELECT ca_id, MAX( max_multiple ) AS max_multiple FROM crypto_ca_record WHERE del_flag = '0' GROUP BY ca_id ) m ON r.ca_id = m.ca_id
+                AND r.max_multiple = m.max_multiple
+                JOIN crypto_coin c ON r.ca_id = c.coin_id
+        WHERE
+            r.del_flag = '0'
+        ORDER BY
+            r.max_multiple DESC;
+    </select>
 </mapper>

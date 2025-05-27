@@ -70,12 +70,12 @@
               </div>
             </div>
           </div>
-          <div class="view-all">
-            <router-link to="/rank/predict" class="el-link el-link--primary">
-              <span>查看完整排行榜</span>
-              <el-icon class="el-icon--right"><arrow-right /></el-icon>
-            </router-link>
-          </div>
+<!--          <div class="view-all">-->
+<!--            <router-link to="/rank/predict" class="el-link el-link&#45;&#45;primary">-->
+<!--              <span>查看完整排行榜</span>-->
+<!--              <el-icon class="el-icon&#45;&#45;right"><arrow-right /></el-icon>-->
+<!--            </router-link>-->
+<!--          </div>-->
         </div>
       </el-card>
     </el-col>
@@ -985,13 +985,12 @@ onMounted(() => {
 .rank-list {
   flex: 1;
   padding: 8px 16px 0;
-  overflow-y: auto;  /* 如果内容过多允许滚动 */
 }
 
 .rank-item {
   display: flex;
   align-items: center;
-  padding: 8px 0;
+  padding: 4px 0;
   border-bottom: 1px solid var(--el-border-color-lighter);
   
   &:last-child {
