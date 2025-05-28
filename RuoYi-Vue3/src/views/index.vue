@@ -21,10 +21,7 @@
 <script setup name="Index">
 import { ref, onMounted, nextTick, computed } from 'vue'
 import * as echarts from 'echarts'
-import TradingViewWidget from '@/components/TradingViewWidget.vue'
-import { ElMessage } from 'element-plus'
 import DataSummary from '@/views/components/DataSummary.vue'
-import { Search, User, Warning } from '@element-plus/icons-vue'
 import PopularCA from "./components/PopularCA.vue";
 import MarketChart from "./components/MarketChart.vue";
 
@@ -41,7 +38,7 @@ function initChart() {
   if (chart) {
     chart.dispose()
   }
-  
+
   nextTick(() => {
     chart = echarts.init(chartRef.value)
     // 这里添加模拟的K线数据
@@ -101,7 +98,7 @@ onUnmounted(() => {
   .mt20 {
     margin-top: 20px;
   }
-  
+
   .mb20 {
     margin-bottom: 20px;
   }
@@ -114,7 +111,7 @@ onUnmounted(() => {
     height: 160px;
     background: #1a1a1a;
     border: 1px solid #2a2a2a;
-    
+
     :deep(.el-card__header) {
       padding: 0;
       border: none;
@@ -156,7 +153,7 @@ onUnmounted(() => {
         .stat-label {
           display: flex;
           align-items: center;
-          
+
           .mr8 {
             margin-right: 8px;
           }
@@ -181,12 +178,12 @@ onUnmounted(() => {
           line-height: 22px;
           font-size: 12px;
           border-radius: 3px;
-          
+
           &.el-tag--success {
             background: rgba(103, 194, 58, 0.1);
             color: #95eb6c;
           }
-          
+
           &.el-tag--danger {
             background: rgba(245, 108, 108, 0.1);
             color: #ff7875;
