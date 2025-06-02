@@ -1,5 +1,6 @@
 package com.ruoyi.crypto.service.impl;
 
+import com.ruoyi.crypto.domain.vo.CryptoCaRecordVO;
 import com.ruoyi.crypto.domain.vo.CryptoCoinVO;
 import com.ruoyi.crypto.mapper.CryptoCaRecordMapper;
 import com.ruoyi.crypto.service.CryptoCaRecordService;
@@ -15,12 +16,27 @@ public class CryptoCaRecordServiceImpl implements CryptoCaRecordService {
     private CryptoCaRecordMapper cryptoCaRecordMapper;
 
     @Override
-    public List<CryptoCoinVO> getHotCaByWechat() {
+    public List<CryptoCaRecordVO> getHotCaByWechat() {
         return cryptoCaRecordMapper.getHotCaByWechat();
     }
 
     @Override
-    public List<CryptoCoinVO> getHotCaByTelegram() {
+    public List<CryptoCaRecordVO> getHotCaByTelegram() {
         return cryptoCaRecordMapper.getHotCaByTelegram();
+    }
+
+    @Override
+    public CryptoCaRecordVO selectCryptoCoin(CryptoCaRecordVO cryptoCoin) {
+        return cryptoCaRecordMapper.selectCryptoCoin(cryptoCoin);
+    }
+
+    @Override
+    public List<CryptoCaRecordVO> selectCryptoCoinList(CryptoCaRecordVO cryptoCoin) {
+        return cryptoCaRecordMapper.selectCryptoCoinList(cryptoCoin);
+    }
+
+    @Override
+    public int deleteCryptoCoinByIds(Long[] coinIds) {
+        return cryptoCaRecordMapper.deleteCryptoCoinByIds(coinIds);
     }
 }

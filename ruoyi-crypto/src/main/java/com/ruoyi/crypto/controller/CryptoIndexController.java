@@ -2,6 +2,7 @@ package com.ruoyi.crypto.controller;
 
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.crypto.domain.vo.CryptoCaRecordVO;
 import com.ruoyi.crypto.domain.vo.CryptoCoinVO;
 import com.ruoyi.crypto.domain.vo.CryptoIndexVo;
 import com.ruoyi.crypto.domain.vo.CryptoUserVo;
@@ -46,7 +47,7 @@ public class CryptoIndexController extends BaseController {
     @GetMapping("/getHotCaByWechat")
     public AjaxResult getHotCaByWechat()
     {
-        List<CryptoCoinVO> hotCaByWechat = cryptoCaRecordService.getHotCaByWechat();
+        List<CryptoCaRecordVO> hotCaByWechat = cryptoCaRecordService.getHotCaByWechat();
         return success(hotCaByWechat);
     }
 
@@ -56,7 +57,7 @@ public class CryptoIndexController extends BaseController {
     @GetMapping("/getHotCaByTelegram")
     public AjaxResult getHotCaByTelegram()
     {
-        List<CryptoCoinVO> hotCaByTelegram = cryptoCaRecordService.getHotCaByTelegram();
+        List<CryptoCaRecordVO> hotCaByTelegram = cryptoCaRecordService.getHotCaByTelegram();
         return success(hotCaByTelegram);
     }
 

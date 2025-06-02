@@ -4,10 +4,14 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.crypto.mapper.CryptoCaRecordMapper">
 
-    <resultMap id="CryptoCoinVOResult" type="CryptoCoinVO">
+    <resultMap id="CryptoCaRecordVOResult" type="CryptoCaRecordVO">
         <id property="coinId"    column="coin_id"    />
         <result property="address"     column="address"></result>
         <result property="symbol"      column="symbol"></result>
+        <result property="name"        column="name"></result>
+        <result property="logoUrl"     column="logo_url"></result>
+        <result property="chainType"   column="chain_type"></result>
+        <result property="description" column="description"></result>
         <result property="delFlag"     column="del_flag"    />
         <result property="createBy"    column="create_by"   />
         <result property="createTime"  column="create_time" />
@@ -15,16 +19,24 @@
         <result property="updateTime"  column="update_time" />
         <result property="queryCount" column="query_count"/>
         <result property="maxMultiple" column="max_multiple"/>
+        <result property="firstQueryUserId" column="first_query_user_id"/>
+        <result property="firstQueryGroupId" column="first_query_group_id"/>
+        <result property="firstQueryTime" column="first_query_time"/>
+        <result property="firstMarketCap" column="first_market_cap"/>
+        <result property="firstPrice" column="first_price"/>
+        <result property="highestMarketCap" column="highest_market_cap"/>
+        <result property="highestPrice" column="highest_price"/>
+        <result property="highestTime" column="highest_time"/>
     </resultMap>
 
-
-    <select id="getHotCaByWechat" parameterType="CryptoCoinVO" resultMap="CryptoCoinVOResult">
+    <select id="getHotCaByWechat" parameterType="CryptoCaRecordVO" resultMap="CryptoCaRecordVOResult">
         SELECT
             ccr.query_count,
             ccr.max_multiple,
             c.address,
             c.symbol
         FROM
+            
             crypto_ca_record ccr
                 JOIN crypto_coin c ON c.coin_id = ccr.ca_id
         ORDER BY
@@ -32,7 +44,7 @@
             LIMIT 4
     </select>
 
-    <select id="getHotCaByTelegram" parameterType="CryptoCoinVO" resultMap="CryptoCoinVOResult">
+    <select id="getHotCaByTelegram" parameterType="CryptoCaRecordVO" resultMap="CryptoCaRecordVOResult">
         SELECT
             coin_address AS address,
             coin_name AS symbol,
@@ -51,7 +63,7 @@
             LIMIT 4;
     </select>
 
-    <select id="getMaxMultipleCa" parameterType="CryptoCoinVO" resultMap="CryptoCoinVOResult">
+    <select id="getMaxMultipleCa" parameterType="CryptoCaRecordVO" resultMap="CryptoCaRecordVOResult">
         SELECT
             c.coin_id,
             r.max_multiple,
@@ -67,4 +79,58 @@
         ORDER BY
             r.max_multiple DESC;
     </select>
+
+    <select id="selectCryptoCoin" parameterType="Long" resultMap="CryptoCaRecordVOResult">
+        SELECT c.*,
+        r.query_count, r.max_multiple
+        FROM crypto_coin c
+        LEFT JOIN crypto_ca_record r ON c.coin_id = r.ca_id
+        <where>
+            c.del_flag = '0'
+            <if test="coinId != null">
+                AND c.coin_id = #{coinId}
+            </if>
+            <if test="address != null and address != ''">
+                AND c.address = #{address}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectCryptoCoinList" parameterType="CryptoCaRecordVO" resultMap="CryptoCaRecordVOResult">
+        SELECT c.*,
+        r.query_count, r.max_multiple,
+        r.first_query_user_id, r.first_query_group_id, r.first_query_time, r.first_market_cap, r.first_price,
+        r.highest_market_cap, r.highest_price, r.highest_time
+        FROM crypto_coin c
+        LEFT JOIN crypto_ca_record r ON c.coin_id = r.ca_id
+        <where>
+            c.del_flag = '0'
+            <if test="symbol != null and symbol != ''">
+                AND (c.symbol like concat('%', #{symbol}, '%') OR c.name like concat('%', #{symbol}, '%'))
+            </if>
+            <if test="chainType != null and chainType != ''">
+                AND c.chain_type = #{chainType}
+            </if>
+            <if test="address != null and address != ''">
+                AND c.address = #{address}
+            </if>
+            <if test="params.beginTime != null and params.beginTime != ''">
+                AND c.create_time &gt;= CONCAT(#{params.beginTime}, ' 00:00:00')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''">
+                AND c.create_time &lt;= CONCAT(#{params.endTime}, ' 23:59:59')
+            </if>
+        </where>
+        order by c.create_time desc
+    </select>
+
+    <update id="deleteCryptoCoinByIds" parameterType="Long">
+        update crypto_coin set del_flag = '2' where coin_id in
+        <foreach collection="array" item="coinId" open="(" separator="," close=")">
+            #{coinId}
+        </foreach>
+    </update>
+
+
+
 </mapper>
