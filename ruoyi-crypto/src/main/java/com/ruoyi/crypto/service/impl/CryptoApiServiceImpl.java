@@ -92,27 +92,27 @@ public class CryptoApiServiceImpl implements CryptoApiService {
         }
         //dev信息
         String ownerAddress = "";
-        if(!JSONUtil.isNull(res.getJSONArray("creators")) && res.getJSONArray("creators").size() > 0){
+        if(!JSONUtil.isNull(res.getJSONArray("creators")) && !res.getJSONArray("creators").isEmpty()){
             ownerAddress = res.getJSONArray("creators").getJSONObject(0).getStr("address", "");
         }
         //是否可增发
         String mintableStat = "1";
-        if(res.getJSONObject("mintable").size() > 0){
+        if(!res.getJSONObject("mintable").isEmpty()){
             mintableStat = res.getJSONObject("mintable").getStr("status");
         }
         //是否可冻结
         String freezableStat = "1";
-        if(res.getJSONObject("freezable").size() > 0){
+        if(!res.getJSONObject("freezable").isEmpty()){
             freezableStat = res.getJSONObject("freezable").getStr("status");
         }
         //是否可销毁
         String closableStat = "1";
-        if(res.getJSONObject("closable").size() > 0){
+        if(!res.getJSONObject("closable").isEmpty()){
             closableStat = res.getJSONObject("closable").getStr("status");
         }
         //税率
         String feeRate = "0";
-        if(res.getJSONObject("transfer_fee").size() > 0){
+        if(!res.getJSONObject("transfer_fee").isEmpty()){
             feeRate = res.getJSONObject("transfer_fee").getJSONObject("current_fee_rate").getStr("fee_rate", "0");
         }
         //是否上dex
@@ -121,10 +121,11 @@ public class CryptoApiServiceImpl implements CryptoApiService {
             dexFlag = true;
         }
 
+        double rate = (double) (Integer.parseInt(feeRate)) / 10000;
         if ("1".equals(mintableStat)) riskTag += "⚠️ 可增发 ";
         if ("1".equals(freezableStat)) riskTag += "⚠️ 可冻结（黑名单） ";
         if ("1".equals(closableStat)) riskTag += "⚠️ 可销毁 ";
-        if (Double.parseDouble(feeRate) >= 0.20) {
+        if (rate >= 0.20) {
             riskTag += "🔥 高税率 ";
             isHoneypot = true; //
         };
@@ -138,7 +139,7 @@ public class CryptoApiServiceImpl implements CryptoApiService {
         json.append("isMintable", mintableStat);
         json.append("isFreezable", freezableStat);
         json.append("isClosable", closableStat);
-        json.append("feeRate", feeRate);
+        json.append("feeRate", rate);
         json.append("dexFlag", dexFlag);
         json.append("riskTag", riskTag);
         json.append("isHoneypot", isHoneypot);

@@ -389,7 +389,6 @@ const getTokenInfo = () => {
         low24h: calculateLow24h(tokenPair),
         holderCount: 0, // DexScreener不提供这个数据
         liquidity: tokenPair.liquidity?.usd || 0,
-        safetyScore: calculateSafetyScore(tokenPair),
         isVerified: !!tokenPair.info?.websites?.length,
         hasRenounced: false, // 需要其他API获取
         queryCount: Math.floor(Math.random() * 1000) + 100, // 模拟数据
@@ -457,7 +456,6 @@ const loadDemoToken = () => {
     low24h: 175.80,
     holderCount: 1250000,
     liquidity: 12500000,
-    safetyScore: 95,
     isVerified: true,
     hasRenounced: false,
     queryCount: 1256,
@@ -632,12 +630,6 @@ const formatNumber = (num) => {
     return (num / 1e3).toFixed(2) + 'K'
   }
   return num?.toString() || '0'
-}
-
-const getSafetyType = (score) => {
-  if (score >= 80) return 'success'
-  if (score >= 60) return 'warning'
-  return 'danger'
 }
 
 // 格式化价格变化
