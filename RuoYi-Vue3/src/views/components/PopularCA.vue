@@ -82,7 +82,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getHotCaByWechat, getHotCaByTelegram } from '@/api/crypto/index'
+import { getHotCaByWechat, getHotCaByTelegram } from '@/api/crypto/caRecord'
 import { Refresh, DocumentCopy } from '@element-plus/icons-vue'
 
 const loading = ref(false)

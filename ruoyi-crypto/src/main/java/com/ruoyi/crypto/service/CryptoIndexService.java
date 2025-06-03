@@ -1,6 +1,5 @@
 package com.ruoyi.crypto.service;
 
-import cn.hutool.json.JSONObject;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.crypto.domain.vo.CryptoIndexVo;
 import com.ruoyi.crypto.domain.vo.CryptoUserVo;

@@ -222,7 +222,7 @@
 </template>
 
 <script setup name="CryptoCoin">
-import { listCoins, delCoin, addCoin, updateCoin } from "@/api/crypto/index";
+import { listCoins, delCoin, addCoin, updateCoin } from "@/api/crypto/caRecord";
 import { ElMessage } from 'element-plus'  // 确保在script开头导入
 import sol from '@/assets/crypto-icons/SOL.png'
 import bnb from '@/assets/crypto-icons/BNB.png'

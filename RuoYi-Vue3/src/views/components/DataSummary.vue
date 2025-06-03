@@ -160,7 +160,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { Search, User, Refresh, RefreshRight, ArrowRight } from '@element-plus/icons-vue'
 import useSettingsStore from '@/store/modules/settings'
 import { ElMessage } from 'element-plus'
-import { getDailyActivityStats, getTgBotStatus, getUserRange } from '@/api/crypto/index'
+import { getDailyActivityStats, getTgBotStatus, getUserRange } from '@/api/crypto/caRecord'
 
 const settingsStore = useSettingsStore()
 
