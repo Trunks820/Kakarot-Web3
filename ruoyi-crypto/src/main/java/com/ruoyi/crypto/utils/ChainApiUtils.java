@@ -10,6 +10,7 @@ import cn.hutool.json.JSONUtil;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.crypto.service.ApiSupplier;
+import okhttp3.*;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,6 +23,13 @@ import static com.ruoyi.common.core.domain.AjaxResult.error;
 import static com.ruoyi.common.core.domain.AjaxResult.success;
 
 public class ChainApiUtils {
+
+    static {
+        System.setProperty("http.proxyHost", "127.0.0.1");
+        System.setProperty("http.proxyPort", "7890");
+        System.setProperty("https.proxyHost", "127.0.0.1");
+        System.setProperty("https.proxyPort", "7890");
+    }
 
     private static final String X_APP_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjdmYjkxNzAyLTIwY2QtNDVkOS1iNjI5LTY1MzNkMzA2YjA3MCIsIm9yZ0lkIjoiNDUwODc1IiwidXNlcklkIjoiNDYzOTE2IiwidHlwZUlkIjoiOWY1MGNjYTgtODEwNC00NzU0LWI2MDAtYmMyZmM5YzU4MDM5IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDkwMjEyMDcsImV4cCI6NDkwNDc4MTIwN30.9RgqquajqDX38Df0EauxayYQcDuiFkkwopD5k0BnOCU";
     private static final String GMGN_TOKEN_INFO = "https://gmgn.ai/api/v1/mutil_window_token_info";
@@ -97,57 +105,6 @@ public class ChainApiUtils {
     private static final long CACHE_EXPIRE_TIME = 30 * 60 * 1000;
     private static final Map<String, Long> CACHE_TIME_MAP = new ConcurrentHashMap<>();
 
-    public static AjaxResult getTokenInfoAutomatic(String address, String chainType){
-        /**
-         * 2025-06-04
-         * 如果是 sol 地址，优先调用 gmgn 的 API 获取数据，若失败则依次尝试 moralis、dex 作为备用。
-         * 如果是evm地址，需要先查询dex 确认是哪条链，然后在调用gmgn
-         */
-        if("sol".equals(chainType)){
-            // sol直接按规则走
-            String finalChainType = chainType;
-            AjaxResult result = tryChainApis(
-                    () -> getGMGNTokenInfo(address, finalChainType),
-                    () -> getMoralisTokenPair(address),
-                    () -> getDexPairInfo(address)
-            );
-            return result;
-//            AjaxResult gmgnTokenInfo = getGMGNTokenInfo(address, chainType);
-//            if(gmgnTokenInfo.isSuccess()){
-//                return gmgnTokenInfo;
-//            }
-//
-//            AjaxResult moralisTokenPair = getMoralisTokenPair(address);
-//            if(moralisTokenPair.isSuccess()){
-//                return moralisTokenPair;
-//            }
-//
-//            AjaxResult dexPairInfo = getDexPairInfo(address);
-//            if(dexPairInfo.isSuccess()){
-//                return dexPairInfo;
-//            }
-        } else{
-            // evm需要先判定具体是哪个链
-            AjaxResult dexPairInfo = getDexPairInfo(address);
-            if(dexPairInfo.isSuccess()){
-                JSONObject jsonObject = JSONUtil.parseObj(dexPairInfo.get("data"));
-                chainType = jsonObject.getStr("chainId");
-                if("ethereum".equals(chainType)){
-                    chainType = "eth";
-                }
-            } else{
-                return error("查询公链失败，请稍后！");
-            }
-
-            // 使用gmgn
-            AjaxResult gmgnTokenInfo = getGMGNTokenInfo(address, chainType);
-            if(gmgnTokenInfo.isSuccess()){
-                return gmgnTokenInfo;
-            }
-            return dexPairInfo;
-        }
-    }
-
     /**
      * 通过池子地址直接获取axiom代币信息（避免重复调用dex）
      * @param pairAddress 池子地址
@@ -168,7 +125,7 @@ public class ChainApiUtils {
      * @param chainType
      * @return
      */
-    public static AjaxResult getGMGNTokenInfo(String address, String chainType){
+    public static AjaxResult getGMGNTokenInfo(String address, String chainType) {
         String url = GMGN_TOKEN_INFO + GMGN_COMMON_PARAM;
         Map<String, Object> param = new HashMap<>();
         param.put("chain", chainType);
@@ -178,6 +135,7 @@ public class ChainApiUtils {
         String referer = "https://gmgn.ai/" + chainType + "/token/" + address;
         Map<String, String> headers = new HashMap<>(GMGN_COMMON_HEADERS);
         headers.put("referer", referer);
+
         String body = doPost(url, headers, json);
         if(StringUtils.isEmpty(body)){
             return error("查询ca信息失败！");
@@ -456,15 +414,19 @@ public class ChainApiUtils {
     }
 
     public static String doPost(String url, Map<String, String> headers, String json) {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(RequestBody.create(json.getBytes()))
+                .headers(Headers.of(headers))
+                .build();
+        Response response = null;
         try {
-            HttpResponse response = HttpRequest.post(url)
-                    .body(json)
-                    .contentType("application/json")
-                    .headerMap(headers, true)
-                    .execute();
-            return response.body();
+            response = client.newCall(request).execute();
+            String string = response.body().string();
+            return string;
         }catch (Exception e){
-            return null;
+            throw new RuntimeException(e);
         }
     }
 

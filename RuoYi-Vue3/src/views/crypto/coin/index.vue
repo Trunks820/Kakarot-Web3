@@ -327,7 +327,7 @@
 </template>
 
 <script setup name="CryptoScanner">
-import { ref, reactive, computed, getCurrentInstance, watch, onMounted } from 'vue'
+import { ref, reactive, getCurrentInstance, onMounted } from 'vue'
 import { tokenInfo, securityInfo} from "@/api/crypto/index"
 const { proxy } = getCurrentInstance()
 
@@ -338,7 +338,6 @@ const tokenData = ref(null)
 const monitoring = ref(false)
 const settingAlert = ref(false)
 const alertDialogVisible = ref(false)
-const currentChain = ref('sol')
 const klineIframe = ref(null)
 const securityData = ref(null)
 const loadingSecurity = ref(false)

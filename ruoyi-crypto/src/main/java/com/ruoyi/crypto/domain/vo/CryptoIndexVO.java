@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @ApiModel(value = "主页信息视图对象", description = "主页信息聚合视图")
-public class CryptoIndexVo {
+public class CryptoIndexVO {
 
     private Long totalQueries;
 

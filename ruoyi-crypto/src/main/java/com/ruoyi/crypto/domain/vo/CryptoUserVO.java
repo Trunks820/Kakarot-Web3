@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @ApiModel(value = "机器人用户视图对象", description = "机器人用户视图对象")
-public class CryptoUserVo {
+public class CryptoUserVO {
     /** 用户id */
     @ApiModelProperty("用户id")
     private String userId;

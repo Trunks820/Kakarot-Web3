@@ -18,15 +18,7 @@ import static com.ruoyi.common.core.domain.AjaxResult.*;
 @Service
 public class CryptoApiServiceImpl implements CryptoApiService {
 
-    String tokenInfoUrl = "https://api.dexscreener.com/latest/dex/tokens/";
-    String tokenSecurityUrl = "https://api.gopluslabs.io/api/v1/solana/token_security?contract_addresses=";
 
-    static {
-        System.setProperty("http.proxyHost", "127.0.0.1");
-        System.setProperty("http.proxyPort", "1081");
-        System.setProperty("https.proxyHost", "127.0.0.1");
-        System.setProperty("https.proxyPort", "1081");
-    }
 
     @Override
     public AjaxResult getTokenInfo(String text) {
@@ -56,8 +48,35 @@ public class CryptoApiServiceImpl implements CryptoApiService {
             return error("无法识别该地址所属的公链类型！");
         }
 
+        if("sol".equals(chainType)){
+            // sol直接按规则走
+            String finalChainType = chainType;
+            AjaxResult result = ChainApiUtils.tryChainApis(
+                    () -> ChainApiUtils.getGMGNTokenInfo(address, finalChainType),
+                    () -> ChainApiUtils.getMoralisTokenPair(address),
+                    () -> ChainApiUtils.getDexPairInfo(address)
+            );
+            return result;
+        } else{
+            // evm需要先判定具体是哪个链
+            AjaxResult dexPairInfo = ChainApiUtils.getDexPairInfo(address);
+            if(dexPairInfo.isSuccess()){
+                JSONObject jsonObject = JSONUtil.parseObj(dexPairInfo.get("data"));
+                chainType = jsonObject.getStr("chainId");
+                if("ethereum".equals(chainType)){
+                    chainType = "eth";
+                }
+            } else{
+                return error("查询公链失败，请稍后！");
+            }
 
-        return ChainApiUtils.getTokenInfoAutomatic(address, chainType);
+            // 使用gmgn
+            AjaxResult gmgnTokenInfo = ChainApiUtils.getGMGNTokenInfo(address, chainType);
+            if(gmgnTokenInfo.isSuccess()){
+                return gmgnTokenInfo;
+            }
+            return dexPairInfo;
+        }
     }
 
     @Override

@@ -4,8 +4,8 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.utils.http.HttpUtils;
-import com.ruoyi.crypto.domain.vo.CryptoIndexVo;
-import com.ruoyi.crypto.domain.vo.CryptoUserVo;
+import com.ruoyi.crypto.domain.vo.CryptoIndexVO;
+import com.ruoyi.crypto.domain.vo.CryptoUserVO;
 import com.ruoyi.crypto.mapper.CryptoCaQueryRecordMapper;
 import com.ruoyi.crypto.mapper.CryptoUserMapper;
 import com.ruoyi.crypto.service.CryptoIndexService;
@@ -26,7 +26,7 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
     private CryptoUserMapper cryptoUserMapper;
 
     @Override
-    public CryptoIndexVo getDailyActivityStats() {
+    public CryptoIndexVO getDailyActivityStats() {
         return cryptoCaQueryRecordMapper.getDailyActivityStats();
     }
 
@@ -56,7 +56,7 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
     }
 
     @Override
-    public List<CryptoUserVo> getUserRange(){
+    public List<CryptoUserVO> getUserRange(){
         return cryptoUserMapper.getUserRange();
     }
 

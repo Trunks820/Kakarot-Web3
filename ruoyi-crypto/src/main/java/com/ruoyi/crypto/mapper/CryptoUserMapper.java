@@ -1,6 +1,6 @@
 package com.ruoyi.crypto.mapper;
 
-import com.ruoyi.crypto.domain.vo.CryptoUserVo;
+import com.ruoyi.crypto.domain.vo.CryptoUserVO;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -9,5 +9,5 @@ import java.util.List;
 public interface CryptoUserMapper {
 
 
-    List<CryptoUserVo> getUserRange();
+    List<CryptoUserVO> getUserRange();
 }

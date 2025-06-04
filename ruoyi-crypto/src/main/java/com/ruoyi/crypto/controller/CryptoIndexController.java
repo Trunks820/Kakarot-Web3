@@ -3,9 +3,8 @@ package com.ruoyi.crypto.controller;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.crypto.domain.vo.CryptoCaRecordVO;
-import com.ruoyi.crypto.domain.vo.CryptoCoinVO;
-import com.ruoyi.crypto.domain.vo.CryptoIndexVo;
-import com.ruoyi.crypto.domain.vo.CryptoUserVo;
+import com.ruoyi.crypto.domain.vo.CryptoIndexVO;
+import com.ruoyi.crypto.domain.vo.CryptoUserVO;
 import com.ruoyi.crypto.service.CryptoCaRecordService;
 import com.ruoyi.crypto.service.CryptoIndexService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,7 +36,7 @@ public class CryptoIndexController extends BaseController {
     @GetMapping("/getDailyActivityStats")
     public AjaxResult getDailyActivityStats()
     {
-        CryptoIndexVo dailyActivityStats = cryptoIndexService.getDailyActivityStats();
+        CryptoIndexVO dailyActivityStats = cryptoIndexService.getDailyActivityStats();
         return success(dailyActivityStats);
     }
 
@@ -70,7 +69,7 @@ public class CryptoIndexController extends BaseController {
     @GetMapping("/getUserRange")
     public AjaxResult getUserRange()
     {
-        List<CryptoUserVo> userRange = cryptoIndexService.getUserRange();
+        List<CryptoUserVO> userRange = cryptoIndexService.getUserRange();
         return success(userRange);
     }
 

@@ -36,11 +36,18 @@
         <spring-security.version>5.7.12</spring-security.version>
         <spring-framework.version>5.3.39</spring-framework.version>
         <hutool.version>5.8.25</hutool.version>
+        <okhttp.version>4.12.0</okhttp.version>
     </properties>
 
     <!-- 依赖声明 -->
     <dependencyManagement>
         <dependencies>
+
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
 
             <!-- hutool 工具包 -->
             <dependency>

@@ -1,8 +1,6 @@
 package com.ruoyi.crypto.mapper;
 
-import java.util.List;
-import com.ruoyi.crypto.domain.CryptoCaQueryRecord;
-import com.ruoyi.crypto.domain.vo.CryptoIndexVo;
+import com.ruoyi.crypto.domain.vo.CryptoIndexVO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -17,6 +15,6 @@ public interface CryptoCaQueryRecordMapper {
      *
      * @return 包含总查询数和活跃用户数的VO对象
      */
-    CryptoIndexVo getDailyActivityStats();
+    CryptoIndexVO getDailyActivityStats();
 
 }
