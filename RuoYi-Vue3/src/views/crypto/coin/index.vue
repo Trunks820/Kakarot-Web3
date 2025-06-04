@@ -1057,7 +1057,7 @@ const copyAddress = (address) => {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .crypto-scanner {
   padding: 20px;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -1123,7 +1123,7 @@ const copyAddress = (address) => {
   flex: 1;
 }
 
-.search-input >>> .el-input__inner {
+:deep(.search-input .el-input__inner) {
   border: none !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -1133,12 +1133,12 @@ const copyAddress = (address) => {
   font-weight: 500;
 }
 
-.search-input >>> .el-input__inner:focus {
+:deep(.search-input .el-input__inner:focus) {
   border: none !important;
   box-shadow: none !important;
 }
 
-.search-input >>> .el-input__inner::placeholder {
+:deep(.search-input .el-input__inner::placeholder) {
   color: #9ca3af;
   font-weight: 400;
 }
@@ -1939,8 +1939,8 @@ const copyAddress = (address) => {
     white-space: nowrap;
     flex-shrink: 0;
   }
-  
-  .search-input >>> .el-input__inner {
+
+  :deep(.search-input .el-input__inner) {
     padding: 14px 8px;
     font-size: 15px;
   }
@@ -2164,348 +2164,305 @@ const copyAddress = (address) => {
 
 /* 黑暗模式适配 */
 :global(html.dark) {
-  .crypto-scanner {
+  :deep(.crypto-scanner){
     background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
   }
 
-  .main-card {
+  :deep(.main-card) {
     background: rgba(31, 41, 55, 0.95);
     border: 1px solid rgba(75, 85, 99, 0.3);
   }
 
-  .search-header {
+  :deep(.search-header) {
     background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
   }
 
-  .search-input-wrapper {
+  :deep(.search-input-wrapper) {
     background: #374151;
     border-color: #4b5563;
   }
 
-  .search-input-wrapper:focus-within {
+:deep(.search-input-wrapper:focus-within) {
     border-color: #6366f1;
     background: #374151;
   }
 
-  .search-icon {
+:deep(.search-icon) {
     color: #9ca3af;
   }
 
-  .search-input-wrapper:focus-within .search-icon {
+:deep(.search-input-wrapper:focus-within .search-icon) {
     color: #6366f1;
   }
 
-  .search-input >>> .el-input__inner {
+:deep(.search-input .el-input__inner) {
     background: transparent !important;
     color: #f9fafb !important;
   }
 
-  .search-input >>> .el-input__inner::placeholder {
+:deep(.search-input .el-input__inner::placeholder) {
     color: #6b7280 !important;
   }
 
-  .header-divider {
+:deep(.header-divider) {
     background: linear-gradient(90deg, transparent, rgba(75, 85, 99, 0.3), transparent);
   }
 
-  .chart-section,
+:deep(.chart-section,
   .token-info-section,
   .action-section,
-  .stats-section {
+  .stats-section) {
     background: rgba(31, 41, 55, 0.8);
     border: 1px solid rgba(75, 85, 99, 0.3);
   }
 
-  .chart-header {
+:deep(.chart-header) {
     border-bottom-color: rgba(75, 85, 99, 0.3);
   }
 
-  .token-info h3 {
+:deep(.token-info h3) {
     color: #f9fafb;
   }
 
-  .token-name {
+:deep(.token-name) {
     color: #9ca3af !important;
   }
 
-  .current-price {
+:deep(.current-price) {
     color: #f9fafb;
     font-size: 20px;
     font-weight: 600;
   }
 
-  .section-header,
-  .section-title {
+:deep(.section-header,
+  .section-title) {
     color: #f9fafb;
     border-bottom-color: rgba(75, 85, 99, 0.3);
   }
 
-  .info-item {
+:deep(.info-item) {
     background: rgba(55, 65, 81, 0.6);
   }
 
-  .info-item:hover {
+:deep(.info-item:hover) {
     background: rgba(55, 65, 81, 0.8);
   }
 
-  .info-label {
+:deep(.info-label) {
     color: #9ca3af;
   }
 
-  .info-value {
+:deep(.info-value) {
     color: #f3f4f6;
   }
 
-  .timeframe-btn {
+:deep(.timeframe-btn) {
     background: rgba(55, 65, 81, 0.8);
     border-color: #4b5563;
     color: #d1d5db;
   }
 
-  .timeframe-btn:hover {
+:deep(.timeframe-btn:hover) {
     background: rgba(55, 65, 81, 1);
     border-color: #6b7280;
   }
 
-  .trading-stats .stat-item {
+:deep(.trading-stats .stat-item) {
     background: rgba(55, 65, 81, 0.6);
   }
 
-  .trading-stats .stat-label {
+:deep(.trading-stats .stat-label) {
     color: #9ca3af;
   }
 
-  .trading-stats .stat-value {
+:deep(.trading-stats .stat-value) {
     color: #f3f4f6;
   }
 
-  .safety-row {
-    background: rgba(55, 65, 81, 0.6);
-  }
 
-  .safety-item {
-    color: #d1d5db;
-  }
-
-  .query-stats .stat-item {
+:deep(.query-stats .stat-item) {
     border-bottom-color: rgba(75, 85, 99, 0.3);
   }
 
-  .label {
+:deep(.label) {
     color: #9ca3af;
   }
 
-  .value {
+:deep(.value) {
     color: #f3f4f6;
   }
 
-  .social-btn-small {
+:deep(.social-btn-small) {
     background: rgba(55, 65, 81, 0.8) !important;
     border-color: #4b5563 !important;
     color: #d1d5db !important;
   }
 
-  .social-btn-small:hover {
+:deep(.social-btn-small:hover) {
     background: rgba(75, 85, 99, 0.9) !important;
     border-color: #6b7280 !important;
   }
 
   /* 新布局元素黑暗模式适配 */
-  .token-title .query-stats .label {
+:deep(.token-title .query-stats .label) {
     color: #9ca3af !important;
   }
 
-  .token-title .query-stats .value {
+:deep(.token-title .query-stats .value) {
     color: #f3f4f6 !important;
   }
 
-  .token-title .primary-actions .el-button {
+:deep(.token-title .primary-actions .el-button) {
     background: rgba(55, 65, 81, 0.8) !important;
     border-color: #4b5563 !important;
     color: #d1d5db !important;
   }
 
-  .token-title .primary-actions .el-button:hover {
+:deep(.token-title .primary-actions .el-button:hover) {
     background: rgba(75, 85, 99, 0.9) !important;
     border-color: #6b7280 !important;
   }
 
-  .token-title .primary-actions .el-button--primary {
+:deep(.token-title .primary-actions .el-button--primary) {
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
     border-color: transparent !important;
     color: white !important;
   }
 
-  .token-title .primary-actions .el-button--info {
+:deep(.token-title .primary-actions .el-button--info) {
     background: rgba(75, 85, 99, 0.8) !important;
     border-color: #6b7280 !important;
     color: #d1d5db !important;
   }
 
-  /* Element Plus 组件黑暗模式适配 */
-  .el-button--primary {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-  }
-
-  .el-tag {
-    background-color: rgba(55, 65, 81, 0.8) !important;
-    border-color: #4b5563 !important;
-    color: #d1d5db !important;
-  }
-
-  .el-tag.el-tag--success {
-    background-color: rgba(16, 185, 129, 0.2) !important;
-    border-color: rgba(16, 185, 129, 0.3) !important;
-    color: #10b981 !important;
-  }
-
-  .el-tag.el-tag--warning {
-    background-color: rgba(245, 158, 11, 0.2) !important;
-    border-color: rgba(245, 158, 11, 0.3) !important;
-    color: #f59e0b !important;
-  }
-
-  .el-tag.el-tag--danger {
-    background-color: rgba(239, 68, 68, 0.2) !important;
-    border-color: rgba(239, 68, 68, 0.3) !important;
-    color: #ef4444 !important;
-  }
-
   /* 新布局黑暗模式适配 */
-  .token-title-row {
+:deep(.token-title-row) {
     border-bottom-color: rgba(75, 85, 99, 0.3);
   }
 
-  .query-stats-row .stat-item {
+:deep(.query-stats-row .stat-item) {
     background: rgba(55, 65, 81, 0.6) !important;
   }
 
-  .query-stats-row .stat-item:hover {
+:deep(.query-stats-row .stat-item:hover) {
     background: rgba(55, 65, 81, 0.8) !important;
   }
 
-  .query-stats-row .label {
+:deep(.query-stats-row .label) {
     color: #9ca3af !important;
   }
 
-  .query-stats-row .value {
+:deep(.query-stats-row .value) {
     color: #f3f4f6 !important;
   }
 
-  .action-buttons .el-button {
+:deep(.action-buttons .el-button) {
     background: rgba(55, 65, 81, 0.8) !important;
     border-color: #4b5563 !important;
     color: #d1d5db !important;
   }
 
-  .action-buttons .el-button:hover {
+:deep(.action-buttons .el-button:hover) {
     background: rgba(75, 85, 99, 0.9) !important;
     border-color: #6b7280 !important;
   }
 
-  .action-buttons .el-button--primary {
+:deep(.action-buttons .el-button--primary) {
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
     border-color: transparent !important;
     color: white !important;
   }
 
-  .action-buttons .el-button--info {
+:deep(.action-buttons .el-button--info) {
     background: rgba(75, 85, 99, 0.8) !important;
     border-color: #6b7280 !important;
     color: #d1d5db !important;
   }
 
   /* 安全数据区域黑暗模式适配 */
-  .security-info-row {
+:deep(.security-info-row) {
     background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
     border-color: rgba(75, 85, 99, 0.5);
   }
 
-  .security-info-row:hover {
+:deep(.security-info-row:hover) {
     border-color: rgba(107, 114, 128, 0.7);
     background: linear-gradient(135deg, rgba(55, 65, 81, 0.8) 0%, rgba(31, 41, 55, 1) 100%);
   }
 
-  .placeholder-text {
-    color: #d1d5db;
-  }
 
-  .placeholder-desc {
-    color: #9ca3af;
-  }
-
-  .security-header {
+:deep(.security-header) {
     border-bottom-color: rgba(75, 85, 99, 0.3);
   }
 
-  .security-title {
+:deep(.security-title) {
     color: #f9fafb;
   }
 
-  .metric-label {
+:deep(.metric-label) {
     color: #9ca3af;
   }
 
-  .metric-value {
+:deep(.metric-value) {
     color: #f3f4f6;
   }
 
-  .permission-item i {
+:deep(.permission-item i) {
     color: #9ca3af;
   }
 
-  .permission-item.risk i {
+:deep(.permission-item.risk i) {
     color: #f87171;
   }
 
-  .permission-item span {
+:deep(.permission-item span) {
     color: #d1d5db;
   }
 
-  .security-loading,
-  .security-error {
+:deep(.security-loading,
+  .security-error) {
     color: #9ca3af;
   }
 
   /* 新安全分析样式的黑暗模式 */
-  .security-metric-card {
+:deep(.security-metric-card) {
     background: rgba(55, 65, 81, 0.8);
     border-color: #4b5563;
   }
 
-  .security-metric-card:hover {
+:deep(.security-metric-card:hover) {
     background: rgba(55, 65, 81, 1);
     border-color: #6b7280;
   }
 
-  .security-metric-card.clickable:hover {
+:deep(.security-metric-card.clickable:hover) {
     border-color: #6366f1;
     background: rgba(55, 65, 81, 1);
   }
 
-  .permission-timeframe-btn {
+:deep(.permission-timeframe-btn) {
     background: rgba(55, 65, 81, 0.8);
     border-color: #4b5563;
     color: #d1d5db;
   }
 
-  .permission-timeframe-btn:hover {
+:deep(.permission-timeframe-btn:hover) {
     background: rgba(55, 65, 81, 1);
   }
 
-  .permission-timeframe-btn.safe {
+:deep(.permission-timeframe-btn.safe) {
     background: linear-gradient(135deg, rgba(6, 95, 70, 0.8), rgba(4, 120, 87, 0.6));
     border-color: #6ee7b7;
     color: #6ee7b7;
   }
 
-  .permission-timeframe-btn.danger {
+:deep(.permission-timeframe-btn.danger) {
     background: linear-gradient(135deg, rgba(153, 27, 27, 0.8), rgba(220, 38, 38, 0.6));
     border-color: #f87171;
     color: #fca5a5;
   }
 
-  .metric-value.neutral {
+:deep(.metric-value.neutral) {
     color: #6366f1;
     display: flex;
     align-items: center;
@@ -2514,19 +2471,18 @@ const copyAddress = (address) => {
     font-size: 10px;
   }
 
-  .metric-value.success {
+:deep(.metric-value.success) {
     color: #059669;
   }
 
-  .metric-value.warning {
+:deep(.metric-value.warning) {
     color: #f59e0b;
   }
 
-  .metric-value.danger {
+:deep(.metric-value.danger) {
     color: #dc2626;
   }
 
-  /* Element Plus 组件黑暗模式适配 */
 }
 
 </style>

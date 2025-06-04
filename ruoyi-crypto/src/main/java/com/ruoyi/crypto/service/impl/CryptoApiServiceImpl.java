@@ -7,6 +7,8 @@ import cn.hutool.json.JSONUtil;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.crypto.service.CryptoApiService;
+import com.ruoyi.crypto.utils.AddressUtils;
+import com.ruoyi.crypto.utils.ChainApiUtils;
 import org.springframework.stereotype.Service;
 import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicReference;
@@ -27,35 +29,35 @@ public class CryptoApiServiceImpl implements CryptoApiService {
     }
 
     @Override
-    public AjaxResult getTokenInfo(String address) {
-        String result = HttpUtil.get(tokenInfoUrl + address);
-        if(StringUtils.isEmpty(result)){
-            return error("查询ca信息失败！");
-        }
-        if(!JSONUtil.isJson(result)){
-            return error("查询ca信息为空！");
-        }
-        JSONObject jsonObject = JSONUtil.parseObj(result);
-        JSONArray pairs = jsonObject.getJSONArray("pairs");
-        if(pairs.isEmpty()){
-            return error("未查询到此ca信息");
-        }
-        if(pairs.size() == 1){
-            return success(pairs.get(0));
+    public AjaxResult getTokenInfo(String text) {
+        /**
+         * 2025-06-04
+         * 处理地址和链的判定流程：
+         * 1. 先用正则匹配文本，尝试直接提取区块链地址和链类型。
+         * 2. 如果是 sol 地址，优先调用 gmgn 的 API 获取数据，若失败则依次尝试 moralis、dex 作为备用。
+         * 3. 如果不是 sol 地址，先用 dex 的 API 判断该地址属于哪条公链，然后带上链类型和地址去查 gmgn 的 API（备用只查 dex）。
+         *
+         * 实现策略：
+         * - 保证查询顺序优先级（Sol: gmgn > moralis > dex，其他链: gmgn > dex）
+         * - 便于扩展更多链类型和查询逻辑
+         * - 目前只支持 sol\eth\base\bsc
+         * - 如后续支持新链，需在正则和判定逻辑处增加分支
+         */
+
+        //获取文本中的地址
+        String address = AddressUtils.findAddress(text);
+        if(StringUtils.isEmpty(address)){
+            return error("请输入正确的地址！");
         }
 
-        JSONObject maxPair = pairs.stream()
-                .map(item -> (JSONObject) item)
-                .max(Comparator.comparing(pairsJson -> {
-                    JSONObject liq = pairsJson.getJSONObject("liquidity");
-                    if(liq == null) return 0.0;
-                    try {
-                        return liq.getDouble("usd", 0.0);
-                    }catch (Exception e){
-                        return 0.0;
-                    }
-                })).orElse(null);
-        return success(maxPair);
+        //确立哪条链 sol/evm
+        String chainType = AddressUtils.findChainType(address);
+        if(StringUtils.isEmpty(chainType)){
+            return error("无法识别该地址所属的公链类型！");
+        }
+
+
+        return ChainApiUtils.getTokenInfoAutomatic(address, chainType);
     }
 
     @Override
@@ -64,14 +66,12 @@ public class CryptoApiServiceImpl implements CryptoApiService {
         boolean isHoneypot = false; //是否貔貅
         String riskTag = "";
 
-        String result = HttpUtil.get(tokenSecurityUrl + address);
-        if(StringUtils.isEmpty(result)){
-            return error("查询ca信息失败！");
+        AjaxResult ajaxResult = ChainApiUtils.getGoPlusTokenSecurity(address);
+        if(ajaxResult.isError()){
+            return ajaxResult;
         }
-        if(!JSONUtil.isJson(result)){
-            return error("查询ca信息为空！");
-        }
-        JSONObject jsonObject = JSONUtil.parseObj(result);
+
+        JSONObject jsonObject = JSONUtil.parseObj(ajaxResult.get(DATA_TAG));
         String code = jsonObject.getStr("code", "-1");
         String message = jsonObject.getStr("message", "查询失败");
         if(!"1".equals(code)){
