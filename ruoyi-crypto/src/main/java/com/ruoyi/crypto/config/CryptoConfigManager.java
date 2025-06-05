@@ -38,7 +38,12 @@ public class CryptoConfigManager {
 
     @PostConstruct
     public void init() {
-        loadAllConfigs();
+        try {
+            loadAllConfigs();
+        } catch (Exception e) {
+            // 如果数据库还没有创建表，先忽略错误，避免启动失败
+            System.err.println("Warning: Failed to load dynamic config from database: " + e.getMessage());
+        }
     }
 
     /**
@@ -118,25 +123,35 @@ public class CryptoConfigManager {
         
         switch (provider.toLowerCase()) {
             case "gmgn":
-                urls.put("tokenInfoUrl", gmgnProperties.getTokenInfoUrl());
-                urls.put("tokenWalletUrl", gmgnProperties.getTokenWalletUrl());
-                urls.put("tokenHoldersUrl", gmgnProperties.getTokenHoldersUrl());
-                urls.put("tokenSecurityUrl", gmgnProperties.getTokenSecurityUrl());
+                if (gmgnProperties != null) {
+                    urls.put("tokenInfoUrl", gmgnProperties.getTokenInfoUrl());
+                    urls.put("tokenWalletUrl", gmgnProperties.getTokenWalletUrl());
+                    urls.put("tokenHoldersUrl", gmgnProperties.getTokenHoldersUrl());
+                    urls.put("tokenSecurityUrl", gmgnProperties.getTokenSecurityUrl());
+                }
                 break;
             case "moralis":
-                urls.put("tokenPairUrl", moralisProperties.getTokenPairUrl());
-                urls.put("pairInfoUrl", moralisProperties.getPairInfoUrl());
-                urls.put("tokenTradeUrl", moralisProperties.getTokenTradeUrl());
+                if (moralisProperties != null) {
+                    urls.put("tokenPairUrl", moralisProperties.getTokenPairUrl());
+                    urls.put("pairInfoUrl", moralisProperties.getPairInfoUrl());
+                    urls.put("tokenTradeUrl", moralisProperties.getTokenTradeUrl());
+                }
                 break;
             case "axiom":
-                urls.put("tokenPairUrl", axiomProperties.getTokenPairUrl());
-                urls.put("pairInfoUrl", axiomProperties.getPairInfoUrl());
+                if (axiomProperties != null) {
+                    urls.put("tokenPairUrl", axiomProperties.getTokenPairUrl());
+                    urls.put("pairInfoUrl", axiomProperties.getPairInfoUrl());
+                }
                 break;
             case "dex":
-                urls.put("tokenInfoUrl", dexProperties.getTokenPairUrl());
+                if (dexProperties != null) {
+                    urls.put("tokenInfoUrl", dexProperties.getTokenPairUrl());
+                }
                 break;
             case "goplus":
-                urls.put("tokenSecurityUrl", goPlusProperties.getTokenSecurityUrl());
+                if (goPlusProperties != null) {
+                    urls.put("tokenSecurityUrl", goPlusProperties.getTokenSecurityUrl());
+                }
                 break;
         }
         

@@ -43,6 +43,9 @@ public class ChainApiUtils {
 
     @Resource
     private ProxyProperties proxyProperties;
+    
+    @Resource
+    private CryptoConfigManager configManager;
 
     private String GMGN_TOKEN_INFO = "";
     private String GMGN_TOKEN_WALLET = "";
@@ -60,35 +63,62 @@ public class ChainApiUtils {
 
     @PostConstruct
     public void init() {
-        System.setProperty("http.proxyHost", proxyProperties.getHttpHost());
-        System.setProperty("http.proxyPort", String.valueOf(proxyProperties.getHttpPort()));
-        System.setProperty("https.proxyHost", proxyProperties.getHttpsHost());
-        System.setProperty("https.proxyPort", String.valueOf(proxyProperties.getHttpsPort()));
+        // 设置代理，添加空值检查
+        if (proxyProperties != null) {
+            if (proxyProperties.getHttpHost() != null) {
+                System.setProperty("http.proxyHost", proxyProperties.getHttpHost());
+            }
+            if (proxyProperties.getHttpPort() != null) {
+                System.setProperty("http.proxyPort", String.valueOf(proxyProperties.getHttpPort()));
+            }
+            if (proxyProperties.getHttpsHost() != null) {
+                System.setProperty("https.proxyHost", proxyProperties.getHttpsHost());
+            }
+            if (proxyProperties.getHttpsPort() != null) {
+                System.setProperty("https.proxyPort", String.valueOf(proxyProperties.getHttpsPort()));
+            }
+        }
 
-        GMGN_TOKEN_INFO = gmgnProperties.getTokenInfoUrl();
-        GMGN_TOKEN_WALLET = gmgnProperties.getTokenWalletUrl();
-        GMGN_TOKEN_HOLDERS = gmgnProperties.getTokenHoldersUrl();
-        GMGN_TOKEN_SECURITY = gmgnProperties.getTokenSecurityUrl();
-        GMGN_COMMON_PARAM = "?device_id=" + gmgnProperties.getDeviceId()
-                + "&client_id=" + gmgnProperties.getClient_id()
-                + "&from_app=" + gmgnProperties.getFrom_app()
-                + "&app_ver=" + gmgnProperties.getApp_ver()
-                + "&tz_name=" + gmgnProperties.getTz_name()
-                + "&tz_offset=" + gmgnProperties.getTz_offset()
-                + "&app_lang=" + gmgnProperties.getApp_lang()
-                + "&fp_did=" + gmgnProperties.getFp_did()
-                + "&os=" + gmgnProperties.getOs();
+        // 初始化URL配置（从yml读取，稳定不变）
+        if (gmgnProperties != null) {
+            GMGN_TOKEN_INFO = gmgnProperties.getTokenInfoUrl();
+            GMGN_TOKEN_WALLET = gmgnProperties.getTokenWalletUrl();
+            GMGN_TOKEN_HOLDERS = gmgnProperties.getTokenHoldersUrl();
+            GMGN_TOKEN_SECURITY = gmgnProperties.getTokenSecurityUrl();
+        }
 
-        AXIOM_PAIR_INFO = axiomProperties.getPairInfoUrl();
-        AXIOM_TOKEN_INFO = axiomProperties.getTokenPairUrl();
+        if (axiomProperties != null) {
+            AXIOM_PAIR_INFO = axiomProperties.getPairInfoUrl();
+            AXIOM_TOKEN_INFO = axiomProperties.getTokenPairUrl();
+        }
 
-        MORALIS_TOKEN_PAIR = moralisProperties.getTokenPairUrl();
-        MORALIS_PAIR_INFO = moralisProperties.getPairInfoUrl();
-        MORALIS_TOKEN_TRADE = moralisProperties.getTokenTradeUrl();
+        if (moralisProperties != null) {
+            MORALIS_TOKEN_PAIR = moralisProperties.getTokenPairUrl();
+            MORALIS_PAIR_INFO = moralisProperties.getPairInfoUrl();
+            MORALIS_TOKEN_TRADE = moralisProperties.getTokenTradeUrl();
+        }
 
-        DEX_TOKEN_INFO = dexProperties.getTokenPairUrl();
+        if (dexProperties != null) {
+            DEX_TOKEN_INFO = dexProperties.getTokenPairUrl();
+        }
 
-        GO_PLUS_SECURITY = goPlusProperties.getTokenSecurityUrl();
+        if (goPlusProperties != null) {
+            GO_PLUS_SECURITY = goPlusProperties.getTokenSecurityUrl();
+        }
+
+        // GMGN的动态参数现在将从数据库读取，这里不再硬编码
+        // 先暂时保留兜底值，避免启动时出错
+        if (gmgnProperties != null) {
+            GMGN_COMMON_PARAM = "?device_id=" + (gmgnProperties.getDeviceId() != null ? gmgnProperties.getDeviceId() : "")
+                    + "&client_id=" + (gmgnProperties.getClient_id() != null ? gmgnProperties.getClient_id() : "")
+                    + "&from_app=" + (gmgnProperties.getFrom_app() != null ? gmgnProperties.getFrom_app() : "")
+                    + "&app_ver=" + (gmgnProperties.getApp_ver() != null ? gmgnProperties.getApp_ver() : "")
+                    + "&tz_name=" + (gmgnProperties.getTz_name() != null ? gmgnProperties.getTz_name() : "")
+                    + "&tz_offset=" + (gmgnProperties.getTz_offset() != null ? gmgnProperties.getTz_offset() : "")
+                    + "&app_lang=" + (gmgnProperties.getApp_lang() != null ? gmgnProperties.getApp_lang() : "")
+                    + "&fp_did=" + (gmgnProperties.getFp_did() != null ? gmgnProperties.getFp_did() : "")
+                    + "&os=" + (gmgnProperties.getOs() != null ? gmgnProperties.getOs() : "");
+        }
     }
 
     // 池子地址缓存，避免重复请求dex API
@@ -125,11 +155,33 @@ public class ChainApiUtils {
         param.put("addresses", Collections.singletonList(address));
         String json = JSONUtil.toJsonStr(param);
 
+        // 从配置管理器获取最新的headers和params
+        Map<String, String> headers = new HashMap<>();
+        Map<String, String> params = new HashMap<>();
+        
+        try {
+            // 获取动态配置，如果获取失败则使用yml配置兜底
+            headers = configManager.getHeaders("gmgn");
+            params = configManager.getParams("gmgn");
+            
+            // 如果动态配置为空，使用yml配置兜底
+            if (headers.isEmpty() && gmgnProperties != null && gmgnProperties.getHeaders() != null) {
+                headers = new HashMap<>(gmgnProperties.getHeaders());
+            }
+        } catch (Exception e) {
+            // 如果配置管理器出错，使用yml配置兜底
+            if (gmgnProperties != null && gmgnProperties.getHeaders() != null) {
+                headers = new HashMap<>(gmgnProperties.getHeaders());
+            }
+        }
+
+        // 动态构建参数字符串
+        String commonParam = buildGmgnParams(params);
+        
         String referer = "https://gmgn.ai/" + chainType + "/token/" + address;
-        Map<String, String> headers = new HashMap<>(gmgnProperties.getHeaders());
         headers.put("referer", referer);
 
-        String body = doPost(GMGN_TOKEN_INFO + GMGN_COMMON_PARAM, headers, json);
+        String body = doPost(GMGN_TOKEN_INFO + commonParam, headers, json);
         if(StringUtils.isEmpty(body)){
             return error("查询ca信息失败！");
         }
@@ -144,6 +196,26 @@ public class ChainApiUtils {
         }
         JSONArray data = jsonObject.getJSONArray("data");
         return success(data);
+    }
+    
+    /**
+     * 构建GMGN参数字符串
+     */
+    private String buildGmgnParams(Map<String, String> params) {
+        StringBuilder sb = new StringBuilder("?");
+        
+        // 优先使用动态配置的参数
+        sb.append("device_id=").append(params.getOrDefault("device_id", ""));
+        sb.append("&client_id=").append(params.getOrDefault("client_id", ""));
+        sb.append("&from_app=").append(params.getOrDefault("from_app", ""));
+        sb.append("&app_ver=").append(params.getOrDefault("app_ver", ""));
+        sb.append("&tz_name=").append(params.getOrDefault("tz_name", ""));
+        sb.append("&tz_offset=").append(params.getOrDefault("tz_offset", ""));
+        sb.append("&app_lang=").append(params.getOrDefault("app_lang", ""));
+        sb.append("&fp_did=").append(params.getOrDefault("fp_did", ""));
+        sb.append("&os=").append(params.getOrDefault("os", ""));
+        
+        return sb.toString();
     }
 
     /**

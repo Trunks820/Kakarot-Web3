@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.CryptoDynamicConfigMapper">
+    
+    <resultMap type="CryptoDynamicConfig" id="CryptoDynamicConfigResult">
+        <result property="id"           column="id"           />
+        <result property="provider"     column="provider"     />
+        <result property="configGroup"  column="config_group" />
+        <result property="configKey"    column="config_key"   />
+        <result property="configValue"  column="config_value" />
+        <result property="isEnabled"    column="is_enabled"   />
+        <result property="description"  column="description"  />
+        <result property="createBy"     column="create_by"    />
+        <result property="createTime"   column="create_time"  />
+        <result property="updateBy"     column="update_by"    />
+        <result property="updateTime"   column="update_time"  />
+        <result property="remark"       column="remark"       />
+    </resultMap>
+
+    <sql id="selectCryptoDynamicConfigVo">
+        select id, provider, config_group, config_key, config_value, is_enabled, description, create_by, create_time, update_by, update_time, remark from crypto_dynamic_config
+    </sql>
+
+    <select id="selectCryptoDynamicConfigList" parameterType="CryptoDynamicConfig" resultMap="CryptoDynamicConfigResult">
+        <include refid="selectCryptoDynamicConfigVo"/>
+        <where>  
+            <if test="provider != null  and provider != ''"> and provider = #{provider}</if>
+            <if test="configGroup != null  and configGroup != ''"> and config_group = #{configGroup}</if>
+            <if test="configKey != null  and configKey != ''"> and config_key = #{configKey}</if>
+            <if test="configValue != null  and configValue != ''"> and config_value = #{configValue}</if>
+            <if test="isEnabled != null "> and is_enabled = #{isEnabled}</if>
+        </where>
+        order by provider, config_group, config_key
+    </select>
+
+    <insert id="insertCryptoDynamicConfig" parameterType="CryptoDynamicConfig" useGeneratedKeys="true" keyProperty="id">
+        insert into crypto_dynamic_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="provider != null and provider != ''">provider,</if>
+            <if test="configGroup != null and configGroup != ''">config_group,</if>
+            <if test="configKey != null and configKey != ''">config_key,</if>
+            <if test="configValue != null">config_value,</if>
+            <if test="isEnabled != null">is_enabled,</if>
+            <if test="description != null">description,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time,
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="provider != null and provider != ''">#{provider},</if>
+            <if test="configGroup != null and configGroup != ''">#{configGroup},</if>
+            <if test="configKey != null and configKey != ''">#{configKey},</if>
+            <if test="configValue != null">#{configValue},</if>
+            <if test="isEnabled != null">#{isEnabled},</if>
+            <if test="description != null">#{description},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate(),
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCryptoDynamicConfig" parameterType="CryptoDynamicConfig">
+        update crypto_dynamic_config
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="provider != null and provider != ''">provider = #{provider},</if>
+            <if test="configGroup != null and configGroup != ''">config_group = #{configGroup},</if>
+            <if test="configKey != null and configKey != ''">config_key = #{configKey},</if>
+            <if test="configValue != null">config_value = #{configValue},</if>
+            <if test="isEnabled != null">is_enabled = #{isEnabled},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate(),
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCryptoDynamicConfigById" parameterType="Long">
+        delete from crypto_dynamic_config where id = #{id}
+    </delete>
+
+    <delete id="deleteCryptoDynamicConfigByIds" parameterType="String">
+        delete from crypto_dynamic_config where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper> 
