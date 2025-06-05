@@ -4,12 +4,6 @@ import com.ruoyi.common.core.domain.BaseEntity;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-/**
- * 加密货币API动态配置对象 crypto_dynamic_config
- * 
- * @author ruoyi
- * @date 2025-01-31
- */
 public class CryptoDynamicConfig extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
