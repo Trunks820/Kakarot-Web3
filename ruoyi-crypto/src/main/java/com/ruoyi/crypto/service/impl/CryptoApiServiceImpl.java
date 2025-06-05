@@ -1,6 +1,5 @@
 package com.ruoyi.crypto.service.impl;
 
-import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
@@ -10,15 +9,15 @@ import com.ruoyi.crypto.service.CryptoApiService;
 import com.ruoyi.crypto.utils.AddressUtils;
 import com.ruoyi.crypto.utils.ChainApiUtils;
 import org.springframework.stereotype.Service;
-import java.util.Comparator;
+import javax.annotation.Resource;
 import java.util.concurrent.atomic.AtomicReference;
-
 import static com.ruoyi.common.core.domain.AjaxResult.*;
 
 @Service
 public class CryptoApiServiceImpl implements CryptoApiService {
 
-
+    @Resource
+    private ChainApiUtils chainApiUtils;
 
     @Override
     public AjaxResult getTokenInfo(String text) {
@@ -51,15 +50,15 @@ public class CryptoApiServiceImpl implements CryptoApiService {
         if("sol".equals(chainType)){
             // sol直接按规则走
             String finalChainType = chainType;
-            AjaxResult result = ChainApiUtils.tryChainApis(
-                    () -> ChainApiUtils.getGMGNTokenInfo(address, finalChainType),
-                    () -> ChainApiUtils.getMoralisTokenPair(address),
-                    () -> ChainApiUtils.getDexPairInfo(address)
+            AjaxResult result = chainApiUtils.tryChainApis(
+                    () -> chainApiUtils.getGMGNTokenInfo(address, finalChainType),
+                    () -> chainApiUtils.getMoralisTokenPair(address),
+                    () -> chainApiUtils.getDexPairInfo(address)
             );
             return result;
         } else{
             // evm需要先判定具体是哪个链
-            AjaxResult dexPairInfo = ChainApiUtils.getDexPairInfo(address);
+            AjaxResult dexPairInfo = chainApiUtils.getDexPairInfo(address);
             if(dexPairInfo.isSuccess()){
                 JSONObject jsonObject = JSONUtil.parseObj(dexPairInfo.get("data"));
                 chainType = jsonObject.getStr("chainId");
@@ -71,7 +70,7 @@ public class CryptoApiServiceImpl implements CryptoApiService {
             }
 
             // 使用gmgn
-            AjaxResult gmgnTokenInfo = ChainApiUtils.getGMGNTokenInfo(address, chainType);
+            AjaxResult gmgnTokenInfo = chainApiUtils.getGMGNTokenInfo(address, chainType);
             if(gmgnTokenInfo.isSuccess()){
                 return gmgnTokenInfo;
             }
@@ -85,7 +84,7 @@ public class CryptoApiServiceImpl implements CryptoApiService {
         boolean isHoneypot = false; //是否貔貅
         String riskTag = "";
 
-        AjaxResult ajaxResult = ChainApiUtils.getGoPlusTokenSecurity(address);
+        AjaxResult ajaxResult = chainApiUtils.getGoPlusTokenSecurity(address);
         if(ajaxResult.isError()){
             return ajaxResult;
         }
