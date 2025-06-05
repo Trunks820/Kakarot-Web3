@@ -11,5 +11,5 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "crypto.dex")
 public class DexProperties {
 
-    private String tokenPairUrl;
+    private String tokenInfoUrl;
 }

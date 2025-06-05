@@ -145,7 +145,7 @@ public class CryptoConfigManager {
                 break;
             case "dex":
                 if (dexProperties != null) {
-                    urls.put("tokenInfoUrl", dexProperties.getTokenPairUrl());
+                    urls.put("tokenInfoUrl", dexProperties.getTokenInfoUrl());
                 }
                 break;
             case "goplus":

@@ -12,6 +12,7 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.crypto.config.*;
 import com.ruoyi.crypto.service.ApiSupplier;
 import okhttp3.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -64,61 +65,36 @@ public class ChainApiUtils {
     @PostConstruct
     public void init() {
         // 设置代理，添加空值检查
-        if (proxyProperties != null) {
-            if (proxyProperties.getHttpHost() != null) {
-                System.setProperty("http.proxyHost", proxyProperties.getHttpHost());
-            }
-            if (proxyProperties.getHttpPort() != null) {
-                System.setProperty("http.proxyPort", String.valueOf(proxyProperties.getHttpPort()));
-            }
-            if (proxyProperties.getHttpsHost() != null) {
-                System.setProperty("https.proxyHost", proxyProperties.getHttpsHost());
-            }
-            if (proxyProperties.getHttpsPort() != null) {
-                System.setProperty("https.proxyPort", String.valueOf(proxyProperties.getHttpsPort()));
-            }
-        }
 
-        // 初始化URL配置（从yml读取，稳定不变）
-        if (gmgnProperties != null) {
-            GMGN_TOKEN_INFO = gmgnProperties.getTokenInfoUrl();
-            GMGN_TOKEN_WALLET = gmgnProperties.getTokenWalletUrl();
-            GMGN_TOKEN_HOLDERS = gmgnProperties.getTokenHoldersUrl();
-            GMGN_TOKEN_SECURITY = gmgnProperties.getTokenSecurityUrl();
-        }
+        System.setProperty("http.proxyHost", proxyProperties.getHttpHost());
+        System.setProperty("http.proxyPort", String.valueOf(proxyProperties.getPort()));
+        System.setProperty("https.proxyHost", proxyProperties.getHttpsHost());
+        System.setProperty("https.proxyPort", String.valueOf(proxyProperties.getPort()));
 
-        if (axiomProperties != null) {
-            AXIOM_PAIR_INFO = axiomProperties.getPairInfoUrl();
-            AXIOM_TOKEN_INFO = axiomProperties.getTokenPairUrl();
-        }
-
-        if (moralisProperties != null) {
-            MORALIS_TOKEN_PAIR = moralisProperties.getTokenPairUrl();
-            MORALIS_PAIR_INFO = moralisProperties.getPairInfoUrl();
-            MORALIS_TOKEN_TRADE = moralisProperties.getTokenTradeUrl();
-        }
-
-        if (dexProperties != null) {
-            DEX_TOKEN_INFO = dexProperties.getTokenPairUrl();
-        }
-
-        if (goPlusProperties != null) {
-            GO_PLUS_SECURITY = goPlusProperties.getTokenSecurityUrl();
-        }
+        GMGN_TOKEN_INFO = gmgnProperties.getTokenInfoUrl();
+        GMGN_TOKEN_WALLET = gmgnProperties.getTokenWalletUrl();
+        GMGN_TOKEN_HOLDERS = gmgnProperties.getTokenHoldersUrl();
+        GMGN_TOKEN_SECURITY = gmgnProperties.getTokenSecurityUrl();
+        AXIOM_PAIR_INFO = axiomProperties.getPairInfoUrl();
+        AXIOM_TOKEN_INFO = axiomProperties.getTokenPairUrl();
+        MORALIS_TOKEN_PAIR = moralisProperties.getTokenPairUrl();
+        MORALIS_PAIR_INFO = moralisProperties.getPairInfoUrl();
+        MORALIS_TOKEN_TRADE = moralisProperties.getTokenTradeUrl();
+        DEX_TOKEN_INFO = dexProperties.getTokenInfoUrl();
+        GO_PLUS_SECURITY = goPlusProperties.getTokenSecurityUrl();
 
         // GMGN的动态参数现在将从数据库读取，这里不再硬编码
         // 先暂时保留兜底值，避免启动时出错
-        if (gmgnProperties != null) {
-            GMGN_COMMON_PARAM = "?device_id=" + (gmgnProperties.getDeviceId() != null ? gmgnProperties.getDeviceId() : "")
-                    + "&client_id=" + (gmgnProperties.getClient_id() != null ? gmgnProperties.getClient_id() : "")
-                    + "&from_app=" + (gmgnProperties.getFrom_app() != null ? gmgnProperties.getFrom_app() : "")
-                    + "&app_ver=" + (gmgnProperties.getApp_ver() != null ? gmgnProperties.getApp_ver() : "")
-                    + "&tz_name=" + (gmgnProperties.getTz_name() != null ? gmgnProperties.getTz_name() : "")
-                    + "&tz_offset=" + (gmgnProperties.getTz_offset() != null ? gmgnProperties.getTz_offset() : "")
-                    + "&app_lang=" + (gmgnProperties.getApp_lang() != null ? gmgnProperties.getApp_lang() : "")
-                    + "&fp_did=" + (gmgnProperties.getFp_did() != null ? gmgnProperties.getFp_did() : "")
-                    + "&os=" + (gmgnProperties.getOs() != null ? gmgnProperties.getOs() : "");
-        }
+
+        GMGN_COMMON_PARAM = "?device_id=" + (gmgnProperties.getDeviceId() != null ? gmgnProperties.getDeviceId() : "")
+                + "&client_id=" + (gmgnProperties.getClientId() != null ? gmgnProperties.getClientId() : "")
+                + "&from_app=" + (gmgnProperties.getFromApp() != null ? gmgnProperties.getFromApp() : "")
+                + "&app_ver=" + (gmgnProperties.getAppVer() != null ? gmgnProperties.getAppVer() : "")
+                + "&tz_name=" + (gmgnProperties.getTzName() != null ? gmgnProperties.getTzName() : "")
+                + "&tz_offset=" + (gmgnProperties.getTzOffset() != null ? gmgnProperties.getTzOffset() : "")
+                + "&app_lang=" + (gmgnProperties.getAppLang() != null ? gmgnProperties.getAppLang() : "")
+                + "&fp_did=" + (gmgnProperties.getFpDid() != null ? gmgnProperties.getFpDid() : "")
+                + "&os=" + (gmgnProperties.getOs() != null ? gmgnProperties.getOs() : "");
     }
 
     // 池子地址缓存，避免重复请求dex API
@@ -134,10 +110,10 @@ public class ChainApiUtils {
      * @return
      */
     private String getAxiomTokenInfoByPairAddress(String pairAddress){
-        
         if(StringUtils.isEmpty(pairAddress)){
             return null;
         }
+
         String url = axiomProperties.getTokenPairUrl() + pairAddress;
         String body = doGet(url, axiomProperties.getHeaders());
         return body;

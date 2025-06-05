@@ -16,13 +16,13 @@ public class GmgnProperties {
     private String tokenHoldersUrl;
     private String tokenSecurityUrl;
     private String deviceId;
-    private String client_id;
-    private String from_app;
-    private String app_ver;
-    private String tz_name;
-    private String tz_offset;
-    private String app_lang;
-    private String fp_did;
+    private String clientId;
+    private String fromApp;
+    private String appVer;
+    private String tzName;
+    private String tzOffset;
+    private String appLang;
+    private String fpDid;
     private String os;
     private Map<String, String> headers;
 }

@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "proxy")
 public class ProxyProperties {
     private String httpHost;
-    private Integer httpPort;
     private String httpsHost;
-    private Integer httpsPort;
+    private Integer port;
 }

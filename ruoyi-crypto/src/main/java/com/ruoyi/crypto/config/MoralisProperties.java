@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Data
 @Component
-@ConfigurationProperties(prefix = "crypto.morails")
+@ConfigurationProperties(prefix = "crypto.moralis")
 public class MoralisProperties {
 
     private String tokenPairUrl;

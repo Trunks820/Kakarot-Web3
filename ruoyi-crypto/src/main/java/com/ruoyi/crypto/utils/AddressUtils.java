@@ -11,7 +11,7 @@ public class AddressUtils {
     private static final String EVM_REGEX = "\\b0x[a-fA-F0-9]{40}\\b";
 
     /**
-     * 获取地址
+     * 获取文本中的地址
      * @param address
      * @return
      */
