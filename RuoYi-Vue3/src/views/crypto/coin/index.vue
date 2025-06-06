@@ -280,11 +280,11 @@
                   </div>
                   <div class="stat-item">
                     <div class="stat-label">买入</div>
-                    <div class="stat-value buy-color">{{ getSelectedBuys() }}/${{ formatNumber(getSelectedBuyVolume()) }}</div>
+                    <div class="stat-value buy-color">{{ formatNumber(getSelectedBuys()) }}/${{ formatNumber(getSelectedBuyVolume()) }}</div>
                   </div>
                   <div class="stat-item">
                     <div class="stat-label">卖出</div>
-                    <div class="stat-value sell-color">{{ getSelectedSells() }}/${{ formatNumber(getSelectedSellVolume()) }}</div>
+                    <div class="stat-value sell-color">{{ formatNumber(getSelectedSells()) }}/${{ formatNumber(getSelectedSellVolume()) }}</div>
                   </div>
                   <div class="stat-item">
                     <div class="stat-label">净买入</div>
@@ -367,32 +367,23 @@ const getTokenInfo = () => {
 
     if (response && response.data) {
       const tokenPair = response.data
-      
-      // 检查数据结构
-      if (!tokenPair.baseToken) {
-        proxy.$modal.msgError('返回的数据格式不正确，缺少baseToken信息')
-        return
-      }
-      
-      const baseToken = tokenPair.baseToken
       tokenData.value = {
-        name: baseToken.name,
-        symbol: baseToken.symbol,
-        address: baseToken.address,
-        logoUrl: tokenPair.info?.imageUrl || getChainLogo(tokenPair.chainId || 'sol'),
-        price: parseFloat(tokenPair.priceUsd) || 0,
+        name: tokenPair.name,
+        symbol: tokenPair.symbol,
+        address: tokenPair.address,
+        logoUrl: tokenPair.logoUrl || getChainLogo(tokenPair.chainId || 'sol'),
+        price: parseFloat(tokenPair.price) || 0,
         change24h: tokenPair.priceChange?.h24 || 0,
         marketCap: tokenPair.marketCap || tokenPair.fdv || 0,
         volume24h: tokenPair.volume?.h24 || 0,
         high24h: calculateHigh24h(tokenPair),
         low24h: calculateLow24h(tokenPair),
-        holderCount: 0, // DexScreener不提供这个数据
-        liquidity: tokenPair.liquidity?.usd || 0,
-        isVerified: !!tokenPair.info?.websites?.length,
+        holderCount: tokenPair.holders, // DexScreener不提供这个数据
+        liquidity: tokenPair.liquidity || 0,
         hasRenounced: false, // 需要其他API获取
-        queryCount: Math.floor(Math.random() * 1000) + 100, // 模拟数据
-        todayQueries: Math.floor(Math.random() * 100) + 10, // 模拟数据
-        monitorCount: Math.floor(Math.random() * 50) + 5, // 模拟数据
+        queryCount: tokenPair.queryCount || 0,
+        todayQueries: tokenPair.todayQueries || 0,
+        monitorCount: tokenPair.monitorCount || 0,
         // 新增：交易对信息
         pairInfo: {
           dexId: tokenPair.dexId,
@@ -405,8 +396,9 @@ const getTokenInfo = () => {
         // 新增：实时交易数据
         realtimeData: processRealtimeData(tokenPair),
         // 新增：官方社媒链接
-        socialLinks: extractSocialLinks(tokenPair.info)
+        socialLinks: extractSocialLinks(tokenPair)
       }
+      console.log(tokenPair.realtimeData)
       
       proxy.$modal.msgSuccess(`🎉 成功加载${tokenData.value.symbol}代币信息`)
       
@@ -455,7 +447,6 @@ const loadDemoToken = () => {
     low24h: 175.80,
     holderCount: 1250000,
     liquidity: 12500000,
-    isVerified: true,
     hasRenounced: false,
     queryCount: 1256,
     todayQueries: 89,
@@ -465,7 +456,7 @@ const loadDemoToken = () => {
       chainId: "solana",
       pairAddress: "58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2",
       url: "https://dexscreener.com/solana/58oqchx4ywmvkdwllzzbxchscc2fqcuwbkwmihlvqo2",
-      labels: ["v3"],
+      labels: ["v2"],
       pairCreatedAt: 1640995200000
     },
     realtimeData: {
@@ -622,13 +613,18 @@ const formatPrice = (price) => {
 
 const formatNumber = (num) => {
   if (num >= 1e9) {
-    return (num / 1e9).toFixed(2) + 'B'
+    return removeTrailingZero(num / 1e9) + 'B'
   } else if (num >= 1e6) {
-    return (num / 1e6).toFixed(2) + 'M'
+    return removeTrailingZero(num / 1e6) + 'M'
   } else if (num >= 1e3) {
-    return (num / 1e3).toFixed(2) + 'K'
+    return removeTrailingZero(num / 1e3) + 'K'
   }
-  return num?.toString() || '0'
+  return removeTrailingZero(num)
+}
+
+function removeTrailingZero(n) {
+  // 转成字符串，最多两位小数，然后去掉末尾多余的0和小数点
+  return parseFloat(Number(n).toFixed(2)).toString()
 }
 
 // 格式化价格变化
@@ -867,9 +863,10 @@ const detectSocialType = (url) => {
 // 处理交易数据，确保数据完整性
 const processRealtimeData = (tokenPair) => {
   // 如果API没有交易数据，生成基于价格变化的模拟数据
-  const txns = tokenPair.txns || generateMockTxnsFromPriceChange(tokenPair.priceChange)
-  const priceChange = tokenPair.priceChange || {}
-  const volume = tokenPair.volume || {}
+  const realtimeData = tokenPair.realtimeData;
+  const txns = realtimeData.txns || generateMockTxnsFromPriceChange(realtimeData.txns)
+  const priceChange = realtimeData.priceChange || {}
+  const volume = realtimeData.volume || {}
 
   return {
     txns,
