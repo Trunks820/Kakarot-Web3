@@ -10,19 +10,18 @@ import cn.hutool.json.JSONUtil;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.crypto.config.*;
+import com.ruoyi.crypto.domain.*;
+import com.ruoyi.crypto.domain.vo.CryptoApiResultVo;
 import com.ruoyi.crypto.service.ApiSupplier;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import static com.ruoyi.common.core.domain.AjaxResult.error;
-import static com.ruoyi.common.core.domain.AjaxResult.success;
+
+import static com.ruoyi.common.core.domain.AjaxResult.*;
 
 @Component
 public class ChainApiUtils {
@@ -152,7 +151,7 @@ public class ChainApiUtils {
         }
 
         // 动态构建参数字符串
-        String commonParam = buildGmgnParams(params);
+        String commonParam = buildGmgnParams(params, gmgnProperties);
         
         String referer = "https://gmgn.ai/" + chainType + "/token/" + address;
         headers.put("referer", referer);
@@ -166,30 +165,39 @@ public class ChainApiUtils {
         }
         JSONObject jsonObject = JSONUtil.parseObj(body);
         String code = jsonObject.getStr("code");
-        String message = jsonObject.getStr("message");
+        String msg = jsonObject.getStr("message");
         if(!"0".equals(code)){
-            return error(message);
+            return error(msg);
         }
-        JSONArray data = jsonObject.getJSONArray("data");
-        return success(data);
+
+        JSONArray jsonArray = jsonObject.getJSONArray("data");
+        if(jsonArray == null){
+            return error("数据为空！");
+        }
+
+        JSONObject data = jsonArray.getJSONObject(0);
+        if(JSONUtil.isNull(data)){
+            return error("数据为空！");
+        }
+        return successSource("gmgn", data);
     }
     
     /**
      * 构建GMGN参数字符串
      */
-    private String buildGmgnParams(Map<String, String> params) {
+    private String buildGmgnParams(Map<String, String> params, GmgnProperties gmgnProperties) {
         StringBuilder sb = new StringBuilder("?");
         
         // 优先使用动态配置的参数
-        sb.append("device_id=").append(params.getOrDefault("device_id", ""));
-        sb.append("&client_id=").append(params.getOrDefault("client_id", ""));
-        sb.append("&from_app=").append(params.getOrDefault("from_app", ""));
-        sb.append("&app_ver=").append(params.getOrDefault("app_ver", ""));
-        sb.append("&tz_name=").append(params.getOrDefault("tz_name", ""));
-        sb.append("&tz_offset=").append(params.getOrDefault("tz_offset", ""));
-        sb.append("&app_lang=").append(params.getOrDefault("app_lang", ""));
-        sb.append("&fp_did=").append(params.getOrDefault("fp_did", ""));
-        sb.append("&os=").append(params.getOrDefault("os", ""));
+        sb.append("device_id=").append(params.getOrDefault("device_id", gmgnProperties.getDeviceId()));
+        sb.append("&client_id=").append(params.getOrDefault("client_id", gmgnProperties.getClientId()));
+        sb.append("&from_app=").append(params.getOrDefault("from_app", gmgnProperties.getFromApp()));
+        sb.append("&app_ver=").append(params.getOrDefault("app_ver", gmgnProperties.getAppVer()));
+        sb.append("&tz_name=").append(params.getOrDefault("tz_name", gmgnProperties.getTzName()));
+        sb.append("&tz_offset=").append(params.getOrDefault("tz_offset", gmgnProperties.getTzOffset()));
+        sb.append("&app_lang=").append(params.getOrDefault("app_lang", gmgnProperties.getAppLang()));
+        sb.append("&fp_did=").append(params.getOrDefault("fp_did", gmgnProperties.getFpDid()));
+        sb.append("&os=").append(params.getOrDefault("os", gmgnProperties.getOs()));
         
         return sb.toString();
     }
@@ -300,7 +308,7 @@ public class ChainApiUtils {
                     })).orElse(null);
         }
 
-        return success(selectedPair);
+        return successSource("moralis", selectedPair);
 
     }
 
@@ -327,13 +335,13 @@ public class ChainApiUtils {
      */
     public AjaxResult getDexPairInfo(String address){
         // 先检查缓存
-        String cachedPairAddress = getCachedPairAddress(address);
-        if (StringUtils.isNotEmpty(cachedPairAddress)) {
-            // 构造缓存的返回数据
-            JSONObject cachedData = new JSONObject();
-            cachedData.put("pairAddress", cachedPairAddress);
-            return success(cachedData);
-        }
+//        String cachedPairAddress = getCachedPairAddress(address);
+//        if (StringUtils.isNotEmpty(cachedPairAddress)) {
+//            // 构造缓存的返回数据
+//            JSONObject cachedData = new JSONObject();
+//            cachedData.put("pairAddress", cachedPairAddress);
+//            return success(cachedData);
+//        }
         
         String result = HttpUtil.get(DEX_TOKEN_INFO + address);
         if(StringUtils.isEmpty(result)){
@@ -372,8 +380,9 @@ public class ChainApiUtils {
                 cachePairAddress(address, pairAddress);
             }
         }
-        
-        return success(selectedPair);
+
+        CryptoApiResultVo cryptoApiResultVo = convertFromDex(selectedPair);
+        return successSource("dex", cryptoApiResultVo);
     }
 
     /**
@@ -430,7 +439,7 @@ public class ChainApiUtils {
             return error("查询ca信息为空！");
         }
 
-        return success(result);
+        return success("success", result);
     }
 
     private String getGMGNResult(String address, String chainType, String gmgnUrl){
@@ -458,7 +467,7 @@ public class ChainApiUtils {
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
                 .url(url)
-                .post(RequestBody.create(json.getBytes()))
+                .post(RequestBody.create(json, MediaType.parse("application/json")))
                 .headers(Headers.of(headers))
                 .build();
         Response response = null;
@@ -471,41 +480,25 @@ public class ChainApiUtils {
         }
     }
 
-    private boolean isValidGMGNResponse(String json) {
-        // 判断请求是否成功
-        JSONObject obj = JSONUtil.parseObj(json);
-        String code = obj.getStr("code");
-        if(!"0".equals(code)){
-            return true;
-        }
-        return false;
-    }
-
-    private boolean isValidMoralisResponse(String json) {
-        // 判断请求是否成功
-        JSONObject obj = JSONUtil.parseObj(json);
-        JSONArray pairs = obj.getJSONArray("pairs");
-        if(!pairs.isEmpty()) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean isValidAxiomResponse(String json) {
-        // 判断请求是否成功
-        JSONObject obj = JSONUtil.parseObj(json);
-        if(obj.containsKey("error")){
-            return false;
-        }
-        return true;
-    }
-
     public AjaxResult tryChainApis(ApiSupplier... apis) {
         for (ApiSupplier api : apis) {
             try {
                 AjaxResult result = api.get();
-                if (result != null && result.isSuccess()) {
-                    return result;
+                String dataObj = result.get("data") + "";
+                if (result != null && result.isSuccess() && dataObj != null) {
+                    String source = result.get("source") + "";
+                    CryptoApiResultVo vo = new CryptoApiResultVo();
+                    if ("gmgn".equals(source)) {
+                        vo = convertFromGmgn(dataObj);
+                    } else if ("moralis".equals(source)) {
+                        vo = convertFromMoralis(dataObj);
+                    } else if ("dex".equals(source)) {
+                        JSONObject jsonObject = JSONUtil.parseObj("dataObj");
+                        vo = convertFromDex(jsonObject);
+                    } else {
+                        return error("未知数据来源！");
+                    }
+                    return success(vo);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -514,5 +507,163 @@ public class ChainApiUtils {
         return AjaxResult.error("所有API都失败");
     }
 
+    public CryptoApiResultVo convertFromGmgn(Object dataObj) {
+        JSONObject obj = JSONUtil.parseObj(dataObj);
+        CryptoApiResultVo vo = new CryptoApiResultVo();
+        CryptoPairInfo pairInfo = new CryptoPairInfo();
+        CryptoSecurityData securityData = new CryptoSecurityData();
+        CryptoRealtimeData cryptoRealtimeData = new CryptoRealtimeData();
+        vo.setAddress(obj.getStr("address"));
+        vo.setSymbol(obj.getStr("symbol"));
+        vo.setName(obj.getStr("name"));
+        vo.setLogoUrl(obj.getStr("logo"));
+        vo.setCreateTime(obj.getLong("creation_timestamp"));
+        vo.setHolderCount(obj.getInt("holder_count"));
+        vo.setLiquidity(obj.getDouble("liquidity"));
+        // Pool信息
+        JSONObject poolJson = obj.getJSONObject("pool");
+        if (poolJson != null) {
+            pairInfo.setExchange(poolJson.getStr("exchange"));
+            pairInfo.setFeeRatio(poolJson.getDouble("fee_ratio"));
+            securityData.setFeeRate(poolJson.getDouble("fee_ratio"));
+            vo.setPairInfo(pairInfo);
+        }
+        // Dev信息
+        JSONObject devJson = obj.getJSONObject("dev");
+        if (devJson != null) {
+            securityData.setOwnerAddress(devJson.getStr("creator_address"));
+            securityData.setCreatorTokenBalance(devJson.getDouble("creator_token_balance"));
+            securityData.setTop10Percent(devJson.getDouble("top_10_holder_rate"));
+            securityData.setDexscrAd(devJson.getInt("dexscr_ad"));
+            securityData.setDexscrUpdateLink(devJson.getInt("dexscr_update_link"));
+            securityData.setCtoFlag(devJson.getInt("cto_flag"));
+            vo.setCryptoSecurityData(securityData);
+        }
+        // Price信息
+        JSONObject priceJson = obj.getJSONObject("price");
+        if (priceJson != null) {
+            vo.setPrice(priceJson.getDouble("price"));
+            // Txns（构建前端要的结构）
+            Map<String, CryptoTxnStats> txns = new HashMap<>();
+            txns.put("m5", newTxnStats(priceJson, "buys_5m", "sells_5m"));
+            txns.put("h1", newTxnStats(priceJson, "buys_1h", "sells_1h"));
+            txns.put("h6", newTxnStats(priceJson, "buys_6h", "sells_6h"));
+            txns.put("h24", newTxnStats(priceJson, "buys_24h", "sells_24h"));
+            cryptoRealtimeData.setTxns(txns);
+            // Volume
+            Map<String, Double> volume = new HashMap<>();
+            volume.put("m5", priceJson.getDouble("volume_5m"));
+            volume.put("h1", priceJson.getDouble("volume_1h"));
+            volume.put("h6", priceJson.getDouble("volume_6h"));
+            volume.put("h24", priceJson.getDouble("volume_24h"));
+            cryptoRealtimeData.setVolume(volume);
+            // PriceChange
+            Map<String, Double> priceChange = new HashMap<>();
+            priceChange.put("m5", calcPriceChange(priceJson.getDouble("price_5m"), priceJson.getDouble("price")));
+            priceChange.put("h1", calcPriceChange(priceJson.getDouble("price_1h"), priceJson.getDouble("price")));
+            priceChange.put("h6", calcPriceChange(priceJson.getDouble("price_6h"), priceJson.getDouble("price")));
+            priceChange.put("h24", calcPriceChange(priceJson.getDouble("price_24h"), priceJson.getDouble("price")));
+            cryptoRealtimeData.setPriceChange(priceChange);
+            vo.setRealtimeData(cryptoRealtimeData);
+        }
+        return vo;
+    }
+
+    // 小工具方法
+    private CryptoTxnStats newTxnStats(JSONObject priceJson, String buyKey, String sellKey) {
+        CryptoTxnStats tx = new CryptoTxnStats();
+        tx.setBuys(priceJson.getInt(buyKey, 0));
+        tx.setSells(priceJson.getInt(sellKey, 0));
+        return tx;
+    }
+
+    // 价格涨跌幅换算，百分比（涨跌=（现价-历史价）/历史价*100）
+    private Double calcPriceChange(Double oldPrice, Double nowPrice) {
+        if (oldPrice == null || oldPrice == 0) return 0.0;
+        return ((nowPrice - oldPrice) / oldPrice) * 100;
+    }
+
+    public CryptoApiResultVo convertFromMoralis(String dataObj){
+        CryptoApiResultVo vo = new CryptoApiResultVo();
+        return vo;
+    }
+
+    public CryptoApiResultVo convertFromDex(JSONObject obj){
+        JSONObject baseToken = obj.getJSONObject("baseToken");
+        JSONObject liquidity = obj.getJSONObject("liquidity");
+        JSONObject info = obj.getJSONObject("info");
+
+        CryptoApiResultVo vo = new CryptoApiResultVo();
+        CryptoPairInfo pairInfo = new CryptoPairInfo();
+        CryptoRealtimeData cryptoRealtimeData = new CryptoRealtimeData();
+
+        vo.setChainId(obj.getStr("chainId"));
+        vo.setAddress(baseToken.getStr("address"));
+        vo.setSymbol(baseToken.getStr("symbol"));
+        vo.setName(baseToken.getStr("name"));
+        vo.setCreateTime(obj.getLong("pairCreatedAt"));
+        vo.setLiquidity(liquidity.getDouble("usd"));
+        vo.setPrice(obj.getDouble("priceUsd"));
+        pairInfo.setExchange(obj.getStr("dexId"));
+
+
+        JSONObject txnsJson = obj.getJSONObject("txns");
+        JSONObject volumeJson = obj.getJSONObject("volume");
+        JSONObject priceChangeJson = obj.getJSONObject("priceChange");
+        // Txns（构建前端要的结构）
+        Map<String, CryptoTxnStats> txns = new HashMap<>();
+        String buyKey = "buys";
+        String sellKey = "sells";
+        txns.put("m5", newTxnStats(txnsJson, buyKey, sellKey));
+        txns.put("h1", newTxnStats(txnsJson, buyKey, sellKey));
+        txns.put("h6", newTxnStats(txnsJson, buyKey, sellKey));
+        txns.put("h24", newTxnStats(txnsJson, buyKey, sellKey));
+        cryptoRealtimeData.setTxns(txns);
+        // Volume
+
+        Map<String, Double> volume = new HashMap<>();
+        volume.put("m5", volumeJson.getDouble("5m"));
+        volume.put("h1", volumeJson.getDouble("1h"));
+        volume.put("h6", volumeJson.getDouble("6h"));
+        volume.put("h24", volumeJson.getDouble("24h"));
+        cryptoRealtimeData.setVolume(volume);
+        // PriceChange
+        Map<String, Double> priceChange = new HashMap<>();
+        priceChange.put("m5", priceChangeJson.getDouble("5m"));
+        priceChange.put("h1", priceChangeJson.getDouble("h1"));
+        priceChange.put("h6", priceChangeJson.getDouble("h6"));
+        priceChange.put("h24", priceChangeJson.getDouble("h24"));
+        cryptoRealtimeData.setPriceChange(priceChange);
+        vo.setRealtimeData(cryptoRealtimeData);
+
+        // Social
+        // vo.setSocialLinks(...);
+        vo.setLogoUrl(info.getStr("imageUrl"));
+        List<CryptoSocialLink> list = new ArrayList<>();
+        JSONArray websites = info.getJSONArray("websites");
+        for (Object website : websites) {
+            CryptoSocialLink cryptoSocialLink = new CryptoSocialLink();
+            JSONObject jsonObject = JSONUtil.parseObj(website);
+            String type = jsonObject.getStr("type");
+            String url = jsonObject.getStr("url");
+            cryptoSocialLink.setUrl(url);
+            cryptoSocialLink.setType(type);
+            list.add(cryptoSocialLink);
+        }
+
+        JSONArray socials = info.getJSONArray("socials");
+        for (Object social : socials) {
+            CryptoSocialLink cryptoSocialLink = new CryptoSocialLink();
+            JSONObject jsonObject = JSONUtil.parseObj(social);
+            String type = jsonObject.getStr("type");
+            String url = jsonObject.getStr("url");
+            cryptoSocialLink.setUrl(url);
+            cryptoSocialLink.setType(type);
+            list.add(cryptoSocialLink);
+        }
+        vo.setSocialLinks(list);
+        // 官网、白皮书等字段
+        return vo;
+    }
 
 }

@@ -72,6 +72,10 @@ public class CryptoApiServiceImpl implements CryptoApiService {
             // 使用gmgn
             AjaxResult gmgnTokenInfo = chainApiUtils.getGMGNTokenInfo(address, chainType);
             if(gmgnTokenInfo.isSuccess()){
+                Object data = gmgnTokenInfo.get("data");
+                if(!JSONUtil.isTypeJSON(data + "")){
+                    return error("datadata");
+                }
                 return gmgnTokenInfo;
             }
             return dexPairInfo;

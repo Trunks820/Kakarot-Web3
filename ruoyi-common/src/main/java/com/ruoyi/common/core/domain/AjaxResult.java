@@ -23,6 +23,9 @@ public class AjaxResult extends HashMap<String, Object>
     /** 数据对象 */
     public static final String DATA_TAG = "data";
 
+    /** 来源对象*/
+    public static final String SOURCE_TAG = "source";
+
     /**
      * 初始化一个新创建的 AjaxResult 对象，使其表示一个空消息。
      */
@@ -56,6 +59,27 @@ public class AjaxResult extends HashMap<String, Object>
         if (StringUtils.isNotNull(data))
         {
             super.put(DATA_TAG, data);
+        }
+    }
+
+    /**
+     * 初始化一个新创建的 AjaxResult 对象
+     *
+     * @param code 状态码
+     * @param msg 返回内容
+     * @param data 数据对象
+     */
+    public AjaxResult(int code, String msg, Object data, String source)
+    {
+        super.put(CODE_TAG, code);
+        super.put(MSG_TAG, msg);
+        if (StringUtils.isNotNull(data))
+        {
+            super.put(DATA_TAG, data);
+        }
+        if (StringUtils.isNotNull(source))
+        {
+            super.put(SOURCE_TAG, source);
         }
     }
 
@@ -97,9 +121,26 @@ public class AjaxResult extends HashMap<String, Object>
      * @param data 数据对象
      * @return 成功消息
      */
-    public static AjaxResult success(String msg, Object data)
+    public static AjaxResult success(String msg, Object data, String source)
     {
-        return new AjaxResult(HttpStatus.SUCCESS, msg, data);
+        return new AjaxResult(HttpStatus.SUCCESS, msg, data, source);
+    }
+
+    public static AjaxResult successSource(String source, Object dataObj) {
+        AjaxResult result = new AjaxResult();
+        result.put("source", source);
+        result.put("data", dataObj);
+        result.put("code", HttpStatus.SUCCESS);
+        result.put("msg", "操作成功");
+        return result;
+    }
+
+    public static AjaxResult success(String message, Object dataObj) {
+        AjaxResult result = new AjaxResult();
+        result.put("data", dataObj);
+        result.put("code", HttpStatus.SUCCESS);
+        result.put("msg", message);
+        return result;
     }
 
     /**
