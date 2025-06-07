@@ -190,21 +190,53 @@
         <!-- 基础数据 - 一行卡片 -->
         <div class="data-section">
           <div class="data-cards-row">
-            <div class="data-card">
+            <div 
+              class="data-card"
+              :class="{ 'data-updated': animationStates.dataCards }"
+            >
               <div class="data-label">市值</div>
-              <div class="data-value">${{ formatNumber(tokenData.marketCap) }}</div>
+              <div 
+                class="data-value"
+                :class="{ 'value-updated': animationStates.dataValues }"
+              >
+                ${{ formatNumber(tokenData.marketCap) }}
+              </div>
             </div>
-            <div class="data-card">
+            <div 
+              class="data-card"
+              :class="{ 'data-updated': animationStates.dataCards }"
+            >
               <div class="data-label">池子</div>
-              <div class="data-value">${{ formatNumber(tokenData.liquidity) }}</div>
+              <div 
+                class="data-value"
+                :class="{ 'value-updated': animationStates.dataValues }"
+              >
+                ${{ formatNumber(tokenData.liquidity) }}
+              </div>
             </div>
-            <div class="data-card">
+            <div 
+              class="data-card"
+              :class="{ 'data-updated': animationStates.dataCards }"
+            >
               <div class="data-label">24h成交额</div>
-              <div class="data-value">${{ formatNumber(tokenData.realtimeData.volume.h24) }}</div>
+              <div 
+                class="data-value"
+                :class="{ 'value-updated': animationStates.dataValues }"
+              >
+                ${{ formatNumber(tokenData.realtimeData.volume.h24) }}
+              </div>
             </div>
-            <div class="data-card">
+            <div 
+              class="data-card"
+              :class="{ 'data-updated': animationStates.dataCards }"
+            >
               <div class="data-label">持有者</div>
-              <div class="data-value">{{ formatNumber(tokenData.holderCount || 0) }}</div>
+              <div 
+                class="data-value"
+                :class="{ 'value-updated': animationStates.dataValues }"
+              >
+                {{ formatNumber(tokenData.holderCount || 0) }}
+              </div>
             </div>
           </div>
         </div>
@@ -215,29 +247,72 @@
           <div v-if="securityData">
             <!-- 第一行：风险等级 + 风险提示 -->
             <div class="risk-level-row">
-              <div class="risk-card" :class="getRiskLevelClass(securityData.riskLevel)">
+              <div 
+                class="risk-card" 
+                :class="[
+                  getRiskLevelClass(securityData.riskLevel),
+                  { 'risk-updated': animationStates.riskCard }
+                ]"
+              >
                 {{ getRiskLevelText(securityData.riskLevel) }}
               </div>
-              <div v-if="securityData.riskTag" class="risk-warning">
+              <div 
+                v-if="securityData.riskTag" 
+                class="risk-warning"
+                :class="{ 'warning-updated': animationStates.riskWarning }"
+              >
                 {{ securityData.riskTag }}
               </div>
             </div>
-            
+                    
             <!-- 第二行：安全指标 -->
             <div class="security-metrics-row">
-              <div class="security-card" :class="getConcentrationRiskClass(securityData.top10Percent)">
+              <div 
+                class="security-card" 
+                :class="[
+                  getConcentrationRiskClass(securityData.top10Percent),
+                  { 'metric-updated': animationStates.securityMetrics }
+                ]"
+              >
                 <div class="security-label">Top10</div>
-                <div class="security-value">{{ formatPercent(securityData.top10Percent) }}</div>
+                <div 
+                  class="security-value"
+                  :class="{ 'security-value-updated': animationStates.securityValues }"
+                >
+                  {{ formatPercent(securityData.top10Percent) }}
+                </div>
               </div>
-              <div class="security-card" :class="getFeeRiskClass(securityData.feeRate)">
+              <div 
+                class="security-card" 
+                :class="[
+                  getFeeRiskClass(securityData.feeRate),
+                  { 'metric-updated': animationStates.securityMetrics }
+                ]"
+              >
                 <div class="security-label">交易税率</div>
-                <div class="security-value">{{ formatPercent(securityData.feeRate) }}</div>
+                <div 
+                  class="security-value"
+                  :class="{ 'security-value-updated': animationStates.securityValues }"
+                >
+                  {{ formatPercent(securityData.feeRate) }}
+                </div>
               </div>
-              <div class="security-card neutral">
+              <div 
+                class="security-card neutral"
+                :class="{ 'metric-updated': animationStates.securityMetrics }"
+              >
                 <div class="security-label">持有数</div>
-                <div class="security-value">{{ securityData.holders }}</div>
+                <div 
+                  class="security-value"
+                  :class="{ 'security-value-updated': animationStates.securityValues }"
+                >
+                  {{ securityData.holders }}
+                </div>
               </div>
-              <div class="security-card neutral">
+              <div 
+                class="security-card neutral"
+                :class="{ 'metric-updated': animationStates.securityMetrics }"
+              >
                 <el-button 
                   size="small" 
                   @click="copyAddress(securityData.ownerAddress)"
@@ -251,16 +326,40 @@
             
             <!-- 第三行：权限状态 -->
             <div class="permissions-row">
-              <div class="permission-card" :class="!securityData.isMintable ? 'safe' : 'danger'">
+              <div 
+                class="permission-card" 
+                :class="[
+                  !securityData.isMintable ? 'safe' : 'danger',
+                  { 'permission-updated': animationStates.permissions }
+                ]"
+              >
                 {{ securityData.isMintable ? '可增发' : '不可增发' }}
               </div>
-              <div class="permission-card" :class="!securityData.isFreezable ? 'safe' : 'danger'">
+              <div 
+                class="permission-card" 
+                :class="[
+                  !securityData.isFreezable ? 'safe' : 'danger',
+                  { 'permission-updated': animationStates.permissions }
+                ]"
+              >
                 {{ securityData.isFreezable ? '可冻结' : '不可冻结' }}
               </div>
-              <div class="permission-card" :class="!securityData.isClosable ? 'safe' : 'danger'">
+              <div 
+                class="permission-card" 
+                :class="[
+                  !securityData.isClosable ? 'safe' : 'danger',
+                  { 'permission-updated': animationStates.permissions }
+                ]"
+              >
                 {{ securityData.isClosable ? '可销毁' : '不可销毁' }}
               </div>
-              <div class="permission-card" :class="securityData.dexFlag ? 'safe' : 'danger'">
+              <div 
+                class="permission-card" 
+                :class="[
+                  securityData.dexFlag ? 'safe' : 'danger',
+                  { 'permission-updated': animationStates.permissions }
+                ]"
+              >
                 {{ securityData.dexFlag ? '已上DEX' : '未上DEX' }}
               </div>
             </div>
@@ -342,7 +441,7 @@
 </template>
 
 <script setup name="CryptoScanner">
-import { ref, reactive, getCurrentInstance, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, getCurrentInstance, onMounted, onUnmounted, watch } from 'vue'
 import { Search, Link, DocumentCopy, ArrowDown, Delete } from '@element-plus/icons-vue'
 import { tokenInfo, securityInfo, getTopCoin} from "@/api/crypto/index"
 const { proxy } = getCurrentInstance()
@@ -371,6 +470,17 @@ const settingAlert = ref(false)
 const alertDialogVisible = ref(false)
 const klineIframe = ref(null)
 const securityData = ref(null)
+
+// 动画控制状态
+const animationStates = reactive({
+  dataCards: false,
+  dataValues: false,
+  riskCard: false,
+  riskWarning: false,
+  securityMetrics: false,
+  securityValues: false,
+  permissions: false
+})
 
 const alertForm = reactive({
   targetPrice: '',
@@ -1303,6 +1413,119 @@ const stopPriceUpdates = () => {
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+// 动画触发函数
+const triggerDataCardAnimation = () => {
+  animationStates.dataCards = true
+  setTimeout(() => {
+    animationStates.dataCards = false
+  }, 600)
+}
+
+const triggerDataValueAnimation = () => {
+  animationStates.dataValues = true
+  setTimeout(() => {
+    animationStates.dataValues = false
+  }, 800)
+}
+
+const triggerRiskCardAnimation = () => {
+  animationStates.riskCard = true
+  setTimeout(() => {
+    animationStates.riskCard = false
+  }, 800)
+}
+
+const triggerRiskWarningAnimation = () => {
+  animationStates.riskWarning = true
+  setTimeout(() => {
+    animationStates.riskWarning = false
+  }, 600)
+}
+
+const triggerSecurityMetricsAnimation = () => {
+  animationStates.securityMetrics = true
+  setTimeout(() => {
+    animationStates.securityMetrics = false
+  }, 700)
+}
+
+const triggerSecurityValuesAnimation = () => {
+  animationStates.securityValues = true
+  setTimeout(() => {
+    animationStates.securityValues = false
+  }, 600)
+}
+
+const triggerPermissionsAnimation = () => {
+  animationStates.permissions = true
+  setTimeout(() => {
+    animationStates.permissions = false
+  }, 1000)
+}
+
+// 监听数据变化并触发动画
+watch(
+  () => tokenData.value,
+  (newData, oldData) => {
+    if (newData && oldData) {
+      // 检查基础数据是否有变化
+      const dataFields = ['marketCap', 'liquidity', 'volume24h', 'holderCount']
+      const hasDataChange = dataFields.some(field => 
+        newData[field] !== oldData[field]
+      )
+      
+      if (hasDataChange) {
+        triggerDataCardAnimation()
+        setTimeout(() => {
+          triggerDataValueAnimation()
+        }, 200)
+      }
+    }
+  },
+  { deep: true }
+)
+
+watch(
+  () => securityData.value,
+  (newData, oldData) => {
+    if (newData && oldData) {
+      // 检查风险等级变化
+      if (newData.riskLevel !== oldData.riskLevel) {
+        triggerRiskCardAnimation()
+      }
+      
+      // 检查风险提示变化
+      if (newData.riskTag !== oldData.riskTag) {
+        triggerRiskWarningAnimation()
+      }
+      
+      // 检查安全指标变化
+      const metricFields = ['top10Percent', 'feeRate', 'holders']
+      const hasMetricChange = metricFields.some(field => 
+        newData[field] !== oldData[field]
+      )
+      
+      if (hasMetricChange) {
+        triggerSecurityMetricsAnimation()
+        setTimeout(() => {
+          triggerSecurityValuesAnimation()
+        }, 100)
+      }
+      
+      // 检查权限状态变化
+      const permissionFields = ['isMintable', 'isFreezable', 'isClosable', 'dexFlag']
+      const hasPermissionChange = permissionFields.some(field => 
+        newData[field] !== oldData[field]
+      )
+      
+      if (hasPermissionChange) {
+        triggerPermissionsAnimation()
+      }
+    }
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped>
@@ -1558,11 +1781,53 @@ const scrollToTop = () => {
   border-color: var(--el-color-primary-light-8);
 }
 
+/* 数据变动动画 */
+.data-card.data-updated {
+  animation: dataUpdatePulse 0.6s ease-out;
+}
+
+@keyframes dataUpdatePulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px var(--el-box-shadow-light);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px var(--el-color-primary-light-8);
+    border-color: var(--el-color-primary-light-6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px var(--el-box-shadow-light);
+  }
+}
+
 .data-value {
   font-size: 14px;
   font-weight: 700;
   color: var(--el-text-color-primary);
   margin-bottom: 4px;
+  transition: all 0.3s ease;
+}
+
+/* 数值变动动画 */
+.data-value.value-updated {
+  animation: valueGlow 0.8s ease-out;
+}
+
+@keyframes valueGlow {
+  0% {
+    color: var(--el-text-color-primary);
+    text-shadow: none;
+  }
+  50% {
+    color: var(--el-color-primary);
+    text-shadow: 0 0 8px var(--el-color-primary-light-6);
+  }
+  100% {
+    color: var(--el-text-color-primary);
+    text-shadow: none;
+  }
 }
 
 .data-label {
@@ -1588,6 +1853,31 @@ const scrollToTop = () => {
   transition: all 0.3s ease;
 }
 
+/* 风险等级变动动画 */
+.risk-card.risk-updated {
+  animation: riskLevelChange 0.8s ease-out;
+}
+
+@keyframes riskLevelChange {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  25% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+    box-shadow: 0 6px 16px var(--el-box-shadow);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .risk-card.low {
   background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
   color: var(--el-color-success-dark-2);
@@ -1611,6 +1901,25 @@ const scrollToTop = () => {
   color: var(--el-text-color-secondary);
   font-size: 12px;
   font-style: italic;
+  transition: all 0.3s ease;
+}
+
+/* 风险提示变动动画 */
+.risk-warning.warning-updated {
+  animation: warningFlash 0.6s ease-out;
+}
+
+@keyframes warningFlash {
+  0% {
+    background: var(--el-fill-color-light);
+  }
+  50% {
+    background: var(--el-color-warning-light-9);
+    color: var(--el-color-warning-dark-2);
+  }
+  100% {
+    background: var(--el-fill-color-light);
+  }
 }
 
 /* 安全指标行 */
@@ -1633,6 +1942,26 @@ const scrollToTop = () => {
 .security-card:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px var(--el-box-shadow);
+}
+
+/* 安全指标变动动画 */
+.security-card.metric-updated {
+  animation: securityMetricUpdate 0.7s ease-out;
+}
+
+@keyframes securityMetricUpdate {
+  0% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 2px 4px var(--el-box-shadow-light);
+  }
+  40% {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 16px var(--el-box-shadow);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 2px 4px var(--el-box-shadow-light);
+  }
 }
 
 .security-card.success {
@@ -1675,6 +2004,27 @@ const scrollToTop = () => {
   font-size: 12px;
   font-weight: 700;
   margin-bottom: 4px;
+  transition: all 0.3s ease;
+}
+
+/* 安全数值变动动画 */
+.security-value.security-value-updated {
+  animation: securityValuePulse 0.6s ease-out;
+}
+
+@keyframes securityValuePulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .security-label {
@@ -1705,6 +2055,35 @@ const scrollToTop = () => {
   box-shadow: 0 4px 8px var(--el-box-shadow);
 }
 
+/* 权限状态变动动画 */
+.permission-card.permission-updated {
+  animation: permissionStatusChange 0.8s ease-out;
+}
+
+@keyframes permissionStatusChange {
+  0% {
+    transform: scale(1) rotateY(0deg);
+    opacity: 1;
+  }
+  25% {
+    transform: scale(0.95) rotateY(5deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05) rotateY(-5deg);
+    opacity: 1;
+    box-shadow: 0 6px 16px var(--el-box-shadow);
+  }
+  75% {
+    transform: scale(1.02) rotateY(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
 .permission-card.safe {
   background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
   color: var(--el-color-success-dark-2);
@@ -1715,6 +2094,58 @@ const scrollToTop = () => {
   background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
   color: var(--el-color-danger-dark-2);
   border: 1px solid var(--el-color-danger-light-6);
+}
+
+/* 权限状态安全→危险 变化动画 */
+.permission-card.danger.permission-updated {
+  animation: permissionToDanger 1s ease-out;
+}
+
+@keyframes permissionToDanger {
+  0% {
+    background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
+    color: var(--el-color-success-dark-2);
+    border-color: var(--el-color-success-light-6);
+  }
+  50% {
+    background: linear-gradient(135deg, var(--el-color-warning-light-9), var(--el-color-warning-light-8));
+    color: var(--el-color-warning-dark-2);
+    border-color: var(--el-color-warning-light-6);
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px var(--el-color-warning-light-7);
+  }
+  100% {
+    background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
+    color: var(--el-color-danger-dark-2);
+    border-color: var(--el-color-danger-light-6);
+    transform: scale(1);
+  }
+}
+
+/* 权限状态危险→安全 变化动画 */
+.permission-card.safe.permission-updated {
+  animation: permissionToSafe 1s ease-out;
+}
+
+@keyframes permissionToSafe {
+  0% {
+    background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
+    color: var(--el-color-danger-dark-2);
+    border-color: var(--el-color-danger-light-6);
+  }
+  50% {
+    background: linear-gradient(135deg, var(--el-color-warning-light-9), var(--el-color-warning-light-8));
+    color: var(--el-color-warning-dark-2);
+    border-color: var(--el-color-warning-light-6);
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px var(--el-color-warning-light-7);
+  }
+  100% {
+    background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
+    color: var(--el-color-success-dark-2);
+    border-color: var(--el-color-success-light-6);
+    transform: scale(1);
+  }
 }
 
 /* 时间周期选择器 */
