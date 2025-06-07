@@ -1313,171 +1313,6 @@ const scrollToTop = () => {
   padding: 20px;
 }
 
-/* 搜索区域 */
-.search-section {
-  margin-bottom: 24px;
-  padding: 20px;
-  background: var(--el-bg-color);
-  border-radius: 16px;
-  border: 1px solid var(--el-border-color-lighter);
-  box-shadow: 0 2px 8px var(--el-box-shadow-light);
-  transition: all 0.3s ease;
-}
-
-.search-section:hover {
-  box-shadow: 0 4px 12px var(--el-box-shadow-light);
-  border-color: var(--el-color-primary-light-8);
-}
-
-.search-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.search-main {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.search-input-modern {
-  width: 450px;
-  box-shadow: 0 2px 6px var(--el-box-shadow-light);
-}
-
-.search-input-modern :deep(.el-input__wrapper) {
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  background: var(--el-fill-color-blank);
-}
-
-.search-input-modern :deep(.el-input__wrapper:hover) {
-  border-color: var(--el-color-primary-light-7);
-  box-shadow: 0 0 0 1px var(--el-color-primary-light-8);
-}
-
-.search-input-modern :deep(.el-input__wrapper.is-focus) {
-  border-color: var(--el-color-primary);
-  box-shadow: 0 0 0 2px var(--el-color-primary-light-9);
-}
-
-.search-icon-main {
-  color: var(--el-text-color-secondary);
-  transition: color 0.3s ease;
-}
-
-.search-input-modern :deep(.el-input__wrapper.is-focus) .search-icon-main {
-  color: var(--el-color-primary);
-}
-
-.search-actions {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.paste-btn {
-  color: var(--el-text-color-secondary);
-  transition: all 0.3s ease;
-  border-radius: 6px;
-}
-
-.paste-btn:hover {
-  color: var(--el-color-primary);
-  background: var(--el-color-primary-light-9);
-}
-
-.search-btn-modern {
-  border-radius: 12px;
-  font-weight: 600;
-  padding: 12px 24px;
-  box-shadow: 0 2px 6px var(--el-box-shadow-light);
-  transition: all 0.3s ease;
-}
-
-.search-btn-modern:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--el-box-shadow);
-}
-
-.search-extras {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.quick-examples {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.examples-label {
-  font-size: 13px;
-  color: var(--el-text-color-secondary);
-  font-weight: 500;
-  margin-right: 4px;
-}
-
-.example-btn {
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--el-text-color-regular);
-  background: var(--el-fill-color-light);
-  border: 1px solid var(--el-border-color-light);
-  transition: all 0.3s ease;
-  height: auto;
-  min-width: auto;
-}
-
-.example-btn:hover {
-  background: var(--el-color-primary-light-9);
-  color: var(--el-color-primary);
-  border-color: var(--el-color-primary-light-7);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px var(--el-color-primary-light-9);
-}
-
-.search-history {
-  display: flex;
-  align-items: center;
-}
-
-.history-dropdown .el-button {
-  font-size: 13px;
-  color: var(--el-text-color-secondary);
-  padding: 6px 12px;
-}
-
-.history-dropdown .el-button:hover {
-  color: var(--el-color-primary);
-  background: var(--el-color-primary-light-9);
-}
-
-.history-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.history-symbol {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-
-.history-address {
-  font-size: 11px;
-  color: var(--el-text-color-secondary);
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-}
-
 /* 主要卡片美化 */
 .el-card {
   border: 1px solid var(--el-border-color-lighter);
@@ -1509,47 +1344,6 @@ const scrollToTop = () => {
     0 8px 20px var(--el-box-shadow-light),
     0 4px 8px var(--el-box-shadow);
   border-color: var(--el-color-primary-light-8);
-}
-
-/* 信息卡片间距和动画 */
-.info-card {
-  margin-bottom: 20px;
-  animation: slideInUp 0.4s ease-out;
-}
-
-.info-card:nth-child(1) { animation-delay: 0.1s; }
-.info-card:nth-child(2) { animation-delay: 0.2s; }
-.info-card:nth-child(3) { animation-delay: 0.3s; }
-.info-card:nth-child(4) { animation-delay: 0.4s; }
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 卡片头部美化 */
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-
-.card-header .el-button {
-  box-shadow: 0 2px 4px var(--el-box-shadow-light);
-  transition: all 0.3s ease;
-}
-
-.card-header .el-button:hover {
-  transform: translateY(-1px) scale(1.05);
-  box-shadow: 0 4px 8px var(--el-box-shadow);
 }
 
 /* 代币头部信息美化 */
@@ -1622,24 +1416,16 @@ const scrollToTop = () => {
   text-shadow: 0 1px 2px var(--el-box-shadow-light);
 }
 
-/* Tag 美化 */
-.el-tag {
+.price-change-tag {
   border-radius: 8px;
   font-weight: 600;
   box-shadow: 0 2px 4px var(--el-box-shadow-light);
   transition: all 0.3s ease;
 }
 
-.el-tag:hover {
+.price-change-tag:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px var(--el-box-shadow);
-}
-
-/* 操作区域美化 */
-.token-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
 }
 
 .social-icons {
@@ -1647,468 +1433,21 @@ const scrollToTop = () => {
   gap: 8px;
 }
 
-.social-icons .el-button {
+.social-icon-btn {
   border-radius: 50%;
   box-shadow: 0 2px 6px var(--el-box-shadow-light);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.social-icons .el-button:hover {
+.social-icon-btn:hover {
   transform: translateY(-2px) scale(1.1);
   box-shadow: 0 4px 12px var(--el-box-shadow);
-}
-
-/* 按钮组美化 */
-.el-button-group .el-button {
-  box-shadow: 0 2px 4px var(--el-box-shadow-light);
-  transition: all 0.3s ease;
-}
-
-.el-button-group .el-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px var(--el-box-shadow);
-}
-
-/* 统计行美化 */
-.stats-row {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--el-border-color-light);
-  position: relative;
-}
-
-.stats-row::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 2px;
-  background: linear-gradient(90deg, 
-    var(--el-color-primary-light-8), 
-    var(--el-color-primary), 
-    var(--el-color-primary-light-8));
-  border-radius: 1px;
-}
-
-/* Statistic 组件美化 */
-.el-statistic {
-  text-align: center;
-  padding: 8px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, 
-    var(--el-bg-color) 0%, 
-    var(--el-bg-color-page) 100%);
-}
-
-.el-statistic:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px var(--el-box-shadow-light);
-  background: linear-gradient(135deg, 
-    var(--el-bg-color-page) 0%, 
-    var(--el-fill-color-light) 100%);
-}
-
-/* K线图美化 */
-.chart-container {
-  height: 400px;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: inset 0 2px 4px var(--el-box-shadow-light);
-  background: var(--el-fill-color-light);
-}
-
-.kline-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  border-radius: 12px;
-}
-
-/* 安全分析美化 */
-.risk-level-row {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.risk-card {
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: var(--el-bg-color);
-  box-shadow: 0 2px 4px var(--el-box-shadow-light);
-  transition: all 0.3s ease;
-}
-
-.risk-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px var(--el-box-shadow);
-}
-
-.risk-warning {
-  flex: 1;
-  padding: 8px 12px;
-  background: var(--el-fill-color-light);
-  border-radius: 8px;
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
-  font-style: italic;
-}
-
-.security-metrics-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.security-card {
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: var(--el-bg-color);
-  box-shadow: 0 2px 4px var(--el-box-shadow-light);
-  transition: all 0.3s ease;
-}
-
-.security-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px var(--el-box-shadow);
-}
-
-.security-value {
-  font-size: 12px;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.security-label {
-  font-size: 10px;
-  color: var(--el-text-color-secondary);
-  font-weight: 500;
-}
-
-.permissions-row {
-  margin-top: 20px;
-}
-
-.permission-card {
-  flex: 1;
-  padding: 18px 10px;
-  border-radius: 8px;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-  box-shadow: 0 2px 4px var(--el-box-shadow-light);
-  transition: all 0.3s ease;
-}
-
-.permission-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px var(--el-box-shadow);
-}
-
-.permission-card.safe {
-  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
-  color: var(--el-color-success-dark-2);
-  border: 1px solid var(--el-color-success-light-6);
-}
-
-.permission-card.danger {
-  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
-  color: var(--el-color-danger-dark-2);
-  border: 1px solid var(--el-color-danger-light-6);
-}
-
-/* 加载状态美化 */
-.loading-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 30px;
-  color: var(--el-text-color-secondary);
-  background: linear-gradient(135deg, 
-    var(--el-fill-color-light) 0%, 
-    var(--el-fill-color) 100%);
-  border-radius: 8px;
-}
-
-/* 时间周期选择器美化 */
-.timeframe-cards-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.timeframe-card {
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: var(--el-bg-color);
-  box-shadow: 0 2px 4px var(--el-box-shadow-light);
-  transition: all 0.3s ease;
-}
-
-.timeframe-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px var(--el-box-shadow);
-}
-
-.timeframe-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-}
-
-.timeframe-change {
-  font-size: 11px;
-  font-weight: 700;
-  margin-top: 3px;
-}
-
-.timeframe-change.positive {
-  color: var(--el-color-success);
-  text-shadow: 0 1px 2px var(--el-color-success-light-8);
-}
-
-.timeframe-change.negative {
-  color: var(--el-color-danger);
-  text-shadow: 0 1px 2px var(--el-color-danger-light-8);
-}
-
-.timeframe-change.neutral {
-  color: var(--el-text-color-secondary);
-}
-
-/* 交易统计样式美化 */
-.trading-cards-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.trading-card {
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: var(--el-bg-color);
-  box-shadow: 0 2px 4px var(--el-box-shadow-light);
-  transition: all 0.3s ease;
-}
-
-.trading-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px var(--el-box-shadow);
-}
-
-.trading-value {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-}
-
-.trading-label {
-  font-size: 10px;
-  color: var(--el-text-color-secondary);
-  font-weight: 500;
-}
-
-.buy {
-  background: var(--el-fill-color-light);
-}
-
-.sell {
-  background: var(--el-fill-color-light);
-}
-
-.net-stat.positive {
-  background: var(--el-fill-color-light);
-}
-
-.net-stat.negative {
-  background: var(--el-fill-color-light);
-}
-
-.net-stat.neutral {
-  background: var(--el-fill-color-light);
-}
-
-/* 对话框美化 */
-.el-dialog {
-  border-radius: 16px;
-  box-shadow: 
-    0 20px 40px var(--el-box-shadow-dark),
-    0 4px 8px var(--el-box-shadow);
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .app-container {
-    padding: 16px;
-  }
-  
-  .search-section {
-    padding: 16px;
-    margin-bottom: 20px;
-  }
-  
-  .search-container {
-    gap: 12px;
-  }
-  
-  .search-main {
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-  }
-  
-  .search-input-modern {
-    width: 100% !important;
-  }
-  
-  .search-btn-modern {
-    width: 100%;
-  }
-  
-  .search-extras {
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-  }
-  
-  .quick-examples {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  
-  .examples-label {
-    width: 100%;
-    text-align: center;
-    margin-bottom: 8px;
-  }
-  
-  .example-btn {
-    flex: 1;
-    min-width: calc(33.333% - 6px);
-  }
-  
-  .search-history {
-    justify-content: center;
-    width: 100%;
-  }
-  
-  .token-main-row {
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .token-header-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .mini-stats {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .chart-container {
-    height: 300px;
-  }
-  
-  .data-cards-row {
-    flex-wrap: wrap;
-  }
-  
-  .data-card {
-    flex: 1 1 calc(50% - 4px);
-    min-width: calc(50% - 4px);
-  }
-  
-  .security-metrics-row {
-    flex-wrap: wrap;
-  }
-  
-  .security-card {
-    flex: 1 1 calc(50% - 4px);
-    min-width: calc(50% - 4px);
-  }
-  
-  .permissions-row {
-    flex-wrap: wrap;
-  }
-  
-  .permission-card {
-    flex: 1 1 calc(50% - 4px);
-    min-width: calc(50% - 4px);
-  }
-  
-  .timeframe-cards-row {
-    flex-wrap: wrap;
-  }
-  
-  .timeframe-card {
-    flex: 1 1 calc(50% - 4px);
-    min-width: calc(50% - 4px);
-  }
-  
-  .trading-cards-row {
-    flex-wrap: wrap;
-  }
-  
-  .trading-card {
-    flex: 1 1 calc(50% - 4px);
-    min-width: calc(50% - 4px);
-  }
-}
-
-/* 暗色主题特殊处理 */
-@media (prefers-color-scheme: dark) {
-  .token-text h3 {
-    background: linear-gradient(135deg, var(--el-text-color-primary), var(--el-color-primary-light-3));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  
-  .risk-card.low {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.2));
-    color: #22c55e;
-  }
-  
-  .risk-card.medium {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.2));
-    color: #fbbf24;
-  }
-  
-  .risk-card.high {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.2));
-    color: #ef4444;
-  }
 }
 
 /* 操作按钮区域 */
 .action-buttons {
   display: flex;
   gap: 8px;
-}
-
-.action-btn {
-  font-weight: 600;
-  padding: 8px 10px;
-  box-shadow: 0 4px 12px var(--el-box-shadow-light);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px var(--el-box-shadow);
 }
 
 .action-btn.small {
@@ -2121,11 +1460,6 @@ const scrollToTop = () => {
   align-items: center;
   box-shadow: 0 2px 6px var(--el-box-shadow-light);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.action-btn.small:active,
-.action-btn.small:focus {
-  box-shadow: 0 4px 8px var(--el-box-shadow-light);
 }
 
 .action-btn.small:hover {
@@ -2167,6 +1501,22 @@ const scrollToTop = () => {
   font-size: 10px;
   color: var(--el-text-color-secondary);
   margin-top: 2px;
+}
+
+/* K线图美化 */
+.chart-container {
+  height: 400px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px var(--el-box-shadow-light);
+  background: var(--el-fill-color-light);
+}
+
+.kline-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 12px;
 }
 
 /* 数据区域 */
@@ -2319,6 +1669,12 @@ const scrollToTop = () => {
 
 .security-card.neutral .security-value {
   color: var(--el-text-color-primary);
+}
+
+.security-value {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
 }
 
 .security-label {
@@ -2488,178 +1844,6 @@ const scrollToTop = () => {
   font-size: 10px;
   color: var(--el-text-color-secondary);
   font-weight: 500;
-}
-
-/* 搜索建议样式 */
-.history-suggestion {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  width: 100%;
-}
-
-.suggestion-main {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.suggestion-symbol {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-
-.suggestion-name {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-}
-
-.suggestion-address {
-  font-size: 11px;
-  color: var(--el-text-color-placeholder);
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-}
-
-/* 搜索建议弹出框 */
-.search-history-popper .el-autocomplete-suggestion__wrap {
-  max-height: 200px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px var(--el-box-shadow-dark);
-}
-
-.search-history-popper .el-autocomplete-suggestion__list {
-  padding: 8px 0;
-}
-
-.search-history-popper .el-autocomplete-suggestion li {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-  transition: background-color 0.2s ease;
-}
-
-.search-history-popper .el-autocomplete-suggestion li:last-child {
-  border-bottom: none;
-}
-
-.search-history-popper .el-autocomplete-suggestion li:hover {
-  background: var(--el-fill-color-light);
-}
-
-/* 确保下拉框在最上层 */
-.search-history-popper {
-  z-index: 9999 !important;
-}
-
-/* 历史记录调试信息 */
-.history-debug {
-  display: flex;
-  align-items: center;
-  margin-left: 8px;
-  gap: 4px;
-}
-
-.history-debug .el-tag {
-  font-size: 11px;
-  padding: 2px 6px;
-  opacity: 0.7;
-}
-
-.clear-history-btn {
-  color: var(--el-text-color-secondary);
-  transition: all 0.2s ease;
-  padding: 2px 4px;
-  min-height: auto;
-}
-
-.clear-history-btn:hover {
-  color: var(--el-color-danger);
-  background: var(--el-color-danger-light-9);
-}
-
-/* 主流币价格卡片 */
-.main-coins-row {
-  display: flex;
-  gap: 8px;
-}
-
-.main-coin-card {
-  flex: 1;
-  padding: 12px 8px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, 
-    var(--el-bg-color) 0%, 
-    var(--el-bg-color-page) 100%);
-  border: 1px solid var(--el-border-color-lighter);
-  box-shadow: 0 4px 12px var(--el-box-shadow-light);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  text-align: center;
-  cursor: pointer;
-}
-
-.main-coin-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px var(--el-box-shadow-light);
-  border-color: var(--el-color-primary-light-7);
-}
-
-.coin-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.coin-icon {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.coin-symbol {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-}
-
-.coin-price {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-  margin-bottom: 4px;
-}
-
-.coin-change {
-  font-size: 11px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.coin-change.positive {
-  color: var(--el-color-success);
-}
-
-.coin-change.negative {
-  color: var(--el-color-danger);
-}
-
-.coin-volume {
-  font-size: 9px;
-  color: var(--el-text-color-secondary);
-  font-weight: 500;
-}
-
-/* 主流币价格更新动画 */
-@keyframes priceUpdate {
-  /* 动画已移除 */
-}
-
-.main-coin-card.price-updated {
-  /* 动画已移除 */
 }
 
 /* 顶部搜索区域样式 */
@@ -2904,15 +2088,6 @@ const scrollToTop = () => {
 .no-data-sidebar {
   padding: 40px 20px;
   text-align: center;
-}
-
-/* 价格更新动画 */
-.coin-item-compact.price-updated {
-  /* 动画已移除 */
-}
-
-@keyframes coinPriceUpdate {
-  /* 动画已移除 - 直接更新价格 */
 }
 
 /* 主流币加载状态 */
