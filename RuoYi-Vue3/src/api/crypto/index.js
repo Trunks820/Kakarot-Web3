@@ -22,3 +22,14 @@ export function securityInfo(address) {
   })
 }
 
+// 查询主流代币
+export function getTopCoin(coin) {
+  return request({
+    url: '/crypto/api/getTopCoin',
+    method: 'get',
+    params: {
+      coin: coin
+    }
+  })
+}
+

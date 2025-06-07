@@ -167,4 +167,20 @@ public class CryptoApiServiceImpl implements CryptoApiService {
         json.append("isHoneypot", isHoneypot);
         return success(json);
     }
+
+
+    @Override
+    public AjaxResult getTopCoin(String coin) {
+        AjaxResult topCoin = chainApiUtils.getTopCoin(coin);
+        Object data = topCoin.get("data");
+        if(data == null){
+            return error("未查询到此价格");
+        }
+        JSONArray objects = JSONUtil.parseArray(data.toString());
+        if(objects.isEmpty()){
+            return error("未查询到此价格");
+        }
+        JSONObject object = JSONUtil.parseObj(objects.get(0));
+        return success(object);
+    }
 }

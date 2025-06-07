@@ -1,305 +1,320 @@
 <template>
-  <div class="crypto-scanner">
-    <!-- 主卡片 - 包含搜索和内容 -->
-    <div class="main-card">
-      <!-- 搜索头部区域 -->
-      <div class="search-header">
-        <div class="search-input-wrapper">
-          <div class="search-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21 21L16.514 16.506M19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <el-input
-            v-model="searchCA"
-            placeholder="输入 CA 地址"
-            class="search-input"
-            @keyup.enter="searchToken"
-            clearable
-            size="large"
-          />
-          <el-button 
-            @click="searchToken" 
-            type="primary" 
-            :loading="searching"
-            class="search-button"
-            size="large"
-          >
-            {{ searching ? '查询中...' : '查询' }}
-          </el-button>
-        </div>
-      </div>
-
-      <!-- 分割线 -->
-      <div class="header-divider"></div>
-
-      <!-- 主要内容区域 -->
-      <div class="main-content" v-if="tokenData">
-        <el-row :gutter="20">
-          <!-- 左侧K线图区域 -->
-          <el-col :span="16">
-            <div class="chart-section">
-              <div class="chart-header"><!--                </div>-->
-                <div class="token-title-row">
-                  <!-- logo -->
-                  <img :src="tokenData.logoUrl" class="token-logo" v-if="tokenData.logoUrl">
-
-                  <!-- 名称和价格 -->
-                  <div class="token-info">
-                    <div class="token-header">
-                      <h3>{{ tokenData.symbol }} <span class="token-name">{{ tokenData.name }}</span></h3>
+  <div class="app-container">
+    <!-- 始终显示的主要内容区域 -->
+    <el-row :gutter="20">
+      <!-- 左侧K线图区域 -->
+      <el-col :span="16">
+        <el-card shadow="never">
+          <!-- 代币基本信息 -->
+          <template #header>
+            <!-- 顶部搜索区域：左侧搜索框 + 右侧主流币 -->
+            <div class="top-search-area">
+              <!-- 左侧：搜索框 -->
+              <div class="search-compact">
+                <el-autocomplete
+                  v-model="searchCA"
+                  placeholder="输入合约地址..."
+                  class="search-input-compact"
+                  size="default"
+                  clearable
+                  :fetch-suggestions="fetchSuggestions"
+                  @select="handleSelect"
+                  @keyup.enter="searchToken"
+                  @paste="handlePaste"
+                  :trigger-on-focus="true"
+                  popper-class="search-history-popper"
+                  :debounce="300"
+                >
+                  <template #prefix>
+                    <el-icon class="search-icon-compact"><Search /></el-icon>
+                  </template>
+                  <template #suffix>
+                    <el-button 
+                      @click="pasteFromClipboard"
+                      size="small"
+                      text
+                      class="paste-btn-compact"
+                      title="粘贴"
+                    >
+                      <el-icon><DocumentCopy /></el-icon>
+                    </el-button>
+                  </template>
+                  <template #default="{ item }">
+                    <div class="history-suggestion">
+                      <div class="suggestion-main">
+                        <span class="suggestion-symbol">{{ item.symbol }}</span>
+                        <span class="suggestion-name">{{ item.name }}</span>
+                      </div>
+                      <div class="suggestion-address">{{ formatAddress(item.address) }}</div>
                     </div>
-                    <div class="price-info">
-                      <span class="current-price">${{ formatPrice(tokenData.price) }}</span>
-                      <span :class="['price-change', tokenData.change24h >= 0 ? 'positive' : 'negative']">
-                        {{ tokenData.change24h >= 0 ? '+' : '' }}{{ tokenData.change24h }}%
-                      </span>
-                    </div>
-                  </div>
-
-                  <!-- 社交链接 -->
-                  <div class="social-links-inline" v-if="tokenData.socialLinks && tokenData.socialLinks.length > 0">
-                    <div class="social-buttons">
-                      <el-button
-                          v-for="link in tokenData.socialLinks"
-                          :key="link.type"
-                          size="mini"
-                          @click="openSocialLink(link.url)"
-                          :type="getSocialButtonType()"
-                          circle
-                          :title="link.type"
-                          class="social-btn-small"
-                      >
-                        <img
-                            v-if="getSocialIcon(link.type).includes('.png')"
-                            :src="getSocialIcon(link.type)"
-                            alt="Social Icon"
-                            class="social-icon-img"
-                        >
-                        <i v-else :class="getSocialIcon(link.type)"></i>
-                      </el-button>
-                    </div>
-                  </div>
-
-                  <!-- 操作按钮 -->
-                  <div class="action-buttons">
-                    <div class="primary-actions">
-                      <el-button
-                          :type="getMonitorButtonType()"
-                          size="small"
-                          @click="toggleMonitor"
-                          :loading="monitoring"
-                          :disabled="monitorStatus === 'monitored'"
-                      >
-                        <i :class="getMonitorButtonIcon()"></i>
-                        {{ getMonitorButtonText() }}
-                      </el-button>
-                      <el-button size="small" @click="openInExplorer" type="info">
-                        <i class="el-icon-link"></i> 区块浏览器
-                      </el-button>
-                    </div>
-                  </div>
-
-                  <!-- 查询统计 -->
-                  <div class="query-stats-row">
-                    <div class="stat-item">
-                      <span class="label">总查询</span>
-                      <span class="value">{{ tokenData.queryCount || 0 }}</span>
-                    </div>
-                    <div class="stat-item">
-                      <span class="label">今日查询</span>
-                      <span class="value">{{ tokenData.todayQueries || 0 }}</span>
-                    </div>
-                    <div class="stat-item">
-                      <span class="label">监控人数</span>
-                      <span class="value">{{ tokenData.monitorCount || 0 }}</span>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-              
-              <div class="chart-container">
-                <iframe 
-                  ref="klineIframe"
-                  :src="getKlineUrl()"
-                  class="kline-iframe"
-                  frameborder="0"
-                  scrolling="no">
-                </iframe>
-              </div>
-            </div>
-          </el-col>
-
-          <!-- 右侧信息操作区域 -->
-          <el-col :span="8">
-            <!-- 代币信息 - GMGN风格 -->
-            <div class="token-info-section">
-              <div class="section-header">
-                <el-button style="float: right; padding: 3px 0" type="text" @click="refreshTokenData">
-                  <i class="el-icon-refresh"></i> 刷新
+                  </template>
+                </el-autocomplete>
+                <el-button 
+                  @click="searchToken" 
+                  type="primary" 
+                  class="search-btn-compact"
+                  size="default"
+                >
+                  查询
                 </el-button>
               </div>
-              
-              <!-- 基础数据行 -->
-              <div class="basic-info-row">
-                <div class="info-item">
-                  <span class="info-label">市值</span>
-                  <span class="info-value">${{ formatNumber(tokenData.marketCap) }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">池子</span>
-                  <span class="info-value">${{ formatNumber(tokenData.liquidity) }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">24h成交额</span>
-                  <span class="info-value">${{ formatNumber(tokenData.volume24h) }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">持有者</span>
-                  <span class="info-value">{{ formatNumber(tokenData.holderCount) || '0' }}</span>
-                </div>
-              </div>
 
-              <!-- 安全数据区域 -->
-              <div class="security-info-row">
-                <div class="security-header">
-                  <span class="security-title">🔒 安全分析</span>
-                </div>
-                
-                <div class="security-content" v-if="securityData">
-                  <!-- 风险等级 -->
-                  <div class="risk-level-section">
-                    <el-tag :type="getRiskLevelType(securityData.riskLevel)" size="medium">
-                      {{ getRiskLevelText(securityData.riskLevel) }}
-                    </el-tag>
-                    <span class="risk-tags" v-if="securityData.riskTag">{{ securityData.riskTag }}</span>
-                  </div>
-                  
-                  <!-- 安全指标网格 -->
-                  <div class="security-metrics-grid">
-                    <div class="security-metric-card">
-                      <div class="metric-label">Top10占比</div>
-                      <div class="metric-value" :class="getConcentrationRiskClass(securityData.top10Percent)">
-                        {{ formatPercent(securityData.top10Percent) }}
-                      </div>
+              <!-- 右侧：主流币价格 -->
+              <div class="main-coins-compact">
+                <div 
+                  v-for="coin in mainCoins" 
+                  :key="coin.symbol"
+                  class="coin-item-compact"
+                >
+                  <img :src="coin.icon" :alt="coin.symbol" class="coin-logo" />
+                  <div class="coin-info">
+                    <div class="coin-price-compact">
+                      ${{ formatCoinPrice(coin.price) }}
                     </div>
-                    
-                    <div class="security-metric-card">
-                      <div class="metric-label">交易税率</div>
-                      <div class="metric-value" :class="getFeeRiskClass(securityData.feeRate)">
-                        {{ formatPercent(securityData.feeRate) }}
-                      </div>
-                    </div>
-
-                    <div class="security-metric-card">
-                      <div class="metric-label">持有者数</div>
-                      <div class="metric-value neutral">
-                        {{ securityData.holders }}
-                      </div>
-                    </div>
-                    
-                    <div class="security-metric-card clickable" @click="copyAddress(securityData.ownerAddress)" title="点击复制开发者地址">
-                      <div class="metric-label">开发者</div>
-                      <div class="metric-value neutral">
-                        <i class="el-icon-document-copy"></i> 复制
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- 权限状态网格 - 时间选择器风格 -->
-                  <div class="permissions-timeframe-grid">
                     <div 
-                      class="permission-timeframe-btn" 
-                      :class="{ 'safe': !securityData.isMintable, 'danger': securityData.isMintable }"
+                      :class="['coin-change-compact', coin.change24h >= 0 ? 'positive' : 'negative']"
                     >
-                      <div class="permission-label">增发权限</div>
-                      <div class="permission-status">{{ securityData.isMintable ? '可增发' : '不可增发' }}</div>
+                      {{ coin.change24h >= 0 ? '+' : '' }}{{ coin.change24h.toFixed(1) }}%
                     </div>
-                    
-                    <div 
-                      class="permission-timeframe-btn" 
-                      :class="{ 'safe': !securityData.isFreezable, 'danger': securityData.isFreezable }"
-                    >
-                      <div class="permission-label">冻结权限</div>
-                      <div class="permission-status">{{ securityData.isFreezable ? '可冻结' : '不可冻结' }}</div>
-                    </div>
-                    
-                    <div 
-                      class="permission-timeframe-btn" 
-                      :class="{ 'safe': !securityData.isClosable, 'danger': securityData.isClosable }"
-                    >
-                      <div class="permission-label">销毁权限</div>
-                      <div class="permission-status">{{ securityData.isClosable ? '可销毁' : '不可销毁' }}</div>
-                    </div>
-                    
-                    <div 
-                      class="permission-timeframe-btn" 
-                      :class="{ 'safe': securityData.dexFlag, 'danger': !securityData.dexFlag }"
-                    >
-                      <div class="permission-label">DEX状态</div>
-                      <div class="permission-status">{{ securityData.dexFlag ? '已上DEX' : '未上DEX' }}</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="security-loading" v-else-if="loadingSecurity">
-                  <i class="el-icon-loading"></i>
-                  <span>正在分析安全数据...</span>
-                </div>
-                
-                <div class="security-error" v-else>
-                  <i class="el-icon-warning-outline"></i>
-                  <span>暂无安全数据</span>
-                </div>
-              </div>
-
-              <!-- 时间周期选择器 - GMGN风格 -->
-              <div class="timeframe-selector" v-if="tokenData.realtimeData">
-                <div class="timeframe-buttons">
-                  <div 
-                    v-for="timeframe in timeframes" 
-                    :key="timeframe.value"
-                    :class="['timeframe-btn', { active: selectedTimeframe === timeframe.value }]"
-                    @click="selectedTimeframe = timeframe.value"
-                  >
-                    <div class="timeframe-label">{{ timeframe.label }}</div>
-                    <div :class="['timeframe-change', getChangeClass(getPriceChangeByTimeframe(timeframe.value))]">
-                      {{ formatChange(getPriceChangeByTimeframe(timeframe.value)) }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 交易统计 - GMGN风格 -->
-              <div class="trading-stats" v-if="tokenData.realtimeData">
-                <div class="trading-stats-row">
-                  <div class="stat-item">
-                    <div class="stat-label">成交额</div>
-                    <div class="stat-value">${{ formatNumber(getSelectedVolume()) }}</div>
-                  </div>
-                  <div class="stat-item">
-                    <div class="stat-label">买入</div>
-                    <div class="stat-value buy-color">{{ formatNumber(getSelectedBuys()) }}/${{ formatNumber(getSelectedBuyVolume()) }}</div>
-                  </div>
-                  <div class="stat-item">
-                    <div class="stat-label">卖出</div>
-                    <div class="stat-value sell-color">{{ formatNumber(getSelectedSells()) }}/${{ formatNumber(getSelectedSellVolume()) }}</div>
-                  </div>
-                  <div class="stat-item">
-                    <div class="stat-label">净买入</div>
-                    <div :class="['stat-value', getNetBuyClass()]">{{ getNetBuysFormatted() }}</div>
                   </div>
                 </div>
               </div>
             </div>
-          </el-col>
-        </el-row>
-      </div>
-    </div>
+
+            <!-- 代币信息区域 - 仅在有数据时显示 -->
+            <div v-if="tokenData" class="token-header-info">
+              <!-- 代币基本信息 + 操作按钮 -->
+              <div class="token-main-row">
+                <div class="token-basic">
+                  <el-avatar 
+                    v-if="tokenData.logoUrl" 
+                    :src="tokenData.logoUrl" 
+                    :size="50"
+                    class="token-avatar"
+                  />
+                  <div class="token-text">
+                    <h3>{{ tokenData.symbol }} <span class="token-sub">{{ tokenData.name }}</span></h3>
+                    <div class="price-social-row">
+                      <div class="price-row">
+                        <span class="price-main">${{ formatPrice(tokenData.price) }}</span>
+                        <el-tag 
+                          :type="tokenData.change24h >= 0 ? 'success' : 'danger'"
+                          effect="plain"
+                          size="small"
+                          class="price-change-tag"
+                        >
+                          {{ tokenData.change24h >= 0 ? '+' : '' }}{{ tokenData.change24h }}%
+                        </el-tag>
+                      </div>
+                      
+                      <!-- 社交链接图标 -->
+                      <div v-if="tokenData.socialLinks && tokenData.socialLinks.length > 0" class="social-icons">
+                        <el-button
+                          v-for="link in tokenData.socialLinks"
+                          :key="link.type"
+                          size="small"
+                          @click="openSocialLink(link.url)"
+                          circle
+                          :title="link.type"
+                          class="social-icon-btn"
+                        >
+                          <el-icon><Link /></el-icon>
+                        </el-button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="action-buttons">
+                    <el-button
+                        class="action-btn small"
+                        :type="getMonitorButtonType()"
+                        size="small"
+                        @click="toggleMonitor"
+                        :disabled="monitorStatus === 'monitored'"
+                        round
+                        icon="Monitor"
+                    >
+                      {{ getMonitorButtonText() }}
+                    </el-button>
+                    <el-button
+                        class="action-btn small"
+                        size="small"
+                        @click="openInExplorer"
+                        round
+                        icon="Link"
+                    >
+                      区块链
+                    </el-button>
+                  </div>
+
+                  <!-- 统计小卡片 -->
+                  <div class="mini-stats">
+                    <div class="mini-card">
+                      <div class="mini-value">{{ tokenData.queryCount || 0 }}</div>
+                      <div class="mini-label">总查询</div>
+                    </div>
+                    <div class="mini-card">
+                      <div class="mini-value">{{ tokenData.todayQueries || 0 }}</div>
+                      <div class="mini-label">今日查询</div>
+                    </div>
+                    <div class="mini-card">
+                      <div class="mini-value">{{ tokenData.monitorCount || 0 }}</div>
+                      <div class="mini-label">监控人数</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- K线图 - 仅在有数据时显示 -->
+            <div v-if="tokenData" class="chart-container">
+              <iframe 
+                ref="klineIframe"
+                :src="getKlineUrl()"
+                class="kline-iframe"
+                frameborder="0"
+                scrolling="no">
+              </iframe>
+            </div>
+
+            <!-- 没有数据时的占位内容 -->
+            <div v-else class="no-data-placeholder">
+              <el-empty description="请输入代币地址开始分析" />
+            </div>
+          </template>
+        </el-card>
+      </el-col>
+
+      <!-- 右侧信息区域 - 仅在有数据时显示 -->
+      <el-col v-if="tokenData" :span="8">
+        <!-- 基础数据 - 一行卡片 -->
+        <div class="data-section">
+          <div class="data-cards-row">
+            <div class="data-card">
+              <div class="data-label">市值</div>
+              <div class="data-value">${{ formatNumber(tokenData.marketCap) }}</div>
+            </div>
+            <div class="data-card">
+              <div class="data-label">池子</div>
+              <div class="data-value">${{ formatNumber(tokenData.liquidity) }}</div>
+            </div>
+            <div class="data-card">
+              <div class="data-label">24h成交额</div>
+              <div class="data-value">${{ formatNumber(tokenData.realtimeData.volume.h24) }}</div>
+            </div>
+            <div class="data-card">
+              <div class="data-label">持有者</div>
+              <div class="data-value">{{ formatNumber(tokenData.holderCount || 0) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 安全分析 -->
+        <div class="data-section">
+          <h4 class="section-title">🔒 安全分析</h4>
+          <div v-if="securityData">
+            <!-- 第一行：风险等级 + 风险提示 -->
+            <div class="risk-level-row">
+              <div class="risk-card" :class="getRiskLevelClass(securityData.riskLevel)">
+                {{ getRiskLevelText(securityData.riskLevel) }}
+              </div>
+              <div v-if="securityData.riskTag" class="risk-warning">
+                {{ securityData.riskTag }}
+              </div>
+            </div>
+            
+            <!-- 第二行：安全指标 -->
+            <div class="security-metrics-row">
+              <div class="security-card" :class="getConcentrationRiskClass(securityData.top10Percent)">
+                <div class="security-label">Top10</div>
+                <div class="security-value">{{ formatPercent(securityData.top10Percent) }}</div>
+              </div>
+              <div class="security-card" :class="getFeeRiskClass(securityData.feeRate)">
+                <div class="security-label">交易税率</div>
+                <div class="security-value">{{ formatPercent(securityData.feeRate) }}</div>
+              </div>
+              <div class="security-card neutral">
+                <div class="security-label">持有数</div>
+                <div class="security-value">{{ securityData.holders }}</div>
+              </div>
+              <div class="security-card neutral">
+                <el-button 
+                  size="small" 
+                  @click="copyAddress(securityData.ownerAddress)"
+                  :icon="DocumentCopy"
+                  round
+                >
+                  开发者
+                </el-button>
+              </div>
+            </div>
+            
+            <!-- 第三行：权限状态 -->
+            <div class="permissions-row">
+              <div class="permission-card" :class="!securityData.isMintable ? 'safe' : 'danger'">
+                {{ securityData.isMintable ? '可增发' : '不可增发' }}
+              </div>
+              <div class="permission-card" :class="!securityData.isFreezable ? 'safe' : 'danger'">
+                {{ securityData.isFreezable ? '可冻结' : '不可冻结' }}
+              </div>
+              <div class="permission-card" :class="!securityData.isClosable ? 'safe' : 'danger'">
+                {{ securityData.isClosable ? '可销毁' : '不可销毁' }}
+              </div>
+              <div class="permission-card" :class="securityData.dexFlag ? 'safe' : 'danger'">
+                {{ securityData.dexFlag ? '已上DEX' : '未上DEX' }}
+              </div>
+            </div>
+          </div>
+          
+          <el-empty v-if="!securityData" description="暂无安全数据" />
+        </div>
+
+        <!-- 时间周期选择器 - 无标题，直接一行 -->
+        <div class="data-section" v-if="tokenData.realtimeData">
+          <div class="timeframe-cards-row">
+            <div 
+              v-for="timeframe in timeframes" 
+              :key="timeframe.value"
+              class="timeframe-card"
+              :class="{ active: selectedTimeframe === timeframe.value }"
+              @click="selectedTimeframe = timeframe.value"
+            >
+              <div class="timeframe-label">{{ timeframe.label }}</div>
+              <div 
+                :class="['timeframe-change', getChangeClass(getPriceChangeByTimeframe(timeframe.value))]"
+              >
+                {{ formatChange(getPriceChangeByTimeframe(timeframe.value)) }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 交易统计 - 一行 -->
+        <div class="data-section" v-if="tokenData.realtimeData">
+          <div class="trading-cards-row">
+            <div class="trading-card">
+              <div class="trading-label">成交额</div>
+              <div class="trading-value">${{ formatNumber(getSelectedVolume()) }}</div>
+            </div>
+            <div class="trading-card buy">
+              <div class="trading-label">买入</div>
+              <div class="trading-value">${{ formatNumber(getSelectedBuyVolume()) }}</div>
+            </div>
+            <div class="trading-card sell">
+              <div class="trading-label">卖出</div>
+              <div class="trading-value">${{ formatNumber(getSelectedSellVolume()) }}</div>
+            </div>
+            <div class="trading-card" :class="getNetBuyClass()">
+              <div class="trading-label">净买入</div>
+              <div class="trading-value">{{ getNetBuysFormatted() }}</div>
+            </div>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
 
     <!-- 价格提醒对话框 -->
-    <el-dialog title="设置价格提醒" :visible.sync="alertDialogVisible" width="500px">
+    <el-dialog v-model="alertDialogVisible" title="设置价格提醒" width="500px">
       <el-form :model="alertForm" label-width="100px">
         <el-form-item label="提醒价格">
           <el-input v-model="alertForm.targetPrice" placeholder="请输入目标价格"></el-input>
@@ -318,19 +333,35 @@
           </el-checkbox-group>
         </el-form-item>
       </el-form>
-      <div slot="footer">
+      <template #footer>
         <el-button @click="alertDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="confirmPriceAlert" :loading="settingAlert">确 定</el-button>
-      </div>
+        <el-button type="primary" @click="confirmPriceAlert">确 定</el-button>
+      </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup name="CryptoScanner">
-import { ref, reactive, getCurrentInstance, onMounted } from 'vue'
-import { tokenInfo, securityInfo} from "@/api/crypto/index"
+import { ref, reactive, getCurrentInstance, onMounted, onUnmounted } from 'vue'
+import { Search, Link, DocumentCopy, ArrowDown, Delete } from '@element-plus/icons-vue'
+import { tokenInfo, securityInfo, getTopCoin} from "@/api/crypto/index"
 const { proxy } = getCurrentInstance()
+let securityTimer = null
 
+// onMounted(() => {
+//   // 每隔15秒查一次
+//   securityTimer = setInterval(() => {
+//     getTokenInfo()
+//   }, 15000)
+// })
+//
+// onUnmounted(() => {
+//   // 页面卸载时清除定时器，防止内存泄漏
+//   if (securityTimer) {
+//     clearInterval(securityTimer)
+//     securityTimer = null
+//   }
+// })
 // 响应式数据定义
 const searchCA = ref('')
 const searching = ref(false)
@@ -340,7 +371,6 @@ const settingAlert = ref(false)
 const alertDialogVisible = ref(false)
 const klineIframe = ref(null)
 const securityData = ref(null)
-const loadingSecurity = ref(false)
 
 const alertForm = reactive({
   targetPrice: '',
@@ -357,6 +387,171 @@ const timeframes = ref([
 ])
 
 const monitorStatus = ref('not_monitored') // not_monitored, monitoring, monitored
+
+// 搜索历史记录
+const searchHistory = ref([])
+
+// 主流币价格数据
+const mainCoins = ref([
+  { 
+    symbol: 'BTC', 
+    name: 'Bitcoin', 
+    icon: '/src/assets/crypto-icons/BTC.png',
+    price: 0, 
+    change24h: 0, 
+    volume24h: 0,
+    high24h: 0,
+    low24h: 0,
+    coin: 'BTC_USDT'
+  },
+  { 
+    symbol: 'ETH', 
+    name: 'Ethereum', 
+    icon: '/src/assets/crypto-icons/ETH.png',
+    price: 0, 
+    change24h: 0, 
+    volume24h: 0,
+    high24h: 0,
+    low24h: 0,
+    coin: 'ETH_USDT'
+  },
+  { 
+    symbol: 'BNB', 
+    name: 'BNB', 
+    icon: '/src/assets/crypto-icons/BNB.png',
+    price: 0, 
+    change24h: 0, 
+    volume24h: 0,
+    high24h: 0,
+    low24h: 0,
+    coin: 'BNB_USDT'
+  },
+  { 
+    symbol: 'SOL', 
+    name: 'Solana', 
+    icon: '/src/assets/crypto-icons/SOL.png',
+    price: 0, 
+    change24h: 0, 
+    volume24h: 0,
+    high24h: 0,
+    low24h: 0,
+    coin: 'SOL_USDT'
+  }
+])
+
+let priceUpdateTimer = null
+
+// 自动完成建议
+const fetchSuggestions = (queryString, callback) => {
+  // 如果没有输入内容，显示最近5条历史记录
+  if (!queryString) {
+    callback(searchHistory.value.slice(0, 5))
+    return
+  }
+  
+  // 如果没有历史记录，返回空数组
+  if (searchHistory.value.length === 0) {
+    callback([])
+    return
+  }
+  
+  // 过滤匹配的历史记录
+  const suggestions = searchHistory.value.filter(item => {
+    const query = queryString.toLowerCase()
+    return (
+      item.symbol.toLowerCase().includes(query) ||
+      item.name.toLowerCase().includes(query) ||
+      item.address.toLowerCase().includes(query)
+    )
+  })
+  
+  callback(suggestions.slice(0, 5)) // 最多显示5条
+}
+
+// 处理选择历史记录
+const handleSelect = (item) => {
+  searchCA.value = item.address
+  searchToken()
+}
+
+// 填充示例地址（保留用于兼容）
+const fillExample = (address) => {
+  searchCA.value = address
+  searchToken()
+}
+
+// 处理粘贴事件
+const handlePaste = async (event) => {
+  // 延迟一点处理，确保粘贴内容已经填入
+  setTimeout(() => {
+    // 自动检测并清理地址格式
+    if (searchCA.value) {
+      searchCA.value = searchCA.value.trim()
+    }
+  }, 100)
+}
+
+// 从剪贴板粘贴
+const pasteFromClipboard = async () => {
+  try {
+    const text = await navigator.clipboard.readText()
+    if (text) {
+      searchCA.value = text.trim()
+      proxy.$modal.msgSuccess('已粘贴地址')
+    }
+  } catch (err) {
+    proxy.$modal.msgWarning('请手动粘贴地址')
+  }
+}
+
+// 清空历史记录
+const clearHistory = () => {
+  searchHistory.value = []
+  localStorage.removeItem('crypto_search_history')
+  proxy.$modal.msgSuccess('历史记录已清空')
+}
+
+// 保存搜索历史
+const saveToHistory = (tokenData) => {
+  if (!tokenData || !tokenData.address) return
+  
+  const historyItem = {
+    address: tokenData.address,
+    symbol: tokenData.symbol,
+    name: tokenData.name,
+    timestamp: Date.now()
+  }
+  
+  // 移除重复项
+  searchHistory.value = searchHistory.value.filter(item => item.address !== tokenData.address)
+  
+  // 添加到开头
+  searchHistory.value.unshift(historyItem)
+  
+  // 最多保存5条记录
+  searchHistory.value = searchHistory.value.slice(0, 5)
+  
+  // 保存到本地存储
+  localStorage.setItem('crypto_search_history', JSON.stringify(searchHistory.value))
+}
+
+// 加载历史记录
+const loadHistory = () => {
+  try {
+    const saved = localStorage.getItem('crypto_search_history')
+    if (saved) {
+      searchHistory.value = JSON.parse(saved)
+    }
+  } catch (err) {
+    console.warn('Failed to load search history:', err)
+  }
+}
+
+// 格式化地址显示
+const formatAddress = (address) => {
+  if (!address || address.length < 8) return address || '--'
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
 
 // 获取代币信息
 const getTokenInfo = () => {
@@ -378,7 +573,7 @@ const getTokenInfo = () => {
         volume24h: tokenPair.volume?.h24 || 0,
         high24h: calculateHigh24h(tokenPair),
         low24h: calculateLow24h(tokenPair),
-        holderCount: tokenPair.holders, // DexScreener不提供这个数据
+        holderCount: tokenPair.holderCount, // DexScreener不提供这个数据
         liquidity: tokenPair.liquidity || 0,
         hasRenounced: false, // 需要其他API获取
         queryCount: tokenPair.queryCount || 0,
@@ -398,12 +593,11 @@ const getTokenInfo = () => {
         // 新增：官方社媒链接
         socialLinks: extractSocialLinks(tokenPair)
       }
-      console.log(tokenPair.realtimeData)
-      
-      proxy.$modal.msgSuccess(`🎉 成功加载${tokenData.value.symbol}代币信息`)
-      
       // 自动获取安全数据
-      getTokenSecurity(tokenData.value.address)
+      getTokenSecurity(tokenData.value.address, tokenPair)
+      
+      // 保存到搜索历史
+      saveToHistory(tokenData.value)
     } else {
       proxy.$modal.msgError('未找到该代币信息，请检查CA地址是否正确')
     }
@@ -422,9 +616,9 @@ const searchToken = () => {
     return
   }
 
-  // 重置状态
+  // 重置状态，但保留tokenData避免布局切换
   monitorStatus.value = 'not_monitored'
-  tokenData.value = null
+  // tokenData.value = null  // 注释掉这行，避免布局切换
 
   getTokenInfo()
 }
@@ -432,63 +626,8 @@ const searchToken = () => {
 // 加载演示数据 - 移除自动调用getTokenInfo，使用静态模拟数据
 const loadDemoToken = () => {
   searchCA.value = "So11111111111111111111111111111111111111112"
-  
-  // 使用静态模拟数据，避免API调用失败的无限递归
-  tokenData.value = {
-    name: "Wrapped SOL",
-    symbol: "SOL",
-    address: "So11111111111111111111111111111111111111112",
-    logoUrl: getChainLogo('sol'),
-    price: 180.45,
-    change24h: 2.5,
-    marketCap: 84500000000,
-    volume24h: 2100000000,
-    high24h: 185.20,
-    low24h: 175.80,
-    holderCount: 1250000,
-    liquidity: 12500000,
-    hasRenounced: false,
-    queryCount: 1256,
-    todayQueries: 89,
-    monitorCount: 234,
-    pairInfo: {
-      dexId: "raydium",
-      chainId: "solana",
-      pairAddress: "58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2",
-      url: "https://dexscreener.com/solana/58oqchx4ywmvkdwllzzbxchscc2fqcuwbkwmihlvqo2",
-      labels: ["v2"],
-      pairCreatedAt: 1640995200000
-    },
-    realtimeData: {
-      txns: {
-        m5: { buys: 12, sells: 8 },
-        h1: { buys: 145, sells: 123 },
-        h6: { buys: 867, sells: 745 },
-        h24: { buys: 3456, sells: 2987 }
-      },
-      priceChange: {
-        m5: 0.1,
-        h1: 1.2,
-        h6: 1.8,
-        h24: 2.5
-      },
-      volume: {
-        m5: 125000,
-        h1: 1250000,
-        h6: 7500000,
-        h24: 2100000000
-      }
-    },
-    socialLinks: [
-      { type: 'website', url: 'https://solana.com', label: '官网' },
-      { type: 'twitter', url: 'https://twitter.com/solana', label: 'Twitter' }
-    ]
-  }
-  
-  proxy.$modal.msgSuccess('🎉 加载演示数据成功')
-  
-  // 加载演示安全数据
-  getTokenSecurity(tokenData.value.address)
+
+  getTokenInfo()
 }
 
 // 计算24小时最高价
@@ -691,8 +830,8 @@ const getNetBuys = () => {
 const getNetBuyClass = () => {
   if (tokenData.value?.realtimeData) {
     const netBuys = getNetBuys()
-    if (netBuys > 0) return 'positive'
-    if (netBuys < 0) return 'negative'
+    if (netBuys < 0) return 'positive'
+    if (netBuys > 0) return 'negative'
   }
   return 'neutral'
 }
@@ -905,7 +1044,44 @@ const generateMockTxnsFromPriceChange = (priceChange) => {
 
 // 页面加载时自动显示演示数据
 onMounted(() => {
-  loadDemoToken()
+  loadHistory()
+  
+  // 如果没有历史记录，添加一些示例数据用于测试
+  if (searchHistory.value.length === 0) {
+    searchHistory.value = [
+      {
+        address: 'So11111111111111111111111111111111111111112',
+        symbol: 'SOL',
+        name: 'Solana',
+        timestamp: Date.now() - 3600000
+      },
+      {
+        address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+        symbol: 'USDC',
+        name: 'USD Coin',
+        timestamp: Date.now() - 7200000
+      },
+      {
+        address: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
+        symbol: 'BONK',
+        name: 'Bonk',
+        timestamp: Date.now() - 10800000
+      }
+    ]
+    // 保存示例数据到本地存储
+    localStorage.setItem('crypto_search_history', JSON.stringify(searchHistory.value))
+  }
+  
+  // 启动主流币价格更新
+  startPriceUpdates()
+  
+  // 立即获取一次价格数据
+  updateMainCoinPrices()
+})
+
+onUnmounted(() => {
+  // 页面卸载时清除定时器，防止内存泄漏
+  stopPriceUpdates()
 })
 
 const loadDemoSecurityData = () => {
@@ -948,14 +1124,12 @@ const formatPercent = (value) => {
 }
 
 // 安全数据相关方法
-const getTokenSecurity = async (address) => {
+const getTokenSecurity = async (address, tokenPair) => {
   if (!address) return
   
-  loadingSecurity.value = true
   try {
     const response = await securityInfo(address)
     if (response && response.code === 200) {
-      // 处理后端返回的数据格式（后端使用append会创建数组）
       const data = response.data
       
       // 辅助函数：从数组或单值中提取数据
@@ -979,10 +1153,13 @@ const getTokenSecurity = async (address) => {
       }
       
       const riskTagValue = extractValue(data.riskTag) || ""
-      
+      const holderCount = tokenPair?.holderCount
+      const fallbackHolders = data?.holders
+      const top10Percent = tokenPair?.cryptoSecurityData?.top10Percent
+      const fallbackTop10 = data?.top10Percent
       securityData.value = {
-        holders: extractValue(data.holders) || "0",
-        top10Percent: toNumber(data.top10Percent),
+        holders: (holderCount && holderCount !== "0") ? holderCount : (fallbackHolders || "0"),
+        top10Percent: (top10Percent && top10Percent !== 0) ? top10Percent : (fallbackTop10 || 0),
         ownerAddress: extractValue(data.ownerAddress) || "",
         isMintable: toBool(data.isMintable),
         isFreezable: toBool(data.isFreezable), 
@@ -993,26 +1170,16 @@ const getTokenSecurity = async (address) => {
         isHoneypot: extractValue(data.isHoneypot) === true,
         riskLevel: calculateRiskLevel(riskTagValue)
       }
-      
-      // 更新基础数据中的持有者数量
-      if (tokenData.value) {
-        tokenData.value.holderCount = securityData.value.holders
-      }
-      
-      console.log('安全数据获取成功:', securityData.value)
+
     } else {
-      console.warn('安全数据API返回错误:', response)
       // 获取失败时使用演示数据
       loadDemoSecurityData()
       proxy.$modal.msgWarning('获取安全数据失败，使用演示数据')
     }
   } catch (error) {
-    console.error('获取安全数据异常:', error)
     // 异常时使用演示数据
     loadDemoSecurityData()
     proxy.$modal.msgWarning('网络异常，使用演示数据')
-  } finally {
-    loadingSecurity.value = false
   }
 }
 
@@ -1026,21 +1193,24 @@ const calculateRiskLevel = (riskTag) => {
   return 'LOW'
 }
 
-const formatAddress = (address) => {
-  if (!address || address.length < 8) return address || '--'
-  // 显示前4位和后4位，中间用...代替
-  return `${address.slice(0, 4)}...${address.slice(-4)}`
+const getRiskLevelClass = (level) => {
+  const classes = {
+    'LOW': 'low',
+    'MEDIUM': 'medium', 
+    'HIGH': 'high'
+  }
+  return classes[level] || 'medium'
 }
 
 const getConcentrationRiskClass = (top10Percent) => {
-  if (top10Percent < 0.1) return 'success'
-  if (top10Percent < 0.2) return 'warning'
+  if (top10Percent < 0.15) return 'success'
+  if (top10Percent < 0.25) return 'warning'
   return 'danger'
 }
 
 const getFeeRiskClass = (feeRate) => {
-  if (feeRate < 0.01) return 'success'
-  if (feeRate < 0.03) return 'warning'
+  if (feeRate < 0.05) return 'success'
+  if (feeRate < 0.10) return 'warning'
   return 'danger'
 }
 
@@ -1051,147 +1221,308 @@ const copyAddress = (address) => {
     proxy.$modal.msgError('复制地址失败: ' + err.message)
   })
 }
+
+// 主流币相关方法
+const formatCoinPrice = (price) => {
+  if (!price || price === 0) return '0.00'
+  
+  if (price >= 1) {
+    return price.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  } else if (price >= 0.01) {
+    return price.toFixed(4)
+  } else if (price >= 0.0001) {
+    return price.toFixed(6)
+  } else {
+    return price.toExponential(2)
+  }
+}
+
+const updateMainCoinPrices = async () => {
+  try {
+    // 并发请求所有币种的价格数据
+    const pricePromises = mainCoins.value.map(async (coin) => {
+      try {
+        const response = await getTopCoin(coin.coin)
+        if (response && response.code === 200) {
+          return {
+            symbol: coin.symbol,
+            price: parseFloat(response.data.last),
+            change24h: parseFloat(response.data.change_percentage),
+            volume24h: parseFloat(response.data.quote_volume),
+            high24h: parseFloat(response.data.high_24h),
+            low24h: parseFloat(response.data.low_24h)
+          }
+        }
+        return null
+      } catch (error) {
+        console.warn(`Failed to fetch ${coin.symbol} price:`, error)
+        return null
+      }
+    })
+    
+    // 等待所有请求完成
+    const priceResults = await Promise.all(pricePromises)
+    
+    // 更新价格数据
+    mainCoins.value.forEach((coin, index) => {
+      const priceData = priceResults[index]
+      if (priceData) {
+        coin.price = priceData.price
+        coin.change24h = priceData.change24h
+        coin.volume24h = priceData.volume24h
+        coin.high24h = priceData.high24h
+        coin.low24h = priceData.low24h
+      }
+    })
+    
+    console.log('Main coin prices updated successfully')
+  } catch (error) {
+    console.warn('Failed to update main coin prices:', error)
+  }
+}
+
+const startPriceUpdates = () => {
+  // 立即更新一次
+  updateMainCoinPrices()
+  
+  // 每5秒更新一次价格
+  priceUpdateTimer = setInterval(updateMainCoinPrices, 10000)
+}
+
+const stopPriceUpdates = () => {
+  if (priceUpdateTimer) {
+    clearInterval(priceUpdateTimer)
+    priceUpdateTimer = null
+  }
+}
+
+// 滚动到顶部
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 </script>
 
-<style scoped lang="scss">
-.crypto-scanner {
+<style scoped>
+/* 整体容器美化 */
+.app-container {
+  background: linear-gradient(135deg, var(--el-bg-color-page) 0%, var(--el-bg-color) 100%);
+  min-height: calc(100vh - 200px);
   padding: 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  min-height: calc(100vh - 100px);
 }
 
-/* 主卡片 - 统一的大容器 */
-.main-card {
-  background: rgba(255, 255, 255, 0.98);
-  border-radius: 24px;
-  box-shadow: 
-    0 10px 40px rgba(31, 38, 135, 0.15),
-    0 2px 12px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+/* 搜索区域 */
+.search-section {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: var(--el-bg-color);
+  border-radius: 16px;
+  border: 1px solid var(--el-border-color-lighter);
+  box-shadow: 0 2px 8px var(--el-box-shadow-light);
+  transition: all 0.3s ease;
 }
 
-.main-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 
-    0 20px 60px rgba(31, 38, 135, 0.2),
-    0 4px 20px rgba(0, 0, 0, 0.12);
+.search-section:hover {
+  box-shadow: 0 4px 12px var(--el-box-shadow-light);
+  border-color: var(--el-color-primary-light-8);
 }
 
-/* 搜索头部区域 */
-.search-header {
-  padding: 32px 36px 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-}
-
-.search-input-wrapper {
+.search-container {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 8px 12px 8px 20px;
-  border: 2px solid #e2e8f0;
+  justify-content: center;
+}
+
+.search-main {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.search-input-modern {
+  width: 450px;
+  box-shadow: 0 2px 6px var(--el-box-shadow-light);
+}
+
+.search-input-modern :deep(.el-input__wrapper) {
+  border-radius: 12px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: var(--el-fill-color-blank);
 }
 
-.search-input-wrapper:focus-within {
-  border-color: #667eea;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(0, 0, 0, 0.08);
+.search-input-modern :deep(.el-input__wrapper:hover) {
+  border-color: var(--el-color-primary-light-7);
+  box-shadow: 0 0 0 1px var(--el-color-primary-light-8);
 }
 
-.search-icon {
-  width: 20px;
-  height: 20px;
-  color: #9ca3af;
-  flex-shrink: 0;
+.search-input-modern :deep(.el-input__wrapper.is-focus) {
+  border-color: var(--el-color-primary);
+  box-shadow: 0 0 0 2px var(--el-color-primary-light-9);
+}
+
+.search-icon-main {
+  color: var(--el-text-color-secondary);
   transition: color 0.3s ease;
 }
 
-.search-input-wrapper:focus-within .search-icon {
-  color: #667eea;
+.search-input-modern :deep(.el-input__wrapper.is-focus) .search-icon-main {
+  color: var(--el-color-primary);
 }
 
-.search-input {
-  flex: 1;
+.search-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
 }
 
-:deep(.search-input .el-input__inner) {
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  font-size: 16px;
-  padding: 16px 8px;
-  color: #374151;
-  font-weight: 500;
+.paste-btn {
+  color: var(--el-text-color-secondary);
+  transition: all 0.3s ease;
+  border-radius: 6px;
 }
 
-:deep(.search-input .el-input__inner:focus) {
-  border: none !important;
-  box-shadow: none !important;
+.paste-btn:hover {
+  color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
 }
 
-:deep(.search-input .el-input__inner::placeholder) {
-  color: #9ca3af;
-  font-weight: 400;
-}
-
-.search-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
+.search-btn-modern {
   border-radius: 12px;
-  padding: 16px 28px;
   font-weight: 600;
-  font-size: 14px;
-  color: white;
+  padding: 12px 24px;
+  box-shadow: 0 2px 6px var(--el-box-shadow-light);
+  transition: all 0.3s ease;
+}
+
+.search-btn-modern:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--el-box-shadow);
+}
+
+.search-extras {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.quick-examples {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.examples-label {
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.example-btn {
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--el-text-color-regular);
+  background: var(--el-fill-color-light);
+  border: 1px solid var(--el-border-color-light);
+  transition: all 0.3s ease;
+  height: auto;
+  min-width: auto;
+}
+
+.example-btn:hover {
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+  border-color: var(--el-color-primary-light-7);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px var(--el-color-primary-light-9);
+}
+
+.search-history {
+  display: flex;
+  align-items: center;
+}
+
+.history-dropdown .el-button {
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+  padding: 6px 12px;
+}
+
+.history-dropdown .el-button:hover {
+  color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+}
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.history-symbol {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.history-address {
+  font-size: 11px;
+  color: var(--el-text-color-secondary);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+/* 主要卡片美化 */
+.el-card {
+  border: 1px solid var(--el-border-color-lighter);
+  box-shadow: 
+    0 4px 12px var(--el-box-shadow-light),
+    0 2px 4px var(--el-box-shadow);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+  background: var(--el-bg-color);
   position: relative;
   overflow: hidden;
-  white-space: nowrap;
 }
 
-.search-button::before {
+.el-card::before {
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.search-button:hover::before {
-  left: 100%;
-}
-
-.search-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-}
-
-.search-button:active {
-  transform: translateY(0);
-}
-
-/* 头部分割线 */
-.header-divider {
+  left: 0;
+  right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.06), transparent);
-  margin: 0;
+  background: linear-gradient(90deg, 
+    var(--el-color-primary-light-8), 
+    var(--el-color-primary-light-9), 
+    var(--el-color-primary-light-8));
 }
 
-/* 主内容区域 */
-.main-content {
-  padding: 24px 36px 36px;
-  animation: fadeInUp 0.5s ease-out;
+.el-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 20px var(--el-box-shadow-light),
+    0 4px 8px var(--el-box-shadow);
+  border-color: var(--el-color-primary-light-8);
 }
 
-@keyframes fadeInUp {
+/* 信息卡片间距和动画 */
+.info-card {
+  margin-bottom: 20px;
+  animation: slideInUp 0.4s ease-out;
+}
+
+.info-card:nth-child(1) { animation-delay: 0.1s; }
+.info-card:nth-child(2) { animation-delay: 0.2s; }
+.info-card:nth-child(3) { animation-delay: 0.3s; }
+.info-card:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes slideInUp {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -1202,177 +1533,191 @@ const copyAddress = (address) => {
   }
 }
 
-/* 图表区域 */
-.chart-section {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  border: 1px solid #f1f5f9;
+/* 卡片头部美化 */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.card-header .el-button {
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
   transition: all 0.3s ease;
 }
 
-.chart-section:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
+.card-header .el-button:hover {
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
 }
 
-.chart-header {
+/* 代币头部信息美化 */
+.token-header-info {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: flex-start;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.token-title {
-  display: flex;
-  align-items: center;
-  gap: 20px;
   justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 4px 0;
 }
 
-.token-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.token-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.token-info h3 {
-  margin: 0;
-  color: #1f2937;
-  font-weight: 700;
-}
-
-.token-header {
+.token-main-row {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 12px;
-  margin-bottom: 6px;
 }
 
-.token-name {
-  font-size: 14px;
+.token-basic {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.token-avatar {
+  flex-shrink: 0;
+  box-shadow: 0 4px 8px var(--el-box-shadow-light);
+  transition: all 0.3s ease;
+}
+
+.token-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px var(--el-box-shadow);
+}
+
+.token-text h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--el-text-color-primary), var(--el-color-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.token-sub {
+  color: var(--el-text-color-secondary);
   font-weight: 400;
-  color: #6b7280;
+  font-size: 14px;
   margin-left: 8px;
 }
 
-.social-links-inline {
+.price-social-row {
   display: flex;
   align-items: center;
-  flex-shrink: 0;
+  gap: 12px;
+  margin-top: 6px;
 }
 
-.social-links-inline .social-buttons {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.social-btn-small {
-  margin: 0 !important;
-  width: 24px !important;
-  height: 24px !important;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  transition: all 0.3s ease !important;
-  font-size: 10px !important;
-}
-
-.social-btn-small:hover {
-  transform: translateY(-1px) scale(1.05) !important;
-}
-
-.social-btn-small .social-icon-img {
-  width: 12px;
-  height: 12px;
-  object-fit: contain;
-}
-
-.price-info {
+.price-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 4px;
+  gap: 12px;
 }
 
-/* 操作按钮区域样式 */
-.token-title .action-buttons {
+.price-main {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+  text-shadow: 0 1px 2px var(--el-box-shadow-light);
+}
+
+/* Tag 美化 */
+.el-tag {
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
+  transition: all 0.3s ease;
+}
+
+.el-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
+}
+
+/* 操作区域美化 */
+.token-actions {
   display: flex;
   align-items: center;
-  flex-shrink: 0;
+  gap: 16px;
 }
 
-.token-title .primary-actions {
+.social-icons {
   display: flex;
   gap: 8px;
-  align-items: center;
 }
 
-.token-title .primary-actions .el-button {
-  margin: 0;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 12px;
-  padding: 8px 12px;
+.social-icons .el-button {
+  border-radius: 50%;
+  box-shadow: 0 2px 6px var(--el-box-shadow-light);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
 }
 
-.token-title .primary-actions .el-button:hover {
+.social-icons .el-button:hover {
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 4px 12px var(--el-box-shadow);
+}
+
+/* 按钮组美化 */
+.el-button-group .el-button {
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
+  transition: all 0.3s ease;
+}
+
+.el-button-group .el-button:hover {
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
 }
 
-/* 统计信息区域样式 */
-.token-title .query-stats {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  flex-shrink: 0;
+/* 统计行美化 */
+.stats-row {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--el-border-color-light);
+  position: relative;
 }
 
-.token-title .query-stats .stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 0;
-  border-bottom: none;
-  font-size: 11px;
+.stats-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    var(--el-color-primary-light-8), 
+    var(--el-color-primary), 
+    var(--el-color-primary-light-8));
+  border-radius: 1px;
+}
+
+/* Statistic 组件美化 */
+.el-statistic {
   text-align: center;
-  min-width: 60px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, 
+    var(--el-bg-color) 0%, 
+    var(--el-bg-color-page) 100%);
 }
 
-.token-title .query-stats .label {
-  color: #64748b;
-  font-size: 10px;
-  font-weight: 500;
-  white-space: nowrap;
+.el-statistic:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--el-box-shadow-light);
+  background: linear-gradient(135deg, 
+    var(--el-bg-color-page) 0%, 
+    var(--el-fill-color-light) 100%);
 }
 
-.token-title .query-stats .value {
-  font-weight: 600;
-  color: #1e293b;
-  font-size: 12px;
-}
-
+/* K线图美化 */
 .chart-container {
-  height: 473px;
+  height: 400px;
   border-radius: 12px;
   overflow: hidden;
+  box-shadow: inset 0 2px 4px var(--el-box-shadow-light);
+  background: var(--el-fill-color-light);
 }
 
 .kline-iframe {
@@ -1382,1103 +1727,1201 @@ const copyAddress = (address) => {
   border-radius: 12px;
 }
 
-/* 右侧信息区域 */
-.token-info-section, .action-section, .stats-section {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 20px;
+/* 安全分析美化 */
+.risk-level-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
   margin-bottom: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  border: 1px solid #f1f5f9;
+}
+
+.risk-card {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--el-bg-color);
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
   transition: all 0.3s ease;
 }
 
-.token-info-section:hover, .action-section:hover, .stats-section:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
+.risk-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
 }
 
-.section-header {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-/* 基础信息行 */
-.basic-info-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f1f5f9;
-  justify-content: space-between;
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 16px;
-  background: #f8fafc;
-  border-radius: 12px;
-  transition: all 0.3s ease;
+.risk-warning {
   flex: 1;
-  min-width: 0;
-  text-align: center;
-}
-
-.info-item:hover {
-  background: #f1f5f9;
-  transform: translateY(-1px);
-}
-
-.info-label {
-  font-size: 11px;
-  color: #64748b;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-}
-
-.info-value {
-  font-size: 13px;
-  color: #1e293b;
-  font-weight: 700;
-  word-break: break-all;
-}
-
-/* 安全数据区域 */
-.security-info-row {
-  margin-bottom: 20px;
-  padding: 16px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 2px dashed #e2e8f0;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-}
-
-.security-info-row:hover {
-  border-color: #cbd5e1;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-}
-
-.security-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.security-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.security-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.risk-level-section {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.risk-tags {
+  padding: 8px 12px;
+  background: var(--el-fill-color-light);
+  border-radius: 8px;
+  color: var(--el-text-color-secondary);
   font-size: 12px;
-  color: #6b7280;
+  font-style: italic;
 }
 
-/* 安全指标网格 */
-.security-metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+.security-metrics-row {
+  display: flex;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
-.security-metric-card {
-  padding: 8px 6px;
-  border: 1px solid #e2e8f0;
+.security-card {
+  padding: 8px 16px;
   border-radius: 8px;
-  text-align: center;
-  background: #ffffff;
+  background: var(--el-bg-color);
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
   transition: all 0.3s ease;
 }
 
-.security-metric-card:hover {
+.security-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
 }
 
-.security-metric-card.clickable {
-  cursor: pointer;
+.security-value {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
 }
 
-.security-metric-card.clickable:hover {
-  border-color: #6366f1;
-  background: #f8fafc;
-}
-
-.metric-label {
+.security-label {
   font-size: 10px;
-  color: #64748b;
+  color: var(--el-text-color-secondary);
   font-weight: 500;
-  margin-bottom: 2px;
 }
 
-.metric-value {
-  font-size: 11px;
-  color: #1e293b;
-  font-weight: 700;
+.permissions-row {
+  margin-top: 20px;
 }
 
-.metric-value.neutral {
-  color: #6366f1;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  justify-content: center;
-  font-size: 10px;
-}
-
-.metric-value.success {
-  color: #059669;
-}
-
-.metric-value.warning {
-  color: #f59e0b;
-}
-
-.metric-value.danger {
-  color: #dc2626;
-}
-
-.owner-address {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 11px !important;
-  background: rgba(99, 102, 241, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  cursor: pointer;
+.permission-card {
+  flex: 1;
+  padding: 18px 10px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
   transition: all 0.3s ease;
 }
 
-.owner-address:hover {
-  background: rgba(99, 102, 241, 0.15);
-  border-color: rgba(99, 102, 241, 0.3);
+.permission-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
 }
 
-/* 时间选择器风格的权限状态 */
-.permissions-timeframe-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-top: 12px;
+.permission-card.safe {
+  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
+  color: var(--el-color-success-dark-2);
+  border: 1px solid var(--el-color-success-light-6);
 }
 
-.permission-timeframe-btn {
-  padding: 8px 6px;
-  border: 1px solid #e2e8f0;
+.permission-card.danger {
+  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
+  color: var(--el-color-danger-dark-2);
+  border: 1px solid var(--el-color-danger-light-6);
+}
+
+/* 加载状态美化 */
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 30px;
+  color: var(--el-text-color-secondary);
+  background: linear-gradient(135deg, 
+    var(--el-fill-color-light) 0%, 
+    var(--el-fill-color) 100%);
   border-radius: 8px;
-  cursor: default;
-  text-align: center;
-  background: #ffffff;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #64748b;
 }
 
-.permission-timeframe-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.permission-timeframe-btn.safe {
-  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-  border-color: #6ee7b7;
-  color: #059669;
-}
-
-.permission-timeframe-btn.danger {
-  background: linear-gradient(135deg, #fee2e2, #fca5a5);
-  border-color: #f87171;
-  color: #dc2626;
-}
-
-.permission-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: inherit;
-  margin-bottom: 2px;
-  opacity: 0.8;
-}
-
-.permission-status {
-  font-size: 11px;
-  font-weight: 700;
-  color: inherit;
-}
-
-.security-loading {
+/* 时间周期选择器美化 */
+.timeframe-cards-row {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 8px;
-  text-align: center;
 }
 
-.security-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
+.timeframe-card {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--el-bg-color);
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
+  transition: all 0.3s ease;
 }
 
-/* 时间选择器 */
-.timeframe-selector {
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.timeframe-buttons {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.timeframe-btn {
-  padding: 12px 8px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  cursor: pointer;
-  text-align: center;
-  background: #ffffff;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #64748b;
-}
-
-.timeframe-btn:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-  transform: translateY(-1px);
-}
-
-.timeframe-btn.active {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-color: transparent;
-  color: white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+.timeframe-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
 }
 
 .timeframe-label {
   font-size: 12px;
-  font-weight: 600;
-  color: inherit;
-  margin-bottom: 4px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
 }
 
 .timeframe-change {
   font-size: 11px;
   font-weight: 700;
+  margin-top: 3px;
 }
 
 .timeframe-change.positive {
-  color: #059669;
+  color: var(--el-color-success);
+  text-shadow: 0 1px 2px var(--el-color-success-light-8);
 }
 
 .timeframe-change.negative {
-  color: #dc2626;
+  color: var(--el-color-danger);
+  text-shadow: 0 1px 2px var(--el-color-danger-light-8);
 }
 
 .timeframe-change.neutral {
-  color: #6b7280;
+  color: var(--el-text-color-secondary);
 }
 
-/* 交易统计行 */
-.trading-stats {
-  margin-bottom: 20px;
-}
-
-.trading-stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+/* 交易统计样式美化 */
+.trading-cards-row {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.trading-stats .stat-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  text-align: center;
-  padding: 12px 8px;
-  background: #f8fafc;
-  border-radius: 12px;
-}
-
-.trading-stats .stat-label {
-  font-size: 12px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.trading-stats .stat-value {
-  font-size: 13px;
-  color: #1e293b;
-  font-weight: 700;
-}
-
-.trading-stats .stat-value.buy-color {
-  color: #059669;
-}
-
-.trading-stats .stat-value.sell-color {
-  color: #dc2626;
-}
-
-.trading-stats .stat-value.positive {
-  color: #059669;
-}
-
-.trading-stats .stat-value.negative {
-  color: #dc2626;
-}
-
-.trading-stats .stat-value.neutral {
-  color: #6b7280;
-}
-
-/* 安全信息行 */
-.safety-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
-
-.safety-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.safety-item i.verified {
-  color: #059669;
-}
-
-.safety-item i.unverified {
-  color: #6b7280;
-}
-
-/* 查询统计 */
-.query-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.query-stats .stat-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.query-stats .stat-item:last-child {
-  border-bottom: none;
-}
-
-.label {
-  color: #64748b;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.value {
-  font-weight: 700;
-  color: #1e293b;
-}
-
-/* 操作按钮 */
-.action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.primary-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.action-buttons .el-button {
-  margin: 0;
-  border-radius: 12px;
-  font-weight: 600;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.action-buttons .el-button:hover {
-  transform: translateY(-1px);
-}
-
-/* 社媒链接样式 */
-.social-links {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
-}
-
-.social-links-title {
-  font-size: 12px;
-  color: #64748b;
-  margin-bottom: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.social-buttons {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.social-buttons .el-button {
-  margin: 0;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.trading-card {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--el-bg-color);
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
   transition: all 0.3s ease;
 }
 
-.social-buttons .el-button:hover {
-  transform: translateY(-2px) scale(1.1);
+.trading-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
 }
 
-.social-icon-img {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
+.trading-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
 }
 
-.no-social-links {
+.trading-label {
+  font-size: 10px;
+  color: var(--el-text-color-secondary);
+  font-weight: 500;
+}
+
+.buy {
+  background: var(--el-fill-color-light);
+}
+
+.sell {
+  background: var(--el-fill-color-light);
+}
+
+.net-stat.positive {
+  background: var(--el-fill-color-light);
+}
+
+.net-stat.negative {
+  background: var(--el-fill-color-light);
+}
+
+.net-stat.neutral {
+  background: var(--el-fill-color-light);
+}
+
+/* 对话框美化 */
+.el-dialog {
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 40px var(--el-box-shadow-dark),
+    0 4px 8px var(--el-box-shadow);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 16px;
+  }
+  
+  .search-section {
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .search-container {
+    gap: 12px;
+  }
+  
+  .search-main {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+  
+  .search-input-modern {
+    width: 100% !important;
+  }
+  
+  .search-btn-modern {
+    width: 100%;
+  }
+  
+  .search-extras {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+  
+  .quick-examples {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .examples-label {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  
+  .example-btn {
+    flex: 1;
+    min-width: calc(33.333% - 6px);
+  }
+  
+  .search-history {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .token-main-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .token-header-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .mini-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .chart-container {
+    height: 300px;
+  }
+  
+  .data-cards-row {
+    flex-wrap: wrap;
+  }
+  
+  .data-card {
+    flex: 1 1 calc(50% - 4px);
+    min-width: calc(50% - 4px);
+  }
+  
+  .security-metrics-row {
+    flex-wrap: wrap;
+  }
+  
+  .security-card {
+    flex: 1 1 calc(50% - 4px);
+    min-width: calc(50% - 4px);
+  }
+  
+  .permissions-row {
+    flex-wrap: wrap;
+  }
+  
+  .permission-card {
+    flex: 1 1 calc(50% - 4px);
+    min-width: calc(50% - 4px);
+  }
+  
+  .timeframe-cards-row {
+    flex-wrap: wrap;
+  }
+  
+  .timeframe-card {
+    flex: 1 1 calc(50% - 4px);
+    min-width: calc(50% - 4px);
+  }
+  
+  .trading-cards-row {
+    flex-wrap: wrap;
+  }
+  
+  .trading-card {
+    flex: 1 1 calc(50% - 4px);
+    min-width: calc(50% - 4px);
+  }
+}
+
+/* 暗色主题特殊处理 */
+@media (prefers-color-scheme: dark) {
+  .token-text h3 {
+    background: linear-gradient(135deg, var(--el-text-color-primary), var(--el-color-primary-light-3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .risk-card.low {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.2));
+    color: #22c55e;
+  }
+  
+  .risk-card.medium {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.2));
+    color: #fbbf24;
+  }
+  
+  .risk-card.high {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.2));
+    color: #ef4444;
+  }
+}
+
+/* 操作按钮区域 */
+.action-buttons {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 12px;
+  gap: 8px;
 }
 
-.no-links-text {
-  color: #9ca3af;
+.action-btn {
+  font-weight: 600;
+  padding: 8px 10px;
+  box-shadow: 0 4px 12px var(--el-box-shadow-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--el-box-shadow);
+}
+
+.action-btn.small {
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 20px !important;
+  height: 34px;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 6px var(--el-box-shadow-light);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-btn.small:active,
+.action-btn.small:focus {
+  box-shadow: 0 4px 8px var(--el-box-shadow-light);
+}
+
+.action-btn.small:hover {
+  background: linear-gradient(135deg, var(--el-color-primary-light-9), var(--el-color-primary-light-6));
+  color: var(--el-color-primary-dark-2);
+  box-shadow: 0 6px 14px var(--el-box-shadow-light);
+}
+
+/* 统计小卡片 */
+.mini-stats {
+  display: flex;
+  gap: 8px;
+}
+
+.mini-card {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, 
+    var(--el-fill-color-light) 0%, 
+    var(--el-fill-color) 100%);
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
+  transition: all 0.3s ease;
+  text-align: center;
+  min-width: 60px;
+}
+
+.mini-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
+}
+
+.mini-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+}
+
+.mini-label {
+  font-size: 10px;
+  color: var(--el-text-color-secondary);
+  margin-top: 2px;
+}
+
+/* 数据区域 */
+.data-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  margin: 0 0 12px 0;
+  padding-left: 8px;
+  border-left: 3px solid var(--el-color-primary);
+}
+
+/* 基础数据卡片行 */
+.data-cards-row {
+  display: flex;
+  gap: 8px;
+}
+
+.data-card {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, 
+    var(--el-bg-color) 0%, 
+    var(--el-bg-color-page) 100%);
+  border: 1px solid var(--el-border-color-lighter);
+  box-shadow: 0 4px 12px var(--el-box-shadow-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+.data-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px var(--el-box-shadow-light);
+  border-color: var(--el-color-primary-light-8);
+}
+
+.data-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+  margin-bottom: 4px;
+}
+
+.data-label {
+  font-size: 10px;
+  color: var(--el-text-color-secondary);
+  font-weight: 500;
+}
+
+/* 风险等级行 */
+.risk-level-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.risk-card {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
+  transition: all 0.3s ease;
+}
+
+.risk-card.low {
+  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
+  color: var(--el-color-success-dark-2);
+}
+
+.risk-card.medium {
+  background: linear-gradient(135deg, var(--el-color-warning-light-9), var(--el-color-warning-light-8));
+  color: var(--el-color-warning-dark-2);
+}
+
+.risk-card.high {
+  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
+  color: var(--el-color-danger-dark-2);
+}
+
+.risk-warning {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--el-fill-color-light);
+  border-radius: 8px;
+  color: var(--el-text-color-secondary);
   font-size: 12px;
   font-style: italic;
 }
 
-/* 响应式设计 */
-@media (max-width: 800px) {
-  .crypto-scanner {
-    padding: 16px;
-  }
-  
-  .main-card {
-    border-radius: 20px;
-  }
-  
-  .search-header {
-    padding: 20px 16px;
-  }
-  
-  .main-content {
-    padding: 20px 16px 24px;
-  }
-  
-  .search-input-wrapper {
-    flex-direction: row;
-    gap: 12px;
-    padding: 6px 8px 6px 16px;
-    border-radius: 12px;
-  }
-  
-  .search-button {
-    padding: 14px 20px;
-    font-size: 13px;
-    border-radius: 10px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  :deep(.search-input .el-input__inner) {
-    padding: 14px 8px;
-    font-size: 15px;
-  }
-  
-  .main-content .el-col {
-    margin-bottom: 20px;
-  }
-  
-  .chart-header {
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-start;
-  }
-  
-  .token-title {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
-  }
-
-  .token-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .social-links-inline {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .token-title .action-buttons {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .token-title .primary-actions {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .token-title .query-stats {
-    justify-content: space-around;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .token-title .query-stats .stat-item {
-    min-width: 80px;
-  }
-
-  .basic-info-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  
-  .timeframe-buttons {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-  }
-  
-  .trading-stats-row {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-  }
-
-  /* 安全分析响应式设计 - 移动端2x2布局 */
-  .security-metrics-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .permissions-timeframe-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .permission-timeframe-btn,
-  .security-metric-card {
-    padding: 6px 4px;
-  }
-
-  .permission-label {
-    font-size: 9px;
-  }
-
-  .permission-status {
-    font-size: 10px;
-  }
-
-  .metric-label {
-    font-size: 9px;
-  }
-
-  .metric-value {
-    font-size: 10px;
-  }
+/* 安全指标行 */
+.security-metrics-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.token-title-row {
+.security-card {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: var(--el-bg-color);
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.security-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
+}
+
+.security-card.success {
+  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
+  border: 1px solid var(--el-color-success-light-6);
+}
+
+.security-card.warning {
+  background: linear-gradient(135deg, var(--el-color-warning-light-9), var(--el-color-warning-light-8));
+  border: 1px solid var(--el-color-warning-light-6);
+}
+
+.security-card.danger {
+  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
+  border: 1px solid var(--el-color-danger-light-6);
+}
+
+.security-card.neutral {
+  background: linear-gradient(135deg, var(--el-fill-color-light), var(--el-fill-color));
+  border: 1px solid var(--el-border-color-light);
+}
+
+.security-card.success .security-value {
+  color: var(--el-color-success-dark-2);
+}
+
+.security-card.warning .security-value {
+  color: var(--el-color-warning-dark-2);
+}
+
+.security-card.danger .security-value {
+  color: var(--el-color-danger-dark-2);
+}
+
+.security-card.neutral .security-value {
+  color: var(--el-text-color-primary);
+}
+
+.security-label {
+  font-size: 10px;
+  color: var(--el-text-color-secondary);
+  font-weight: 500;
+}
+
+/* 权限状态行 */
+.permissions-row {
   display: flex;
-  align-items: center;
-  gap: 32px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f1f5f9;
-  flex-wrap: wrap; /* 响应式更友好 */
+  gap: 8px;
+}
+
+.permission-card {
+  flex: 1;
+  padding: 18px 10px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
   transition: all 0.3s ease;
 }
 
-.token-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  transition: transform 0.3s ease;
+.permission-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
 }
 
-.token-logo:hover {
-  transform: scale(1.05);
+.permission-card.safe {
+  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
+  color: var(--el-color-success-dark-2);
+  border: 1px solid var(--el-color-success-light-6);
 }
 
-.token-info { 
-  min-width: 130px;
+.permission-card.danger {
+  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
+  color: var(--el-color-danger-dark-2);
+  border: 1px solid var(--el-color-danger-light-6);
+}
+
+/* 时间周期选择器 */
+.timeframe-cards-row {
+  display: flex;
+  gap: 8px;
+}
+
+.timeframe-card {
   flex: 1;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: var(--el-bg-color);
+  border: 2px solid var(--el-border-color-lighter);
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+  cursor: pointer;
 }
 
-.social-links-inline { 
-  min-width: 88px;
+.timeframe-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
+  border-color: var(--el-color-primary-light-7);
+}
+
+.timeframe-card.active {
+  background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-dark-2));
+  border-color: var(--el-color-primary);
+  box-shadow: 0 4px 12px var(--el-color-primary-light-7);
+}
+
+.timeframe-label {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.timeframe-card.active .timeframe-label {
+  color: white;
+}
+
+.timeframe-change {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.timeframe-change.positive {
+  color: var(--el-color-success);
+}
+
+.timeframe-change.negative {
+  color: var(--el-color-danger);
+}
+
+.timeframe-change.neutral {
+  color: var(--el-text-color-secondary);
+}
+
+.timeframe-card.active .timeframe-change {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 交易统计卡片 */
+.trading-cards-row {
   display: flex;
+  gap: 8px;
+}
+
+.trading-card {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: var(--el-bg-color);
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.trading-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--el-box-shadow);
+}
+
+.trading-card.buy {
+  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
+  border-color: var(--el-color-success-light-6);
+}
+
+.trading-card.sell {
+  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
+  border-color: var(--el-color-danger-light-6);
+}
+
+.trading-card.positive {
+  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
+  border-color: var(--el-color-success-light-6);
+}
+
+.trading-card.negative {
+  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
+  border-color: var(--el-color-danger-light-6);
+}
+
+.trading-value {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.trading-card.buy .trading-value {
+  color: var(--el-color-success-dark-2);
+}
+
+.trading-card.sell .trading-value {
+  color: var(--el-color-danger-dark-2);
+}
+
+.trading-card.positive .trading-value {
+  color: var(--el-color-success-dark-2);
+}
+
+.trading-card.negative .trading-value {
+  color: var(--el-color-danger-dark-2);
+}
+
+.trading-label {
+  font-size: 10px;
+  color: var(--el-text-color-secondary);
+  font-weight: 500;
+}
+
+/* 搜索建议样式 */
+.history-suggestion {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  padding: 8px 0;
+  width: 100%;
 }
 
-.action-buttons { 
-  min-width: 180px;
-  display: flex;
-  justify-content: center;
-}
-
-.action-buttons .primary-actions {
+.suggestion-main {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-.action-buttons .el-button {
+.suggestion-symbol {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.suggestion-name {
   font-size: 12px;
-  padding: 8px 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.suggestion-address {
+  font-size: 11px;
+  color: var(--el-text-color-placeholder);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+/* 搜索建议弹出框 */
+.search-history-popper .el-autocomplete-suggestion__wrap {
+  max-height: 200px;
   border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
+  box-shadow: 0 4px 12px var(--el-box-shadow-dark);
 }
 
-.action-buttons .el-button:hover {
-  transform: translateY(-1px);
+.search-history-popper .el-autocomplete-suggestion__list {
+  padding: 8px 0;
 }
 
-.query-stats-row {
+.search-history-popper .el-autocomplete-suggestion li {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  transition: background-color 0.2s ease;
+}
+
+.search-history-popper .el-autocomplete-suggestion li:last-child {
+  border-bottom: none;
+}
+
+.search-history-popper .el-autocomplete-suggestion li:hover {
+  background: var(--el-fill-color-light);
+}
+
+/* 确保下拉框在最上层 */
+.search-history-popper {
+  z-index: 9999 !important;
+}
+
+/* 历史记录调试信息 */
+.history-debug {
   display: flex;
-  gap: 20px;
-  min-width: 210px;
-  justify-content: flex-end;
+  align-items: center;
+  margin-left: 8px;
+  gap: 4px;
 }
 
-.query-stats-row .stat-item {
+.history-debug .el-tag {
+  font-size: 11px;
+  padding: 2px 6px;
+  opacity: 0.7;
+}
+
+.clear-history-btn {
+  color: var(--el-text-color-secondary);
+  transition: all 0.2s ease;
+  padding: 2px 4px;
+  min-height: auto;
+}
+
+.clear-history-btn:hover {
+  color: var(--el-color-danger);
+  background: var(--el-color-danger-light-9);
+}
+
+/* 主流币价格卡片 */
+.main-coins-row {
+  display: flex;
+  gap: 8px;
+}
+
+.main-coin-card {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, 
+    var(--el-bg-color) 0%, 
+    var(--el-bg-color-page) 100%);
+  border: 1px solid var(--el-border-color-lighter);
+  box-shadow: 0 4px 12px var(--el-box-shadow-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+  cursor: pointer;
+}
+
+.main-coin-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px var(--el-box-shadow-light);
+  border-color: var(--el-color-primary-light-7);
+}
+
+.coin-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.coin-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.coin-symbol {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+}
+
+.coin-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+  margin-bottom: 4px;
+}
+
+.coin-change {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.coin-change.positive {
+  color: var(--el-color-success);
+}
+
+.coin-change.negative {
+  color: var(--el-color-danger);
+}
+
+.coin-volume {
+  font-size: 9px;
+  color: var(--el-text-color-secondary);
+  font-weight: 500;
+}
+
+/* 主流币价格更新动画 */
+@keyframes priceUpdate {
+  /* 动画已移除 */
+}
+
+.main-coin-card.price-updated {
+  /* 动画已移除 */
+}
+
+/* 顶部搜索区域样式 */
+.top-search-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--el-border-color-light);
+  
+  /* 
+  📝 搜索框宽度自定义变量
+  修改下面的值来调整搜索框宽度：
+  - 默认: 320px
+  - 可以使用 px、%、rem 等单位
+  - 例如: 400px, 25%, 20rem 等
+  */
+  --search-input-width: 320px;
+}
+
+.search-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-input-compact {
+  width: var(--search-input-width) !important;
+}
+
+.search-input-compact .el-input__wrapper {
+  border-radius: 8px;
+  border: 1px solid var(--el-border-color);
+  background: var(--el-bg-color);
+}
+
+.search-icon-compact {
+  color: var(--el-text-color-placeholder);
+}
+
+.paste-btn-compact {
+  color: var(--el-text-color-placeholder);
+  padding: 0;
+  height: auto;
+}
+
+.paste-btn-compact:hover {
+  color: var(--el-color-primary);
+}
+
+.search-btn-compact {
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 500;
+}
+
+/* 主流币紧凑布局 */
+.main-coins-compact {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.coin-item-compact {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--el-bg-color-page);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.coin-item-compact:hover {
+  border-color: var(--el-color-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.coin-logo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.coin-item-compact:hover .coin-logo {
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.coin-info {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  font-size: 11px;
-  min-width: 60px;
-  padding: 8px 6px;
-  background: rgba(248, 250, 252, 0.8);
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  cursor: default;
+  gap: 1px;
 }
 
-.query-stats-row .stat-item:hover {
-  background: rgba(241, 245, 249, 0.9);
-  transform: translateY(-1px);
+.coin-price-compact {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  line-height: 1.2;
 }
 
-.query-stats-row .label {
-  color: #64748b;
+.coin-change-compact {
   font-size: 10px;
   font-weight: 500;
-  white-space: nowrap;
-  margin-bottom: 2px;
+  line-height: 1.2;
 }
 
-.query-stats-row .value {
-  font-weight: 600;
-  color: #1e293b;
-  font-size: 13px;
-}
-.current-price {
-  font-size: 20px;
-  font-weight: 600;
+.coin-change-compact.positive {
+  color: #16a34a;
 }
 
-.price-change {
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-weight: bold;
+.coin-change-compact.negative {
+  color: #dc2626;
+}
+
+/* 搜索历史下拉样式 */
+.search-history-popper .el-popper {
+  min-width: var(--search-input-width) !important;
+}
+
+.history-suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.suggestion-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.suggestion-symbol {
+  font-weight: 600;
+  color: var(--el-color-primary);
+}
+
+.suggestion-name {
+  color: var(--el-text-color-regular);
+  font-size: 14px;
+}
+
+.suggestion-address {
   font-size: 12px;
-  /* 默认色 */
-  color: #1f2937;
+  color: var(--el-text-color-placeholder);
+  font-family: monospace;
 }
 
-.price-change.positive {
-  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-  color: #059669 !important; /* 绿色 */
+/* 响应式调整 */
+@media (max-width: 1400px) {
+  .main-coins-compact {
+    gap: 8px;
+  }
+  
+  .coin-item-compact {
+    padding: 4px 8px;
+    gap: 4px;
+  }
+  
+  .coin-logo {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .coin-price-compact {
+    font-size: 11px;
+  }
+  
+  .coin-change-compact {
+    font-size: 9px;
+  }
 }
 
-.price-change.negative {
-  background: linear-gradient(135deg, #fee2e2, #fca5a5);
-  color: #dc2626 !important; /* 红色 */
-}
-
-
-/* 黑暗模式适配 */
-:global(html.dark) {
-  :deep(.crypto-scanner){
-    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+@media (max-width: 1200px) {
+  .top-search-area {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
   }
-
-  :deep(.main-card) {
-    background: rgba(31, 41, 55, 0.95);
-    border: 1px solid rgba(75, 85, 99, 0.3);
-  }
-
-  :deep(.search-header) {
-    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
-  }
-
-  :deep(.search-input-wrapper) {
-    background: #374151;
-    border-color: #4b5563;
-  }
-
-:deep(.search-input-wrapper:focus-within) {
-    border-color: #6366f1;
-    background: #374151;
-  }
-
-:deep(.search-icon) {
-    color: #9ca3af;
-  }
-
-:deep(.search-input-wrapper:focus-within .search-icon) {
-    color: #6366f1;
-  }
-
-:deep(.search-input .el-input__inner) {
-    background: transparent !important;
-    color: #f9fafb !important;
-  }
-
-:deep(.search-input .el-input__inner::placeholder) {
-    color: #6b7280 !important;
-  }
-
-:deep(.header-divider) {
-    background: linear-gradient(90deg, transparent, rgba(75, 85, 99, 0.3), transparent);
-  }
-
-:deep(.chart-section,
-  .token-info-section,
-  .action-section,
-  .stats-section) {
-    background: rgba(31, 41, 55, 0.8);
-    border: 1px solid rgba(75, 85, 99, 0.3);
-  }
-
-:deep(.chart-header) {
-    border-bottom-color: rgba(75, 85, 99, 0.3);
-  }
-
-:deep(.token-info h3) {
-    color: #f9fafb;
-  }
-
-:deep(.token-name) {
-    color: #9ca3af !important;
-  }
-
-:deep(.current-price) {
-    color: #f9fafb;
-    font-size: 20px;
-    font-weight: 600;
-  }
-
-:deep(.section-header,
-  .section-title) {
-    color: #f9fafb;
-    border-bottom-color: rgba(75, 85, 99, 0.3);
-  }
-
-:deep(.info-item) {
-    background: rgba(55, 65, 81, 0.6);
-  }
-
-:deep(.info-item:hover) {
-    background: rgba(55, 65, 81, 0.8);
-  }
-
-:deep(.info-label) {
-    color: #9ca3af;
-  }
-
-:deep(.info-value) {
-    color: #f3f4f6;
-  }
-
-:deep(.timeframe-btn) {
-    background: rgba(55, 65, 81, 0.8);
-    border-color: #4b5563;
-    color: #d1d5db;
-  }
-
-:deep(.timeframe-btn:hover) {
-    background: rgba(55, 65, 81, 1);
-    border-color: #6b7280;
-  }
-
-:deep(.trading-stats .stat-item) {
-    background: rgba(55, 65, 81, 0.6);
-  }
-
-:deep(.trading-stats .stat-label) {
-    color: #9ca3af;
-  }
-
-:deep(.trading-stats .stat-value) {
-    color: #f3f4f6;
-  }
-
-
-:deep(.query-stats .stat-item) {
-    border-bottom-color: rgba(75, 85, 99, 0.3);
-  }
-
-:deep(.label) {
-    color: #9ca3af;
-  }
-
-:deep(.value) {
-    color: #f3f4f6;
-  }
-
-:deep(.social-btn-small) {
-    background: rgba(55, 65, 81, 0.8) !important;
-    border-color: #4b5563 !important;
-    color: #d1d5db !important;
-  }
-
-:deep(.social-btn-small:hover) {
-    background: rgba(75, 85, 99, 0.9) !important;
-    border-color: #6b7280 !important;
-  }
-
-  /* 新布局元素黑暗模式适配 */
-:deep(.token-title .query-stats .label) {
-    color: #9ca3af !important;
-  }
-
-:deep(.token-title .query-stats .value) {
-    color: #f3f4f6 !important;
-  }
-
-:deep(.token-title .primary-actions .el-button) {
-    background: rgba(55, 65, 81, 0.8) !important;
-    border-color: #4b5563 !important;
-    color: #d1d5db !important;
-  }
-
-:deep(.token-title .primary-actions .el-button:hover) {
-    background: rgba(75, 85, 99, 0.9) !important;
-    border-color: #6b7280 !important;
-  }
-
-:deep(.token-title .primary-actions .el-button--primary) {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-    border-color: transparent !important;
-    color: white !important;
-  }
-
-:deep(.token-title .primary-actions .el-button--info) {
-    background: rgba(75, 85, 99, 0.8) !important;
-    border-color: #6b7280 !important;
-    color: #d1d5db !important;
-  }
-
-  /* 新布局黑暗模式适配 */
-:deep(.token-title-row) {
-    border-bottom-color: rgba(75, 85, 99, 0.3);
-  }
-
-:deep(.query-stats-row .stat-item) {
-    background: rgba(55, 65, 81, 0.6) !important;
-  }
-
-:deep(.query-stats-row .stat-item:hover) {
-    background: rgba(55, 65, 81, 0.8) !important;
-  }
-
-:deep(.query-stats-row .label) {
-    color: #9ca3af !important;
-  }
-
-:deep(.query-stats-row .value) {
-    color: #f3f4f6 !important;
-  }
-
-:deep(.action-buttons .el-button) {
-    background: rgba(55, 65, 81, 0.8) !important;
-    border-color: #4b5563 !important;
-    color: #d1d5db !important;
-  }
-
-:deep(.action-buttons .el-button:hover) {
-    background: rgba(75, 85, 99, 0.9) !important;
-    border-color: #6b7280 !important;
-  }
-
-:deep(.action-buttons .el-button--primary) {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
-    border-color: transparent !important;
-    color: white !important;
-  }
-
-:deep(.action-buttons .el-button--info) {
-    background: rgba(75, 85, 99, 0.8) !important;
-    border-color: #6b7280 !important;
-    color: #d1d5db !important;
-  }
-
-  /* 安全数据区域黑暗模式适配 */
-:deep(.security-info-row) {
-    background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
-    border-color: rgba(75, 85, 99, 0.5);
-  }
-
-:deep(.security-info-row:hover) {
-    border-color: rgba(107, 114, 128, 0.7);
-    background: linear-gradient(135deg, rgba(55, 65, 81, 0.8) 0%, rgba(31, 41, 55, 1) 100%);
-  }
-
-
-:deep(.security-header) {
-    border-bottom-color: rgba(75, 85, 99, 0.3);
-  }
-
-:deep(.security-title) {
-    color: #f9fafb;
-  }
-
-:deep(.metric-label) {
-    color: #9ca3af;
-  }
-
-:deep(.metric-value) {
-    color: #f3f4f6;
-  }
-
-:deep(.permission-item i) {
-    color: #9ca3af;
-  }
-
-:deep(.permission-item.risk i) {
-    color: #f87171;
-  }
-
-:deep(.permission-item span) {
-    color: #d1d5db;
-  }
-
-:deep(.security-loading,
-  .security-error) {
-    color: #9ca3af;
-  }
-
-  /* 新安全分析样式的黑暗模式 */
-:deep(.security-metric-card) {
-    background: rgba(55, 65, 81, 0.8);
-    border-color: #4b5563;
-  }
-
-:deep(.security-metric-card:hover) {
-    background: rgba(55, 65, 81, 1);
-    border-color: #6b7280;
-  }
-
-:deep(.security-metric-card.clickable:hover) {
-    border-color: #6366f1;
-    background: rgba(55, 65, 81, 1);
-  }
-
-:deep(.permission-timeframe-btn) {
-    background: rgba(55, 65, 81, 0.8);
-    border-color: #4b5563;
-    color: #d1d5db;
-  }
-
-:deep(.permission-timeframe-btn:hover) {
-    background: rgba(55, 65, 81, 1);
-  }
-
-:deep(.permission-timeframe-btn.safe) {
-    background: linear-gradient(135deg, rgba(6, 95, 70, 0.8), rgba(4, 120, 87, 0.6));
-    border-color: #6ee7b7;
-    color: #6ee7b7;
-  }
-
-:deep(.permission-timeframe-btn.danger) {
-    background: linear-gradient(135deg, rgba(153, 27, 27, 0.8), rgba(220, 38, 38, 0.6));
-    border-color: #f87171;
-    color: #fca5a5;
-  }
-
-:deep(.metric-value.neutral) {
-    color: #6366f1;
-    display: flex;
-    align-items: center;
-    gap: 2px;
+  
+  .search-compact {
     justify-content: center;
-    font-size: 10px;
   }
-
-:deep(.metric-value.success) {
-    color: #059669;
+  
+  .main-coins-compact {
+    justify-content: center;
   }
-
-:deep(.metric-value.warning) {
-    color: #f59e0b;
-  }
-
-:deep(.metric-value.danger) {
-    color: #dc2626;
-  }
-
 }
 
+/* 隐藏右侧栏的主流币价格部分 - 因为已移到顶部 */
+.data-section:has(.main-coins-row) {
+  display: none;
+}
+
+.search-input-compact :deep(.el-input__wrapper) {
+  border-radius: 8px !important;
+  border: 1px solid var(--el-border-color) !important;
+  background: var(--el-bg-color) !important;
+  width: 100% !important;
+}
+
+.search-input-compact :deep(.el-input__inner) {
+  width: 100% !important;
+}
+
+.search-compact .el-autocomplete {
+  width: var(--search-input-width) !important;
+}
+
+/* 强制覆盖Element Plus的样式 */
+.top-search-area .search-compact .el-autocomplete,
+.top-search-area .search-compact .el-autocomplete .el-input,
+.top-search-area .search-compact .search-input-compact {
+  width: var(--search-input-width) !important;
+  min-width: var(--search-input-width) !important;
+  max-width: var(--search-input-width) !important;
+}
+
+.top-search-area .search-compact .el-autocomplete :deep(.el-input__wrapper),
+.top-search-area .search-compact .search-input-compact :deep(.el-input__wrapper) {
+  width: 100% !important;
+}
+
+/* 无数据时的占位样式 */
+.no-data-placeholder {
+  padding: 60px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, var(--el-fill-color-light), var(--el-fill-color-blank));
+  border-radius: 12px;
+  border: 2px dashed var(--el-border-color-light);
+}
+
+.no-data-sidebar {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+/* 价格更新动画 */
+.coin-item-compact.price-updated {
+  /* 动画已移除 */
+}
+
+@keyframes coinPriceUpdate {
+  /* 动画已移除 - 直接更新价格 */
+}
+
+/* 主流币加载状态 */
+.main-coins-compact.loading {
+  opacity: 0.7;
+}
+
+.coin-loading {
+  font-size: 10px;
+  color: var(--el-color-primary);
+}
 </style>

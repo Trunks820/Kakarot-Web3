@@ -103,6 +103,13 @@ public class ChainApiUtils {
     private static final long CACHE_EXPIRE_TIME = 30 * 60 * 1000;
     private final Map<String, Long> CACHE_TIME_MAP = new ConcurrentHashMap<>();
 
+    public AjaxResult getTopCoin(String coin){
+        String url = "https://api.gateio.ws/api/v4/spot/tickers?currency_pair=" + coin + "&timezone=utc8";
+        String s = HttpUtil.get(url);
+        return success("success", s);
+    }
+
+
     /**
      * 通过池子地址直接获取axiom代币信息（避免重复调用dex）
      * @param pairAddress 池子地址
@@ -520,6 +527,7 @@ public class ChainApiUtils {
         vo.setCreateTime(obj.getLong("creation_timestamp"));
         vo.setHolderCount(obj.getInt("holder_count"));
         vo.setLiquidity(obj.getDouble("liquidity"));
+        Double circulatingSupply = obj.getDouble("circulating_supply");
         // Pool信息
         JSONObject poolJson = obj.getJSONObject("pool");
         if (poolJson != null) {
@@ -543,6 +551,8 @@ public class ChainApiUtils {
         JSONObject priceJson = obj.getJSONObject("price");
         if (priceJson != null) {
             vo.setPrice(priceJson.getDouble("price"));
+            double market = circulatingSupply * priceJson.getDouble("price");
+            vo.setMarketCap((long)market);
             // Txns（构建前端要的结构）
             Map<String, CryptoTxnStats> txns = new HashMap<>();
             txns.put("m5", newTxnStats(priceJson, "buys_5m", "sells_5m"));
@@ -566,6 +576,7 @@ public class ChainApiUtils {
             cryptoRealtimeData.setPriceChange(priceChange);
             vo.setRealtimeData(cryptoRealtimeData);
         }
+        System.err.println(vo);
         return vo;
     }
 

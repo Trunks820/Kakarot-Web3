@@ -10,4 +10,5 @@ public interface CryptoApiService {
 
     AjaxResult getTokenSecurityInfo(String address);
 
+    AjaxResult getTopCoin(String coin);
 }
