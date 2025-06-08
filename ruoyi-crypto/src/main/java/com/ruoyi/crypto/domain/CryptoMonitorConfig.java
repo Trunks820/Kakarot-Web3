@@ -2,6 +2,7 @@ package com.ruoyi.crypto.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ruoyi.common.annotation.Excel;
+import com.ruoyi.common.core.domain.BaseEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -11,7 +12,7 @@ import java.util.Date;
 
 @Data
 @ApiModel(value = "监控配置信息", description = "价格监控配置信息")
-public class CryptoMonitorConfig {
+public class CryptoMonitorConfig extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     /** 主键 */

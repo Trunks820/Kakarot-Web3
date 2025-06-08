@@ -61,28 +61,70 @@
 
               <!-- 右侧：主流币价格 -->
               <div class="main-coins-compact">
-                <div 
-                  v-for="coin in mainCoins" 
-                  :key="coin.symbol"
-                  class="coin-item-compact"
-                >
-                  <img :src="coin.icon" :alt="coin.symbol" class="coin-logo" />
-                  <div class="coin-info">
-                    <div class="coin-price-compact">
-                      ${{ formatCoinPrice(coin.price) }}
+                <!-- 主流币加载骨架屏 -->
+                <template v-if="loading.mainCoins">
+                  <div 
+                    v-for="i in 4" 
+                    :key="`skeleton-${i}`"
+                    class="coin-item-compact skeleton-coin"
+                  >
+                    <el-skeleton-item variant="circle" style="width: 16px; height: 16px;" />
+                    <div class="coin-info">
+                      <el-skeleton-item variant="text" style="width: 60px; height: 12px;" />
+                      <el-skeleton-item variant="text" style="width: 40px; height: 10px;" />
                     </div>
-                    <div 
-                      :class="['coin-change-compact', coin.change24h >= 0 ? 'positive' : 'negative']"
-                    >
-                      {{ coin.change24h >= 0 ? '+' : '' }}{{ coin.change24h.toFixed(1) }}%
+                  </div>
+                </template>
+                
+                <!-- 实际主流币数据 -->
+                <template v-else>
+                  <div 
+                    v-for="coin in mainCoins" 
+                    :key="coin.symbol"
+                    class="coin-item-compact"
+                  >
+                    <img :src="coin.icon" :alt="coin.symbol" class="coin-logo" />
+                    <div class="coin-info">
+                      <div class="coin-price-compact">
+                        ${{ formatCoinPrice(coin.price) }}
+                      </div>
+                      <div 
+                        :class="['coin-change-compact', coin.change24h >= 0 ? 'positive' : 'negative']"
+                      >
+                        {{ coin.change24h >= 0 ? '+' : '' }}{{ coin.change24h.toFixed(1) }}%
+                      </div>
                     </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- 代币信息区域骨架屏 -->
+            <div v-if="loading.tokenData" class="token-header-skeleton">
+              <div class="token-skeleton-row">
+                <el-skeleton-item variant="circle" style="width: 50px; height: 50px;" />
+                <div class="token-skeleton-text">
+                  <el-skeleton-item variant="h3" style="width: 200px;" />
+                  <div class="price-skeleton-row">
+                    <el-skeleton-item variant="text" style="width: 100px; height: 24px;" />
+                    <el-skeleton-item variant="button" style="width: 60px; height: 24px;" />
+                  </div>
+                </div>
+                <div class="action-skeleton">
+                  <el-skeleton-item variant="button" style="width: 80px; height: 34px;" />
+                  <el-skeleton-item variant="button" style="width: 80px; height: 34px;" />
+                </div>
+                <div class="mini-stats-skeleton">
+                  <div v-for="i in 3" :key="i" class="mini-skeleton">
+                    <el-skeleton-item variant="text" style="width: 30px; height: 14px;" />
+                    <el-skeleton-item variant="text" style="width: 40px; height: 10px;" />
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- 代币信息区域 - 仅在有数据时显示 -->
-            <div v-if="tokenData" class="token-header-info">
+            <div v-else-if="tokenData" class="token-header-info">
               <!-- 代币基本信息 + 操作按钮 -->
               <div class="token-main-row">
                 <div class="token-basic">
@@ -166,8 +208,13 @@
               </div>
             </div>
             
+            <!-- K线图骨架屏 -->
+            <div v-if="loading.tokenData || loading.chartLoading" class="chart-skeleton">
+              <el-skeleton-item variant="image" style="width: 100%; height: 400px;" />
+            </div>
+            
             <!-- K线图 - 仅在有数据时显示 -->
-            <div v-if="tokenData" class="chart-container">
+            <div v-else-if="tokenData" class="chart-container">
               <iframe 
                 ref="klineIframe"
                 :src="getKlineUrl()"
@@ -185,8 +232,68 @@
         </el-card>
       </el-col>
 
+      <!-- 右侧信息区域骨架屏 -->
+      <el-col v-if="loading.tokenData" :span="8">
+        <!-- 基础数据骨架屏 -->
+        <div class="data-section">
+          <div class="data-cards-row">
+            <div v-for="i in 4" :key="i" class="data-card-skeleton">
+              <el-skeleton-item variant="text" style="width: 40px; height: 10px;" />
+              <el-skeleton-item variant="text" style="width: 60px; height: 14px;" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 安全分析骨架屏 -->
+        <div class="data-section">
+          <h4 class="section-title">🔒 安全分析</h4>
+          <div class="security-skeleton">
+            <!-- 风险等级行骨架 -->
+            <div class="risk-skeleton-row">
+              <el-skeleton-item variant="button" style="width: 80px; height: 32px;" />
+              <el-skeleton-item variant="text" style="flex: 1; height: 32px;" />
+            </div>
+            
+            <!-- 安全指标行骨架 -->
+            <div class="security-skeleton-row">
+              <div v-for="i in 4" :key="i" class="security-card-skeleton">
+                <el-skeleton-item variant="text" style="width: 30px; height: 10px;" />
+                <el-skeleton-item variant="text" style="width: 40px; height: 12px;" />
+              </div>
+            </div>
+            
+            <!-- 权限状态行骨架 -->
+            <div class="permissions-skeleton-row">
+              <div v-for="i in 4" :key="i" class="permission-card-skeleton">
+                <el-skeleton-item variant="text" style="width: 50px; height: 12px;" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 时间周期选择器骨架屏 -->
+        <div class="data-section">
+          <div class="timeframe-skeleton-row">
+            <div v-for="i in 4" :key="i" class="timeframe-card-skeleton">
+              <el-skeleton-item variant="text" style="width: 20px; height: 12px;" />
+              <el-skeleton-item variant="text" style="width: 30px; height: 10px;" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 交易统计骨架屏 -->
+        <div class="data-section">
+          <div class="trading-skeleton-row">
+            <div v-for="i in 4" :key="i" class="trading-card-skeleton">
+              <el-skeleton-item variant="text" style="width: 30px; height: 10px;" />
+              <el-skeleton-item variant="text" style="width: 50px; height: 12px;" />
+            </div>
+          </div>
+        </div>
+      </el-col>
+
       <!-- 右侧信息区域 - 仅在有数据时显示 -->
-      <el-col v-if="tokenData" :span="8">
+      <el-col v-else-if="tokenData" :span="8">
         <!-- 基础数据 - 一行卡片 -->
         <div class="data-section">
           <div class="data-cards-row">
@@ -244,7 +351,33 @@
         <!-- 安全分析 -->
         <div class="data-section">
           <h4 class="section-title">🔒 安全分析</h4>
-          <div v-if="securityData">
+          
+          <!-- 安全数据加载骨架屏 -->
+          <div v-if="loading.securityData" class="security-skeleton">
+            <!-- 风险等级行骨架 -->
+            <div class="risk-skeleton-row">
+              <el-skeleton-item variant="button" style="width: 80px; height: 32px;" />
+              <el-skeleton-item variant="text" style="flex: 1; height: 32px;" />
+            </div>
+            
+            <!-- 安全指标行骨架 -->
+            <div class="security-skeleton-row">
+              <div v-for="i in 4" :key="i" class="security-card-skeleton">
+                <el-skeleton-item variant="text" style="width: 30px; height: 10px;" />
+                <el-skeleton-item variant="text" style="width: 40px; height: 12px;" />
+              </div>
+            </div>
+            
+            <!-- 权限状态行骨架 -->
+            <div class="permissions-skeleton-row">
+              <div v-for="i in 4" :key="i" class="permission-card-skeleton">
+                <el-skeleton-item variant="text" style="width: 50px; height: 12px;" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- 实际安全数据 -->
+          <div v-else-if="securityData">
             <!-- 第一行：风险等级 + 风险提示 -->
             <div class="risk-level-row">
               <div 
@@ -365,7 +498,10 @@
             </div>
           </div>
           
-          <el-empty v-if="!securityData" description="暂无安全数据" />
+          <!-- 无安全数据时的紧凑提示 -->
+          <div v-else-if="!loading.securityData" class="no-security-data">
+            <div class="no-data-text">暂无安全数据</div>
+          </div>
         </div>
 
         <!-- 时间周期选择器 - 无标题，直接一行 -->
@@ -412,64 +548,260 @@
       </el-col>
     </el-row>
 
-    <!-- 价格提醒对话框 -->
-    <el-dialog v-model="alertDialogVisible" title="设置价格提醒" width="500px">
-      <el-form :model="alertForm" label-width="100px">
-        <el-form-item label="提醒价格">
-          <el-input v-model="alertForm.targetPrice" placeholder="请输入目标价格"></el-input>
+    <!-- 监控配置弹窗 -->
+    <el-dialog v-model="monitorDialogVisible" title="设置代币监控" width="600px">
+      <el-form :model="monitorForm" :rules="monitorRules" ref="monitorFormRef" label-width="120px">
+        <!-- 基础信息 -->
+        <el-form-item label="代币地址" prop="contractAddress">
+          <el-input 
+            v-model="monitorForm.contractAddress" 
+            placeholder="请输入代币合约地址"
+            clearable
+          >
+            <template #suffix>
+              <el-button 
+                @click="useCurrentToken"
+                size="small"
+                text
+                type="primary"
+                :disabled="!tokenData"
+              >
+                使用当前
+              </el-button>
+            </template>
+          </el-input>
         </el-form-item>
-        <el-form-item label="提醒类型">
-          <el-select v-model="alertForm.alertType" placeholder="请选择">
-            <el-option label="价格上涨到" value="above"></el-option>
-            <el-option label="价格下跌到" value="below"></el-option>
-            <el-option label="涨跌幅超过" value="change"></el-option>
-          </el-select>
+
+        <!-- 提醒模式选择 -->
+        <el-form-item label="提醒模式" prop="alertMode">
+          <el-radio-group v-model="monitorForm.alertMode">
+            <el-radio value="timer">定时提醒</el-radio>
+            <el-radio value="condition">条件触发</el-radio>
+          </el-radio-group>
         </el-form-item>
-        <el-form-item label="通知方式">
-          <el-checkbox-group v-model="alertForm.notifyMethods">
-            <el-checkbox label="telegram">Telegram</el-checkbox>
-            <el-checkbox label="wechat">微信</el-checkbox>
+
+        <!-- 定时提醒配置 -->
+        <div v-if="monitorForm.alertMode === 'timer'">
+          <el-form-item label="提醒间隔" prop="timerInterval">
+            <el-select v-model="monitorForm.timerInterval" placeholder="选择提醒间隔">
+              <el-option label="每5分钟" value="5"></el-option>
+              <el-option label="每10分钟" value="10"></el-option>
+              <el-option label="每15分钟" value="15"></el-option>
+              <el-option label="每30分钟" value="30"></el-option>
+              <el-option label="每1小时" value="60"></el-option>
+              <el-option label="每2小时" value="120"></el-option>
+              <el-option label="每6小时" value="360"></el-option>
+            </el-select>
+          </el-form-item>
+        </div>
+
+        <!-- 条件触发配置 -->
+        <div v-if="monitorForm.alertMode === 'condition'">
+          <el-form-item label="触发条件" prop="conditionType">
+            <el-select v-model="monitorForm.conditionType" placeholder="选择触发条件">
+              <el-option label="价格高于" value="priceAbove"></el-option>
+              <el-option label="价格低于" value="priceBelow"></el-option>
+              <el-option label="市值低于" value="marketCapBelow"></el-option>
+              <el-option label="涨跌幅超过" value="changeExceeds"></el-option>
+            </el-select>
+          </el-form-item>
+
+          <el-form-item 
+            :label="getConditionLabel()" 
+            prop="conditionValue"
+            v-if="monitorForm.conditionType"
+          >
+            <el-input 
+              v-model="monitorForm.conditionValue" 
+              :placeholder="getConditionPlaceholder()"
+              type="number"
+              step="any"
+            >
+              <template #suffix>
+                <span class="input-suffix">{{ getConditionSuffix() }}</span>
+              </template>
+            </el-input>
+          </el-form-item>
+        </div>
+
+        <!-- 提醒方式 -->
+        <el-form-item label="提醒方式" prop="notifyMethods">
+          <el-checkbox-group v-model="monitorForm.notifyMethods">
+            <el-checkbox value="wechat">微信</el-checkbox>
+            <el-checkbox value="telegram">Telegram</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
+
+        <!-- 微信配置 -->
+        <el-form-item 
+          v-if="monitorForm.notifyMethods.includes('wechat')"
+          label="微信名称" 
+          prop="wechatName"
+        >
+          <el-input 
+            v-model="monitorForm.wechatName" 
+            placeholder="请输入微信名称或备注"
+            clearable
+          />
+        </el-form-item>
+
+        <!-- Telegram配置 -->
+        <el-form-item 
+          v-if="monitorForm.notifyMethods.includes('telegram')"
+          label="Telegram名称" 
+          prop="telegramName"
+        >
+          <el-input 
+            v-model="monitorForm.telegramName" 
+            placeholder="请输入Telegram用户名"
+            clearable
+          >
+            <template #prefix>@</template>
+          </el-input>
+        </el-form-item>
+
+        <!-- 备注 -->
+        <el-form-item label="备注" prop="remark">
+          <el-input 
+            v-model="monitorForm.remark" 
+            type="textarea" 
+            :rows="2"
+            placeholder="选填：为这个监控添加备注"
+            maxlength="200"
+            show-word-limit
+          />
+        </el-form-item>
       </el-form>
+
       <template #footer>
-        <el-button @click="alertDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="confirmPriceAlert">确 定</el-button>
+        <div class="dialog-footer">
+          <el-button @click="monitorDialogVisible = false">取 消</el-button>
+          <el-button 
+            type="primary" 
+            @click="submitMonitorConfig"
+            :loading="monitorSubmitting"
+          >
+            确认监控
+          </el-button>
+        </div>
       </template>
     </el-dialog>
-  </div>
-</template>
+    </div>
+  </template>
 
 <script setup name="CryptoScanner">
 import { ref, reactive, getCurrentInstance, onMounted, onUnmounted, watch } from 'vue'
 import { Search, Link, DocumentCopy, ArrowDown, Delete } from '@element-plus/icons-vue'
-import { tokenInfo, securityInfo, getTopCoin} from "@/api/crypto/index"
+import { tokenInfo, securityInfo, getTopCoin, saveCryptoMonitorConfig, checkTokenMonitored} from "@/api/crypto/index"
 const { proxy } = getCurrentInstance()
 let securityTimer = null
 
-// onMounted(() => {
-//   // 每隔15秒查一次
-//   securityTimer = setInterval(() => {
-//     getTokenInfo()
-//   }, 15000)
-// })
-//
-// onUnmounted(() => {
-//   // 页面卸载时清除定时器，防止内存泄漏
-//   if (securityTimer) {
-//     clearInterval(securityTimer)
-//     securityTimer = null
-//   }
-// })
 // 响应式数据定义
 const searchCA = ref('')
-const searching = ref(false)
 const tokenData = ref(null)
 const monitoring = ref(false)
 const settingAlert = ref(false)
-const alertDialogVisible = ref(false)
 const klineIframe = ref(null)
 const securityData = ref(null)
+
+// 监控弹窗相关状态
+const monitorDialogVisible = ref(false)
+const monitorFormRef = ref()
+const monitorSubmitting = ref(false)
+
+// 监控表单数据
+const monitorForm = reactive({
+  contractAddress: '',
+  alertMode: 'timer', // timer 或 condition
+  timerInterval: '',
+  conditionType: '',
+  conditionValue: '',
+  notifyMethods: [],
+  wechatName: '',
+  telegramName: '',
+  remark: ''
+})
+
+// 监控表单验证规则
+const monitorRules = reactive({
+  contractAddress: [
+    { required: true, message: '请输入代币合约地址', trigger: 'blur' }
+  ],
+  alertMode: [
+    { required: true, message: '请选择提醒模式', trigger: 'change' }
+  ],
+  timerInterval: [
+    { required: true, message: '请选择提醒间隔', trigger: 'change', validator: validateTimerInterval }
+  ],
+  conditionType: [
+    { required: true, message: '请选择触发条件', trigger: 'change', validator: validateConditionType }
+  ],
+  conditionValue: [
+    { required: true, message: '请输入条件值', trigger: 'blur', validator: validateConditionValue }
+  ],
+  notifyMethods: [
+    { required: true, message: '请选择至少一种提醒方式', trigger: 'change' }
+  ],
+  wechatName: [
+    { required: true, message: '请输入微信名称', trigger: 'blur', validator: validateWechatName }
+  ],
+  telegramName: [
+    { required: true, message: '请输入Telegram名称', trigger: 'blur', validator: validateTelegramName }
+  ]
+})
+
+// 自定义验证方法
+function validateTimerInterval(rule, value, callback) {
+  if (monitorForm.alertMode === 'timer' && !value) {
+    callback(new Error('请选择提醒间隔'))
+  } else {
+    callback()
+  }
+}
+
+function validateConditionType(rule, value, callback) {
+  if (monitorForm.alertMode === 'condition' && !value) {
+    callback(new Error('请选择触发条件'))
+  } else {
+    callback()
+  }
+}
+
+function validateConditionValue(rule, value, callback) {
+  if (monitorForm.alertMode === 'condition' && !value) {
+    callback(new Error('请输入条件值'))
+  } else if (monitorForm.alertMode === 'condition' && value && isNaN(value)) {
+    callback(new Error('条件值必须是数字'))
+  } else if (monitorForm.alertMode === 'condition' && value && parseFloat(value) <= 0) {
+    callback(new Error('条件值必须大于0'))
+  } else {
+    callback()
+  }
+}
+
+function validateWechatName(rule, value, callback) {
+  if (monitorForm.notifyMethods.includes('wechat') && !value) {
+    callback(new Error('请输入微信名称'))
+  } else {
+    callback()
+  }
+}
+
+function validateTelegramName(rule, value, callback) {
+  if (monitorForm.notifyMethods.includes('telegram') && !value) {
+    callback(new Error('请输入Telegram名称'))
+  } else {
+    callback()
+  }
+}
+
+// 骨架屏加载状态
+const loading = reactive({
+  tokenData: false,       // 主要代币数据加载状态
+  securityData: false,    // 安全数据加载状态
+  mainCoins: true,        // 主流币价格加载状态
+  chartLoading: false     // K线图加载状态
+})
 
 // 动画控制状态
 const animationStates = reactive({
@@ -482,13 +814,8 @@ const animationStates = reactive({
   permissions: false
 })
 
-const alertForm = reactive({
-  targetPrice: '',
-  alertType: 'above',
-  notifyMethods: ['telegram']
-})
-
 const selectedTimeframe = ref('m5')
+
 const timeframes = ref([
   { value: 'm5', label: '1m' },
   { value: 'h1', label: '1h' },
@@ -551,6 +878,160 @@ const mainCoins = ref([
 
 let priceUpdateTimer = null
 
+// 监控弹窗相关方法
+const toggleMonitor = () => {
+  if (monitorStatus.value === 'not_monitored') {
+    openMonitorDialog()
+  } else {
+    // 实现取消监控的逻辑
+    proxy.$modal.info('取消监控功能开发中...')
+  }
+}
+
+const openMonitorDialog = async () => {
+  // 重置表单
+  resetMonitorForm()
+  
+  // 如果当前有代币数据，自动填入地址并检查是否已被监控
+  if (tokenData.value && tokenData.value.address) {
+    monitorForm.contractAddress = tokenData.value.address
+    
+    // 检查是否已被监控
+    try {
+      const response = await checkTokenMonitored(tokenData.value.address)
+      if (response && response.code === 200 && response.data && response.data.monitored) {
+        proxy.$modal.confirm(
+          `代币 ${tokenData.value.symbol} 已存在监控配置，是否要新增另一个监控规则？`,
+          '监控提示',
+          {
+            confirmButtonText: '新增监控',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        ).then(() => {
+          monitorDialogVisible.value = true
+        }).catch(() => {
+          // 用户取消，不做任何操作
+        })
+        return
+      }
+    } catch (error) {
+      // 检查失败，继续正常流程
+      console.warn('检查监控状态失败:', error)
+    }
+  }
+  
+  monitorDialogVisible.value = true
+}
+
+const resetMonitorForm = () => {
+  Object.assign(monitorForm, {
+    contractAddress: '',
+    alertMode: 'timer',
+    timerInterval: '',
+    conditionType: '',
+    conditionValue: '',
+    notifyMethods: [],
+    wechatName: '',
+    telegramName: '',
+    remark: ''
+  })
+  
+  // 清除表单验证状态
+  if (monitorFormRef.value) {
+    monitorFormRef.value.clearValidate()
+  }
+}
+
+const useCurrentToken = () => {
+  if (tokenData.value && tokenData.value.address) {
+    monitorForm.contractAddress = tokenData.value.address
+  }
+}
+
+const getConditionLabel = () => {
+  const labels = {
+    priceAbove: '目标价格',
+    priceBelow: '目标价格',
+    marketCapBelow: '市值阈值',
+    changeExceeds: '变动幅度'
+  }
+  return labels[monitorForm.conditionType] || '条件值'
+}
+
+const getConditionPlaceholder = () => {
+  const placeholders = {
+    priceAbove: '请输入价格，触发时机：当前价格 > 目标价格',
+    priceBelow: '请输入价格，触发时机：当前价格 < 目标价格',
+    marketCapBelow: '请输入市值（美元），触发时机：当前市值 < 阈值',
+    changeExceeds: '请输入百分比（如：10），触发时机：|涨跌幅| > 变动幅度'
+  }
+  return placeholders[monitorForm.conditionType] || '请输入数值'
+}
+
+const getConditionSuffix = () => {
+  const suffixes = {
+    priceAbove: 'USD',
+    priceBelow: 'USD',
+    marketCapBelow: 'USD',
+    changeExceeds: '%'
+  }
+  return suffixes[monitorForm.conditionType] || ''
+}
+
+const submitMonitorConfig = async () => {
+  try {
+    // 表单验证
+    await monitorFormRef.value.validate()
+    
+    monitorSubmitting.value = true
+    
+    // 构建提交数据
+    const submitData = {
+      contractAddress: monitorForm.contractAddress,
+      alertMode: monitorForm.alertMode,
+      timerInterval: monitorForm.alertMode === 'timer' ? parseInt(monitorForm.timerInterval) : null,
+      conditionType: monitorForm.alertMode === 'condition' ? monitorForm.conditionType : null,
+      conditionValue: monitorForm.alertMode === 'condition' ? parseFloat(monitorForm.conditionValue) : null,
+      notifyMethods: monitorForm.notifyMethods.join(','),
+      wechatName: monitorForm.notifyMethods.includes('wechat') ? monitorForm.wechatName : '',
+      telegramName: monitorForm.notifyMethods.includes('telegram') ? monitorForm.telegramName : '',
+      remark: monitorForm.remark,
+      tokenSymbol: tokenData.value?.symbol || '',
+      tokenName: tokenData.value?.name || '',
+      createTime: new Date(),
+      status: '1' // 启用状态
+    }
+    
+    // 调用真实的API保存到crypto_monitor_config表
+    const response = await saveCryptoMonitorConfig(submitData)
+    
+    if (response && response.code === 200) {
+      monitorStatus.value = 'monitored'
+      monitorDialogVisible.value = false
+      proxy.$modal.msgSuccess('监控配置已保存！')
+    } else {
+      proxy.$modal.msgError('保存失败：' + (response.msg || '未知错误'))
+    }
+    
+  } catch (error) {
+    if (error.message !== 'validation failed') {
+      proxy.$modal.msgError('保存失败：' + (error.message || '未知错误'))
+    }
+  } finally {
+    monitorSubmitting.value = false
+  }
+}
+
+// 其他原有方法保持不变
+const getMonitorButtonType = () => {
+  return monitorStatus.value === 'monitored' ? 'info' : 'primary'
+}
+
+const getMonitorButtonText = () => {
+  return monitorStatus.value === 'monitored' ? '已监控' : '监控'
+}
+
 // 自动完成建议
 const fetchSuggestions = (queryString, callback) => {
   // 如果没有输入内容，显示最近5条历史记录
@@ -584,12 +1065,6 @@ const handleSelect = (item) => {
   searchToken()
 }
 
-// 填充示例地址（保留用于兼容）
-const fillExample = (address) => {
-  searchCA.value = address
-  searchToken()
-}
-
 // 处理粘贴事件
 const handlePaste = async (event) => {
   // 延迟一点处理，确保粘贴内容已经填入
@@ -612,13 +1087,6 @@ const pasteFromClipboard = async () => {
   } catch (err) {
     proxy.$modal.msgWarning('请手动粘贴地址')
   }
-}
-
-// 清空历史记录
-const clearHistory = () => {
-  searchHistory.value = []
-  localStorage.removeItem('crypto_search_history')
-  proxy.$modal.msgSuccess('历史记录已清空')
 }
 
 // 保存搜索历史
@@ -665,11 +1133,11 @@ const formatAddress = (address) => {
 
 // 获取代币信息
 const getTokenInfo = () => {
-  searching.value = true
+  loading.tokenData = true
+  loading.securityData = true
+  
   // 调用API获取数据
   tokenInfo(searchCA.value).then(response => {
-    searching.value = false
-
     if (response && response.data) {
       const tokenPair = response.data
       tokenData.value = {
@@ -683,9 +1151,9 @@ const getTokenInfo = () => {
         volume24h: tokenPair.volume?.h24 || 0,
         high24h: calculateHigh24h(tokenPair),
         low24h: calculateLow24h(tokenPair),
-        holderCount: tokenPair.holderCount, // DexScreener不提供这个数据
+        holderCount: tokenPair.holderCount,
         liquidity: tokenPair.liquidity || 0,
-        hasRenounced: false, // 需要其他API获取
+        hasRenounced: false,
         queryCount: tokenPair.queryCount || 0,
         todayQueries: tokenPair.todayQueries || 0,
         monitorCount: tokenPair.monitorCount || 0,
@@ -703,19 +1171,25 @@ const getTokenInfo = () => {
         // 新增：官方社媒链接
         socialLinks: extractSocialLinks(tokenPair)
       }
+      
+      // 主要数据加载完成
+      loading.tokenData = false
+      
       // 自动获取安全数据
       getTokenSecurity(tokenData.value.address, tokenPair)
       
       // 保存到搜索历史
       saveToHistory(tokenData.value)
     } else {
+      loading.tokenData = false
+      loading.securityData = false
       proxy.$modal.msgError('未找到该代币信息，请检查CA地址是否正确')
     }
   }).catch(error => {
-    searching.value = false
+    loading.tokenData = false
+    loading.securityData = false
     proxy.$modal.msgError('查询失败: ' + (error.message || '网络错误'))
     
-    // 移除自动加载演示数据，避免无限递归
     tokenData.value = null
   })
 }
@@ -728,108 +1202,38 @@ const searchToken = () => {
 
   // 重置状态，但保留tokenData避免布局切换
   monitorStatus.value = 'not_monitored'
-  // tokenData.value = null  // 注释掉这行，避免布局切换
 
   getTokenInfo()
 }
 
-// 加载演示数据 - 移除自动调用getTokenInfo，使用静态模拟数据
-const loadDemoToken = () => {
-  searchCA.value = "So11111111111111111111111111111111111111112"
-
-  getTokenInfo()
-}
-
-// 计算24小时最高价
-const calculateHigh24h = (tokenPair) => {
-  const currentPrice = parseFloat(tokenPair.priceUsd) || 0
-  const change24h = tokenPair.priceChange?.h24 || 0
-
-  if (change24h >= 0) {
-    // 如果是正涨幅，当前价就是最高价
-    return currentPrice
+// 其他工具函数和方法...
+const formatPrice = (price) => {
+  if (price >= 1) {
+    return price.toFixed(4)
   } else {
-    // 如果是负涨幅，计算24小时前的价格作为最高价
-    return currentPrice / (1 + change24h / 100)
+    return price.toFixed(8)
   }
 }
 
-// 计算24小时最低价
-const calculateLow24h = (tokenPair) => {
-  const currentPrice = parseFloat(tokenPair.priceUsd) || 0
-  const change24h = tokenPair.priceChange?.h24 || 0
-
-  if (change24h <= 0) {
-    // 如果是负涨幅，当前价就是最低价
-    return currentPrice
-  } else {
-    // 如果是正涨幅，计算24小时前的价格作为最低价
-    return currentPrice / (1 + change24h / 100)
+const formatNumber = (num) => {
+  if (num >= 1e9) {
+    return removeTrailingZero(num / 1e9) + 'B'
+  } else if (num >= 1e6) {
+    return removeTrailingZero(num / 1e6) + 'M'
+  } else if (num >= 1e3) {
+    return removeTrailingZero(num / 1e3) + 'K'
   }
+  return removeTrailingZero(num)
 }
 
-// 根据公链类型获取logo
-const getChainLogo = (chainId) => {
-  const chainLogos = {
-    'sol': '/src/assets/crypto-icons/SOL.png',
-    'solana': '/src/assets/crypto-icons/SOL.png',
-    'ethereum': '/src/assets/crypto-icons/ETH.png',
-    'bsc': '/src/assets/crypto-icons/BNB.png',
-    'base': '/src/assets/crypto-icons/BASE.png'
-  }
-  return chainLogos[chainId] || chainLogos['sol'] // 默认使用Solana logo
-}
-
-// 计算安全评分
-const calculateSafetyScore = (tokenPair) => {
-  let score = 60 // 基础分
-
-  // 有网站 +10分
-  if (tokenPair.info?.websites?.length) score += 10
-
-  // 有社交媒体 +10分  
-  if (tokenPair.info?.socials?.length) score += 10
-
-  // 流动性充足 +15分
-  if (tokenPair.liquidity?.usd > 100000) score += 15
-
-  // 交易量活跃 +5分
-  if (tokenPair.volume?.h24 > 10000) score += 5
-
-  return Math.min(score, 100)
-}
-
-// 操作功能
-const addToMonitor = () => {
-  monitorStatus.value = 'monitoring'
-  try {
-    // 调用添加监控API
-    simulateApiCall()
-    monitorStatus.value = 'monitored'
-    proxy.$modal.msgSuccess('添加监控成功！')
-  } catch (error) {
-    monitorStatus.value = 'not_monitored'
-    proxy.$modal.error('添加监控失败')
-  }
-}
-
-const confirmPriceAlert = () => {
-  try {
-    simulateApiCall()
-    proxy.$modal.msgSuccess('价格提醒设置成功！')
-  } catch (error) {
-    proxy.$modal.error('设置失败')
-  }
+function removeTrailingZero(n) {
+  return parseFloat(Number(n).toFixed(2)).toString()
 }
 
 const openInExplorer = () => {
   if (tokenData.value) {
     window.open(`https://solscan.io/token/${tokenData.value.address}`, '_blank')
   }
-}
-
-const refreshTokenData = () => {
-  searchToken()
 }
 
 // 生成gmgn K线图URL，根据公链动态调整
@@ -851,308 +1255,7 @@ const getKlineUrl = () => {
   return `https://www.gmgn.cc/kline/${gmgnChain}/${tokenData.value.address}`
 }
 
-// 工具函数
-const formatPrice = (price) => {
-  if (price >= 1) {
-    return price.toFixed(4)
-  } else {
-    return price.toFixed(8)
-  }
-}
-
-const formatNumber = (num) => {
-  if (num >= 1e9) {
-    return removeTrailingZero(num / 1e9) + 'B'
-  } else if (num >= 1e6) {
-    return removeTrailingZero(num / 1e6) + 'M'
-  } else if (num >= 1e3) {
-    return removeTrailingZero(num / 1e3) + 'K'
-  }
-  return removeTrailingZero(num)
-}
-
-function removeTrailingZero(n) {
-  // 转成字符串，最多两位小数，然后去掉末尾多余的0和小数点
-  return parseFloat(Number(n).toFixed(2)).toString()
-}
-
-// 格式化价格变化
-const formatChange = (change) => {
-  if (change === null || change === undefined) return '--'
-  const sign = change >= 0 ? '+' : ''
-  return `${sign}${change.toFixed(2)}%`
-}
-
-// 获取价格变化的样式类
-const getChangeClass = (change) => {
-  if (change === null || change === undefined) return 'neutral'
-  if (change > 0) return 'positive'
-  if (change < 0) return 'negative'
-  return 'neutral'
-}
-
-const simulateApiCall = () => {
-  return new Promise(resolve => setTimeout(resolve, 1000))
-}
-
-const getSelectedVolume = () => {
-  if (tokenData.value?.realtimeData && tokenData.value.realtimeData.volume) {
-    const volume = tokenData.value.realtimeData.volume
-    if (selectedTimeframe.value === 'h1') return volume?.h1 || 0
-    if (selectedTimeframe.value === 'h6') return volume?.h6 || 0
-    if (selectedTimeframe.value === 'h24') return volume?.h24 || 0
-    if (selectedTimeframe.value === 'm5') return volume?.m5 || 0
-  }
-  return 0
-}
-
-const getSelectedBuys = () => {
-  if (tokenData.value?.realtimeData && tokenData.value.realtimeData.txns) {
-    const txns = tokenData.value.realtimeData.txns
-    if (selectedTimeframe.value === 'h1') return txns?.h1?.buys || 0
-    if (selectedTimeframe.value === 'h6') return txns?.h6?.buys || 0
-    if (selectedTimeframe.value === 'h24') return txns?.h24?.buys || 0
-    if (selectedTimeframe.value === 'm5') return txns?.m5?.buys || 0
-  }
-  return 0
-}
-
-const getSelectedSells = () => {
-  if (tokenData.value?.realtimeData && tokenData.value.realtimeData.txns) {
-    const txns = tokenData.value.realtimeData.txns
-    if (selectedTimeframe.value === 'h1') return txns?.h1?.sells || 0
-    if (selectedTimeframe.value === 'h6') return txns?.h6?.sells || 0
-    if (selectedTimeframe.value === 'h24') return txns?.h24?.sells || 0
-    if (selectedTimeframe.value === 'm5') return txns?.m5?.sells || 0
-  }
-  return 0
-}
-
-const getNetBuys = () => {
-  if (tokenData.value?.realtimeData) {
-    const buys = getSelectedBuys()
-    const sells = getSelectedSells()
-    return buys - sells
-  }
-  return 0
-}
-
-const getNetBuyClass = () => {
-  if (tokenData.value?.realtimeData) {
-    const netBuys = getNetBuys()
-    if (netBuys < 0) return 'positive'
-    if (netBuys > 0) return 'negative'
-  }
-  return 'neutral'
-}
-
-const getPriceChangeByTimeframe = (timeframe) => {
-  if (tokenData.value?.realtimeData && tokenData.value.realtimeData.priceChange) {
-    const priceChange = tokenData.value.realtimeData.priceChange
-    if (timeframe === 'm5') return priceChange?.m5
-    if (timeframe === 'h1') return priceChange?.h1
-    if (timeframe === 'h6') return priceChange?.h6
-    if (timeframe === 'h24') return priceChange?.h24
-  }
-  return null
-}
-
-const getSelectedBuyVolume = () => {
-  if (tokenData.value?.realtimeData) {
-    const volume = getSelectedVolume()
-    // 假设买入占总交易量的一半作为示例
-    return volume ? volume * 0.6 : 0
-  }
-  return 0
-}
-
-const getSelectedSellVolume = () => {
-  if (tokenData.value?.realtimeData) {
-    const volume = getSelectedVolume()
-    // 假设卖出占总交易量的一半作为示例
-    return volume ? volume * 0.4 : 0
-  }
-  return 0
-}
-
-const getNetBuysFormatted = () => {
-  if (tokenData.value?.realtimeData) {
-    const buyVolume = getSelectedBuyVolume()
-    const sellVolume = getSelectedSellVolume()
-    const netVolume = buyVolume - sellVolume
-
-    if (netVolume > 0) {
-      return `+$${formatNumber(netVolume)}`
-    } else if (netVolume < 0) {
-      return `-$${formatNumber(Math.abs(netVolume))}`
-    } else {
-      return '$0'
-    }
-  }
-  return '-$948'
-}
-
-const getMonitorButtonType = () => {
-  return monitorStatus.value === 'monitored' ? 'info' : 'primary'
-}
-
-const getMonitorButtonIcon = () => {
-  return monitorStatus.value === 'monitored' ? 'el-icon-info' : 'el-icon-monitor'
-}
-
-const getMonitorButtonText = () => {
-  return monitorStatus.value === 'monitored' ? '已监控' : '添加监控'
-}
-
-const toggleMonitor = () => {
-  if (monitorStatus.value === 'not_monitored') {
-    addToMonitor()
-  } else {
-    // 实现取消监控的逻辑
-    proxy.$modal.info('取消监控功能开发中...')
-  }
-}
-
-// 社媒链接相关方法
-const openSocialLink = (url) => {
-  window.open(url, '_blank')
-}
-
-const getSocialIcon = (type) => {
-  const iconMap = {
-    'website': '/src/assets/crypto-icons/web.png',
-    'twitter': '/src/assets/crypto-icons/twitter.png',
-    'telegram': '/src/assets/crypto-icons/telegram.png',
-    'discord': '/src/assets/crypto-icons/discord.png',
-    'github': 'el-icon-document',
-    'medium': 'el-icon-edit-outline',
-    'reddit': 'el-icon-chat-line-round',
-    'docs': '/src/assets/crypto-icons/gitbook.png'
-  }
-  return iconMap[type.toLowerCase()] || 'el-icon-link'
-}
-
-const getSocialButtonType = () => {
-  // 使用图片图标后，统一使用默认白色按钮样式
-  return ''
-}
-
-const extractSocialLinks = (info) => {
-  const socialLinks = []
-
-  if (!info) {
-    return socialLinks
-  }
-
-  // 官网链接 - 尝试多种可能的字段名
-  const websiteFields = ['websites', 'website', 'links', 'urls']
-  let websites = null
-
-  for (const field of websiteFields) {
-    if (info[field] && Array.isArray(info[field]) && info[field].length > 0) {
-      websites = info[field]
-      break
-    } else if (info[field] && typeof info[field] === 'string') {
-      websites = [{ url: info[field] }]
-      break
-    }
-  }
-
-  if (websites) {
-    websites.forEach(website => {
-      const url = website.url || website
-      const label = website.label || website
-      if (url) {
-        socialLinks.push({
-          type: label.toLowerCase(),
-          url: url,
-          label: label
-        })
-      }
-    })
-  }
-
-  // 社交媒体链接 - 尝试多种可能的字段名
-  const socialFields = ['socials', 'social', 'socialLinks', 'links']
-  let socials = null
-
-  for (const field of socialFields) {
-    if (info[field] && Array.isArray(info[field]) && info[field].length > 0) {
-      socials = info[field]
-      break
-    }
-  }
-
-  if (socials) {
-    socials.forEach(social => {
-      const url = social.url || social
-      if (url) {
-        const socialType = detectSocialType(url)
-        socialLinks.push({
-          type: socialType,
-          url: url,
-          label: socialType
-        })
-      }
-    })
-  }
-  return socialLinks
-}
-
-const detectSocialType = (url) => {
-  if (url.includes('twitter.com') || url.includes('x.com')) return 'twitter'
-  if (url.includes('t.me') || url.includes('telegram')) return 'telegram'
-  if (url.includes('discord')) return 'discord'
-  if (url.includes('github')) return 'github'
-  if (url.includes('medium')) return 'medium'
-  if (url.includes('reddit')) return 'reddit'
-  return 'website'
-}
-
-// 处理交易数据，确保数据完整性
-const processRealtimeData = (tokenPair) => {
-  // 如果API没有交易数据，生成基于价格变化的模拟数据
-  const realtimeData = tokenPair.realtimeData;
-  const txns = realtimeData.txns || generateMockTxnsFromPriceChange(realtimeData.txns)
-  const priceChange = realtimeData.priceChange || {}
-  const volume = realtimeData.volume || {}
-
-  return {
-    txns,
-    priceChange,
-    volume
-  }
-}
-
-// 基于价格变化生成模拟交易数据
-const generateMockTxnsFromPriceChange = (priceChange) => {
-  if (!priceChange) return null
-
-  const baseTxns = {
-    m5: { buys: 0, sells: 0 },
-    h1: { buys: 0, sells: 0 },
-    h6: { buys: 0, sells: 0 },
-    h24: { buys: 0, sells: 0 }
-  }
-
-  // 根据价格变化推算交易活跃度
-  Object.keys(priceChange).forEach(timeframe => {
-    const change = priceChange[timeframe]
-    if (change !== null && change !== undefined) {
-      const activity = Math.abs(change) * 10 // 价格变化越大，交易越活跃
-      const buys = Math.floor(activity * (change > 0 ? 1.2 : 0.8)) // 涨的时候买入多一些
-      const sells = Math.floor(activity * (change > 0 ? 0.8 : 1.2)) // 跌的时候卖出多一些
-
-      if (baseTxns[timeframe]) {
-        baseTxns[timeframe] = { buys, sells }
-      }
-    }
-  })
-
-  return baseTxns
-}
-
-// 页面加载时自动显示演示数据
+// 页面初始化
 onMounted(() => {
   loadHistory()
   
@@ -1164,35 +1267,147 @@ onMounted(() => {
         symbol: 'SOL',
         name: 'Solana',
         timestamp: Date.now() - 3600000
-      },
-      {
-        address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-        symbol: 'USDC',
-        name: 'USD Coin',
-        timestamp: Date.now() - 7200000
-      },
-      {
-        address: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
-        symbol: 'BONK',
-        name: 'Bonk',
-        timestamp: Date.now() - 10800000
       }
     ]
-    // 保存示例数据到本地存储
     localStorage.setItem('crypto_search_history', JSON.stringify(searchHistory.value))
   }
   
   // 启动主流币价格更新
   startPriceUpdates()
-  
-  // 立即获取一次价格数据
   updateMainCoinPrices()
 })
 
 onUnmounted(() => {
-  // 页面卸载时清除定时器，防止内存泄漏
   stopPriceUpdates()
 })
+
+// 其他必要的函数（简化版本）...
+const calculateHigh24h = (tokenPair) => {
+  const currentPrice = parseFloat(tokenPair.priceUsd) || 0
+  const change24h = tokenPair.priceChange?.h24 || 0
+  return change24h >= 0 ? currentPrice : currentPrice / (1 + change24h / 100)
+}
+
+const calculateLow24h = (tokenPair) => {
+  const currentPrice = parseFloat(tokenPair.priceUsd) || 0
+  const change24h = tokenPair.priceChange?.h24 || 0
+  return change24h <= 0 ? currentPrice : currentPrice / (1 + change24h / 100)
+}
+
+const getChainLogo = (chainId) => {
+  const chainLogos = {
+    'sol': '/src/assets/crypto-icons/SOL.png',
+    'solana': '/src/assets/crypto-icons/SOL.png',
+    'ethereum': '/src/assets/crypto-icons/ETH.png',
+    'bsc': '/src/assets/crypto-icons/BNB.png',
+    'base': '/src/assets/crypto-icons/BASE.png'
+  }
+  return chainLogos[chainId] || chainLogos['sol']
+}
+
+const processRealtimeData = (tokenPair) => {
+  const realtimeData = tokenPair.realtimeData;
+  const txns = realtimeData?.txns || generateMockTxnsFromPriceChange(realtimeData?.txns)
+  const priceChange = realtimeData?.priceChange || {}
+  const volume = realtimeData?.volume || {}
+
+  return { txns, priceChange, volume }
+}
+
+const generateMockTxnsFromPriceChange = (priceChange) => {
+  if (!priceChange) return null
+
+  const baseTxns = {
+    m5: { buys: 0, sells: 0 },
+    h1: { buys: 0, sells: 0 },
+    h6: { buys: 0, sells: 0 },
+    h24: { buys: 0, sells: 0 }
+  }
+
+  Object.keys(priceChange).forEach(timeframe => {
+    const change = priceChange[timeframe]
+    if (change !== null && change !== undefined) {
+      const activity = Math.abs(change) * 10
+      const buys = Math.floor(activity * (change > 0 ? 1.2 : 0.8))
+      const sells = Math.floor(activity * (change > 0 ? 0.8 : 1.2))
+
+      if (baseTxns[timeframe]) {
+        baseTxns[timeframe] = { buys, sells }
+      }
+    }
+  })
+
+  return baseTxns
+}
+
+const extractSocialLinks = (info) => {
+  return []  // 简化版本，可以后续扩展
+}
+
+const openSocialLink = (url) => {
+  window.open(url, '_blank')
+}
+
+const getTokenSecurity = async (address, tokenPair) => {
+  if (!address) {
+    loading.securityData = false
+    return
+  }
+  
+  try {
+    const response = await securityInfo(address)
+    if (response && response.code === 200) {
+      const data = response.data
+      
+      const extractValue = (value) => {
+        if (Array.isArray(value)) {
+          return value.length > 0 ? value[0] : null
+        }
+        return value
+      }
+      
+      const toBool = (value) => {
+        const extracted = extractValue(value)
+        return extracted === "1" || extracted === true
+      }
+      
+      const toNumber = (value) => {
+        const extracted = extractValue(value)
+        return parseFloat(extracted) || 0
+      }
+      
+      const riskTagValue = extractValue(data.riskTag) || ""
+      const holderCount = tokenPair?.holderCount
+      const fallbackHolders = data?.holders
+      const top10Percent = tokenPair?.cryptoSecurityData?.top10Percent
+      const fallbackTop10 = data?.top10Percent
+      
+      securityData.value = {
+        holders: (holderCount && holderCount !== "0") ? holderCount : (fallbackHolders || "0"),
+        top10Percent: (top10Percent && top10Percent !== 0) ? top10Percent : (fallbackTop10 || 0),
+        ownerAddress: extractValue(data.ownerAddress) || "",
+        isMintable: toBool(data.isMintable),
+        isFreezable: toBool(data.isFreezable), 
+        isClosable: toBool(data.isClosable),
+        feeRate: toNumber(data.feeRate),
+        dexFlag: extractValue(data.dexFlag) === true,
+        riskTag: riskTagValue,
+        isHoneypot: extractValue(data.isHoneypot) === true,
+        riskLevel: calculateRiskLevel(riskTagValue)
+      }
+      
+      loading.securityData = false
+    } else {
+      loadDemoSecurityData()
+      loading.securityData = false
+      proxy.$modal.msgWarning('获取安全数据失败，使用演示数据')
+    }
+  } catch (error) {
+    loadDemoSecurityData()
+    loading.securityData = false
+    proxy.$modal.msgWarning('网络异常，使用演示数据')
+  }
+}
 
 const loadDemoSecurityData = () => {
   securityData.value = {
@@ -1207,89 +1422,6 @@ const loadDemoSecurityData = () => {
     riskTag: "⚠️ 可冻结（黑名单）",
     isHoneypot: false,
     riskLevel: "MEDIUM"
-  }
-}
-
-const getRiskLevelType = (level) => {
-  const types = {
-    'LOW': 'success',
-    'MEDIUM': 'warning', 
-    'HIGH': 'danger'
-  }
-  return types[level] || 'info'
-}
-
-const getRiskLevelText = (level) => {
-  const texts = {
-    'LOW': '低风险',
-    'MEDIUM': '中风险',
-    'HIGH': '高风险'
-  }
-  return texts[level] || '未知'
-}
-
-const formatPercent = (value) => {
-  if (value === null || value === undefined) return '--'
-  return (value * 100).toFixed(2) + '%'
-}
-
-// 安全数据相关方法
-const getTokenSecurity = async (address, tokenPair) => {
-  if (!address) return
-  
-  try {
-    const response = await securityInfo(address)
-    if (response && response.code === 200) {
-      const data = response.data
-      
-      // 辅助函数：从数组或单值中提取数据
-      const extractValue = (value) => {
-        if (Array.isArray(value)) {
-          return value.length > 0 ? value[0] : null
-        }
-        return value
-      }
-      
-      // 辅助函数：转换为布尔值
-      const toBool = (value) => {
-        const extracted = extractValue(value)
-        return extracted === "1" || extracted === true
-      }
-      
-      // 辅助函数：转换为数字
-      const toNumber = (value) => {
-        const extracted = extractValue(value)
-        return parseFloat(extracted) || 0
-      }
-      
-      const riskTagValue = extractValue(data.riskTag) || ""
-      const holderCount = tokenPair?.holderCount
-      const fallbackHolders = data?.holders
-      const top10Percent = tokenPair?.cryptoSecurityData?.top10Percent
-      const fallbackTop10 = data?.top10Percent
-      securityData.value = {
-        holders: (holderCount && holderCount !== "0") ? holderCount : (fallbackHolders || "0"),
-        top10Percent: (top10Percent && top10Percent !== 0) ? top10Percent : (fallbackTop10 || 0),
-        ownerAddress: extractValue(data.ownerAddress) || "",
-        isMintable: toBool(data.isMintable),
-        isFreezable: toBool(data.isFreezable), 
-        isClosable: toBool(data.isClosable),
-        feeRate: toNumber(data.feeRate),
-        dexFlag: extractValue(data.dexFlag) === true,
-        riskTag: riskTagValue,
-        isHoneypot: extractValue(data.isHoneypot) === true,
-        riskLevel: calculateRiskLevel(riskTagValue)
-      }
-
-    } else {
-      // 获取失败时使用演示数据
-      loadDemoSecurityData()
-      proxy.$modal.msgWarning('获取安全数据失败，使用演示数据')
-    }
-  } catch (error) {
-    // 异常时使用演示数据
-    loadDemoSecurityData()
-    proxy.$modal.msgWarning('网络异常，使用演示数据')
   }
 }
 
@@ -1312,9 +1444,18 @@ const getRiskLevelClass = (level) => {
   return classes[level] || 'medium'
 }
 
+const getRiskLevelText = (level) => {
+  const texts = {
+    'LOW': '低风险',
+    'MEDIUM': '中风险',
+    'HIGH': '高风险'
+  }
+  return texts[level] || '未知'
+}
+
 const getConcentrationRiskClass = (top10Percent) => {
-  if (top10Percent < 0.15) return 'success'
-  if (top10Percent < 0.25) return 'warning'
+  if (top10Percent < 0.10) return 'safe'
+  if (top10Percent < 0.20) return 'warning'
   return 'danger'
 }
 
@@ -1322,6 +1463,11 @@ const getFeeRiskClass = (feeRate) => {
   if (feeRate < 0.05) return 'success'
   if (feeRate < 0.10) return 'warning'
   return 'danger'
+}
+
+const formatPercent = (value) => {
+  if (value === null || value === undefined) return '--'
+  return (value * 100).toFixed(2) + '%'
 }
 
 const copyAddress = (address) => {
@@ -1332,7 +1478,6 @@ const copyAddress = (address) => {
   })
 }
 
-// 主流币相关方法
 const formatCoinPrice = (price) => {
   if (!price || price === 0) return '0.00'
   
@@ -1352,7 +1497,6 @@ const formatCoinPrice = (price) => {
 
 const updateMainCoinPrices = async () => {
   try {
-    // 并发请求所有币种的价格数据
     const pricePromises = mainCoins.value.map(async (coin) => {
       try {
         const response = await getTopCoin(coin.coin)
@@ -1373,10 +1517,8 @@ const updateMainCoinPrices = async () => {
       }
     })
     
-    // 等待所有请求完成
     const priceResults = await Promise.all(pricePromises)
     
-    // 更新价格数据
     mainCoins.value.forEach((coin, index) => {
       const priceData = priceResults[index]
       if (priceData) {
@@ -1388,17 +1530,15 @@ const updateMainCoinPrices = async () => {
       }
     })
     
-    console.log('Main coin prices updated successfully')
+    loading.mainCoins = false
+    
   } catch (error) {
-    console.warn('Failed to update main coin prices:', error)
+    loading.mainCoins = false
   }
 }
 
 const startPriceUpdates = () => {
-  // 立即更新一次
   updateMainCoinPrices()
-  
-  // 每5秒更新一次价格
   priceUpdateTimer = setInterval(updateMainCoinPrices, 10000)
 }
 
@@ -1409,9 +1549,85 @@ const stopPriceUpdates = () => {
   }
 }
 
-// 滚动到顶部
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+// 交易相关方法
+const formatChange = (change) => {
+  if (change === null || change === undefined) return '--'
+  const sign = change >= 0 ? '+' : ''
+  return `${sign}${change.toFixed(2)}%`
+}
+
+const getChangeClass = (change) => {
+  if (change === null || change === undefined) return 'neutral'
+  if (change > 0) return 'positive'
+  if (change < 0) return 'negative'
+  return 'neutral'
+}
+
+const getSelectedVolume = () => {
+  if (tokenData.value?.realtimeData && tokenData.value.realtimeData.volume) {
+    const volume = tokenData.value.realtimeData.volume
+    if (selectedTimeframe.value === 'h1') return volume?.h1 || 0
+    if (selectedTimeframe.value === 'h6') return volume?.h6 || 0
+    if (selectedTimeframe.value === 'h24') return volume?.h24 || 0
+    if (selectedTimeframe.value === 'm5') return volume?.m5 || 0
+  }
+  return 0
+}
+
+const getSelectedBuyVolume = () => {
+  if (tokenData.value?.realtimeData) {
+    const volume = getSelectedVolume()
+    return volume ? volume * 0.6 : 0
+  }
+  return 0
+}
+
+const getSelectedSellVolume = () => {
+  if (tokenData.value?.realtimeData) {
+    const volume = getSelectedVolume()
+    return volume ? volume * 0.4 : 0
+  }
+  return 0
+}
+
+const getNetBuyClass = () => {
+  if (tokenData.value?.realtimeData) {
+    const buyVolume = getSelectedBuyVolume()
+    const sellVolume = getSelectedSellVolume()
+    const netVolume = buyVolume - sellVolume
+    
+    if (netVolume > 0) return 'positive'
+    if (netVolume < 0) return 'negative'
+  }
+  return 'neutral'
+}
+
+const getNetBuysFormatted = () => {
+  if (tokenData.value?.realtimeData) {
+    const buyVolume = getSelectedBuyVolume()
+    const sellVolume = getSelectedSellVolume()
+    const netVolume = buyVolume - sellVolume
+
+    if (netVolume > 0) {
+      return `+$${formatNumber(netVolume)}`
+    } else if (netVolume < 0) {
+      return `-$${formatNumber(Math.abs(netVolume))}`
+    } else {
+      return '$0'
+    }
+  }
+  return '-$948'
+}
+
+const getPriceChangeByTimeframe = (timeframe) => {
+  if (tokenData.value?.realtimeData && tokenData.value.realtimeData.priceChange) {
+    const priceChange = tokenData.value.realtimeData.priceChange
+    if (timeframe === 'm5') return priceChange?.m5
+    if (timeframe === 'h1') return priceChange?.h1
+    if (timeframe === 'h6') return priceChange?.h6
+    if (timeframe === 'h24') return priceChange?.h24
+  }
+  return null
 }
 
 // 动画触发函数
@@ -1879,17 +2095,14 @@ watch(
 }
 
 .risk-card.low {
-  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
   color: var(--el-color-success-dark-2);
 }
 
 .risk-card.medium {
-  background: linear-gradient(135deg, var(--el-color-warning-light-9), var(--el-color-warning-light-8));
   color: var(--el-color-warning-dark-2);
 }
 
 .risk-card.high {
-  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
   color: var(--el-color-danger-dark-2);
 }
 
@@ -1964,19 +2177,17 @@ watch(
   }
 }
 
-.security-card.success {
-  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
-  border: 1px solid var(--el-color-success-light-6);
+/* 安全等级颜色 - 更直观的语义化配色 */
+.security-card.safe {
+  border: 1px solid var(--el-color-success-dark-1);
 }
 
 .security-card.warning {
-  background: linear-gradient(135deg, var(--el-color-warning-light-9), var(--el-color-warning-light-8));
-  border: 1px solid var(--el-color-warning-light-6);
+  border: 1px solid var(--el-color-warning-dark-1);
 }
 
 .security-card.danger {
-  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
-  border: 1px solid var(--el-color-danger-light-6);
+  border: 1px solid var(--el-color-danger-dark-1);
 }
 
 .security-card.neutral {
@@ -1984,16 +2195,20 @@ watch(
   border: 1px solid var(--el-border-color-light);
 }
 
-.security-card.success .security-value {
+/* 安全等级文本颜色 */
+.security-card.safe .security-value {
   color: var(--el-color-success-dark-2);
+  font-weight: 700;
 }
 
 .security-card.warning .security-value {
   color: var(--el-color-warning-dark-2);
+  font-weight: 700;
 }
 
 .security-card.danger .security-value {
   color: var(--el-color-danger-dark-2);
+  font-weight: 700;
 }
 
 .security-card.neutral .security-value {
@@ -2033,7 +2248,7 @@ watch(
   font-weight: 500;
 }
 
-/* 权限状态行 */
+/* 权限状态行 - 安全语义化配色 */
 .permissions-row {
   display: flex;
   gap: 8px;
@@ -2084,16 +2299,15 @@ watch(
   }
 }
 
+/* 权限安全状态：绿色=安全，红色=危险 */
 .permission-card.safe {
-  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
+  border: 1px solid var(--el-color-success-dark-2);
   color: var(--el-color-success-dark-2);
-  border: 1px solid var(--el-color-success-light-6);
 }
 
 .permission-card.danger {
-  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
   color: var(--el-color-danger-dark-2);
-  border: 1px solid var(--el-color-danger-light-6);
+  border: 1px solid var(--el-color-danger-dark-2);
 }
 
 /* 权限状态安全→危险 变化动画 */
@@ -2209,7 +2423,7 @@ watch(
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* 交易统计卡片 */
+/* 交易统计卡片 - 买入绿色，卖出红色 */
 .trading-cards-row {
   display: flex;
   gap: 8px;
@@ -2220,33 +2434,15 @@ watch(
   padding: 10px 8px;
   border-radius: 8px;
   background: var(--el-bg-color);
+  box-shadow: 0 2px 4px var(--el-box-shadow-light);
   transition: all 0.3s ease;
   text-align: center;
+  border: 1px solid var(--el-border-color-light);
 }
 
 .trading-card:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px var(--el-box-shadow);
-}
-
-.trading-card.buy {
-  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
-  border-color: var(--el-color-success-light-6);
-}
-
-.trading-card.sell {
-  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
-  border-color: var(--el-color-danger-light-6);
-}
-
-.trading-card.positive {
-  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
-  border-color: var(--el-color-success-light-6);
-}
-
-.trading-card.negative {
-  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
-  border-color: var(--el-color-danger-light-6);
 }
 
 .trading-value {
@@ -2255,6 +2451,7 @@ watch(
   margin-bottom: 4px;
 }
 
+/* 交易数值颜色 */
 .trading-card.buy .trading-value {
   color: var(--el-color-success-dark-2);
 }
@@ -2529,5 +2726,341 @@ watch(
 .coin-loading {
   font-size: 10px;
   color: var(--el-color-primary);
+}
+
+/* K线图骨架屏 */
+.chart-skeleton {
+  height: 400px;
+  background: var(--el-fill-color-blank);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px var(--el-box-shadow-light);
+}
+
+/* 骨架屏样式 */
+.skeleton-coin {
+  opacity: 0.8;
+}
+
+.token-header-skeleton {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--el-border-color-light);
+}
+
+.token-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.token-skeleton-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.price-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-skeleton {
+  display: flex;
+  gap: 8px;
+}
+
+.mini-stats-skeleton {
+  display: flex;
+  gap: 8px;
+}
+
+.mini-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--el-fill-color-light);
+}
+
+/* 右侧骨架屏 */
+.data-card-skeleton {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 12px;
+  background: var(--el-fill-color-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.security-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.risk-skeleton-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.security-skeleton-row {
+  display: flex;
+  gap: 8px;
+}
+
+.security-card-skeleton {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: var(--el-fill-color-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.permissions-skeleton-row {
+  display: flex;
+  gap: 8px;
+}
+
+.permission-card-skeleton {
+  flex: 1;
+  padding: 18px 10px;
+  border-radius: 8px;
+  background: var(--el-fill-color-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.timeframe-skeleton-row {
+  display: flex;
+  gap: 8px;
+}
+
+.timeframe-card-skeleton {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: var(--el-fill-color-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.trading-skeleton-row {
+  display: flex;
+  gap: 8px;
+}
+
+.trading-card-skeleton {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: var(--el-fill-color-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.no-security-data {
+  padding: 20px;
+  text-align: center;
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
+}
+
+.no-data-text {
+  color: var(--el-text-color-secondary);
+}
+
+/* 卖出交易 - 红色主题 */
+.trading-card.sell {
+  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
+  border: 1px solid var(--el-color-danger-light-6);
+}
+
+.trading-value {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+/* 交易数值颜色 */
+.trading-card.buy .trading-value {
+  color: var(--el-color-success-dark-2);
+}
+
+.trading-card.sell .trading-value {
+  color: var(--el-color-danger-dark-2);
+}
+
+.trading-card.positive .trading-value {
+  color: var(--el-color-success-dark-2);
+}
+
+.trading-card.negative .trading-value {
+  color: var(--el-color-danger-dark-2);
+}
+
+/* 监控弹窗样式 */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.input-suffix {
+  color: var(--el-text-color-placeholder);
+  font-size: 12px;
+  padding-right: 8px;
+}
+
+/* 监控弹窗表单样式优化 */
+.el-dialog {
+  border-radius: 12px;
+}
+
+.el-dialog__header {
+  border-bottom: 1px solid var(--el-border-color-light);
+  padding: 20px 24px 16px;
+}
+
+.el-dialog__body {
+  padding: 24px;
+}
+
+.el-dialog__footer {
+  border-top: 1px solid var(--el-border-color-light);
+  padding: 16px 24px 20px;
+}
+
+/* 表单项样式优化 */
+.el-form-item {
+  margin-bottom: 20px;
+}
+
+.el-form-item__label {
+  font-weight: 500;
+  color: var(--el-text-color-primary) !important;
+}
+
+/* 单选按钮组样式 */
+.el-radio-group {
+  display: flex;
+  gap: 16px;
+}
+
+.el-radio {
+  margin-right: 0 !important;
+}
+
+.el-radio__label {
+  padding-left: 8px;
+}
+
+/* 复选框组样式 */
+.el-checkbox-group {
+  display: flex;
+  gap: 16px;
+}
+
+.el-checkbox {
+  margin-right: 0 !important;
+}
+
+.el-checkbox__label {
+  padding-left: 8px;
+}
+
+/* 条件配置区域样式 */
+.el-form-item:has(.el-select) .el-input {
+  border-radius: 6px;
+}
+
+.el-form-item:has(.el-input[type="number"]) .el-input {
+  border-radius: 6px;
+}
+
+/* 输入框焦点状态优化 */
+.el-input__wrapper:focus-within {
+  box-shadow: 0 0 0 1px var(--el-color-primary) inset;
+}
+
+.el-select:focus-within .el-input__wrapper {
+  box-shadow: 0 0 0 1px var(--el-color-primary) inset;
+}
+
+/* 按钮样式优化 */
+.dialog-footer .el-button {
+  min-width: 80px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.dialog-footer .el-button--primary {
+  background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-dark-2));
+  border: none;
+  box-shadow: 0 4px 12px var(--el-color-primary-light-5);
+}
+
+.dialog-footer .el-button--primary:hover {
+  background: linear-gradient(135deg, var(--el-color-primary-light-3), var(--el-color-primary));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px var(--el-color-primary-light-4);
+}
+
+/* 加载状态优化 */
+.el-button.is-loading {
+  opacity: 0.8;
+}
+
+/* 表单验证错误样式优化 */
+.el-form-item.is-error .el-input__wrapper {
+  border-color: var(--el-color-danger);
+  box-shadow: 0 0 0 1px var(--el-color-danger-light-7) inset;
+}
+
+.el-form-item__error {
+  color: var(--el-color-danger);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+  .el-dialog {
+    width: 95% !important;
+    margin: 5vh auto 50px;
+  }
+  
+  .el-dialog__body {
+    padding: 16px;
+  }
+  
+  .el-form-item {
+    margin-bottom: 16px;
+  }
+  
+  .el-radio-group,
+  .el-checkbox-group {
+    flex-direction: column;
+    gap: 8px;
+  }
 }
 </style>

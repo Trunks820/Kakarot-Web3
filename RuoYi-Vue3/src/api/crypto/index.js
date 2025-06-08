@@ -33,3 +33,78 @@ export function getTopCoin(coin) {
   })
 }
 
+// 保存监控配置
+export function saveCryptoMonitorConfig(data) {
+  return request({
+    url: '/crypto/monitor/save',
+    method: 'post',
+    data: data
+  })
+}
+
+// 查询监控配置列表
+export function listCryptoMonitorConfig(query) {
+  return request({
+    url: '/crypto/monitor/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询监控配置详细
+export function getCryptoMonitorConfig(id) {
+  return request({
+    url: '/crypto/monitor/' + id,
+    method: 'get'
+  })
+}
+
+// 修改监控配置
+export function updateCryptoMonitorConfig(data) {
+  return request({
+    url: '/crypto/monitor',
+    method: 'put',
+    data: data
+  })
+}
+
+// 删除监控配置
+export function delCryptoMonitorConfig(id) {
+  return request({
+    url: '/crypto/monitor/' + id,
+    method: 'delete'
+  })
+}
+
+// 启用/停用监控配置
+export function changeMonitorStatus(id, status) {
+  const data = {
+    id,
+    status
+  }
+  return request({
+    url: '/crypto/monitor/changeStatus',
+    method: 'put',
+    data: data
+  })
+}
+
+// 批量删除监控配置
+export function delCryptoMonitorConfigs(ids) {
+  return request({
+    url: '/crypto/monitor/' + ids,
+    method: 'delete'
+  })
+}
+
+// 检查代币是否已被监控
+export function checkTokenMonitored(contractAddress) {
+  return request({
+    url: '/crypto/monitor/check',
+    method: 'get',
+    params: {
+      contractAddress: contractAddress
+    }
+  })
+}
+
