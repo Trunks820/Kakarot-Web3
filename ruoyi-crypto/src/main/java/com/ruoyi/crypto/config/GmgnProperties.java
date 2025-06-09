@@ -15,6 +15,8 @@ public class GmgnProperties {
     private String tokenWalletUrl;
     private String tokenHoldersUrl;
     private String tokenSecurityUrl;
+    private String tokenStatUrl;
+    private String tokenSmartTradeUrl;
     private String deviceId;
     private String clientId;
     private String fromApp;

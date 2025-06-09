@@ -22,6 +22,17 @@ export function securityInfo(address) {
   })
 }
 
+// 查询代币钱包信息
+export function getWalletInfo(address) {
+  return request({
+    url: '/crypto/api/getWalletInfo',
+    method: 'get',
+    params: {
+      address: address
+    }
+  })
+}
+
 // 查询主流代币
 export function getTopCoin(coin) {
   return request({
@@ -107,4 +118,6 @@ export function checkTokenMonitored(contractAddress) {
     }
   })
 }
+
+
 

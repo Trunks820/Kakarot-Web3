@@ -26,7 +26,8 @@ public class CryptoApiResultVo {
     private Long createTime;
     private CryptoPairInfo pairInfo;               // 交易对信息
     private CryptoRealtimeData realtimeData;       // 实时交易数据
-    private CryptoSecurityData cryptoSecurityData;
+    private CryptoSecurityData cryptoSecurityData; //安全信息
+    private CryptoWalletData cryptoWalletData;     //钱包分析
     private List<CryptoSocialLink> socialLinks;    // 社交和官网链接
 
 }

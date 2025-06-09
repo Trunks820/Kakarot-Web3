@@ -28,6 +28,11 @@ public class CryptoApiController extends BaseController {
         return cryptoApiService.getTokenSecurityInfo(address);
     }
 
+    @GetMapping("/getWalletInfo")
+    public AjaxResult getWalletInfo(String address){
+        return null;
+    }
+
     @GetMapping("/getTopCoin")
     public AjaxResult getTopCoin(String coin){
         return cryptoApiService.getTopCoin(coin);

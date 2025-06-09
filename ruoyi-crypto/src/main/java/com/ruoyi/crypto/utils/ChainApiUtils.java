@@ -51,6 +51,10 @@ public class ChainApiUtils {
     private String GMGN_TOKEN_WALLET = "";
     private String GMGN_TOKEN_HOLDERS = "";
     private String GMGN_TOKEN_SECURITY = "";
+
+    private String GMGN_TOKEN_Stat = "";
+
+    private String GMGN_TOKEN_SMART = "";
     private String GMGN_COMMON_PARAM = "";
 
     private String AXIOM_PAIR_INFO = "";
@@ -74,6 +78,8 @@ public class ChainApiUtils {
         GMGN_TOKEN_WALLET = gmgnProperties.getTokenWalletUrl();
         GMGN_TOKEN_HOLDERS = gmgnProperties.getTokenHoldersUrl();
         GMGN_TOKEN_SECURITY = gmgnProperties.getTokenSecurityUrl();
+        GMGN_TOKEN_Stat = gmgnProperties.getTokenStatUrl();
+        GMGN_TOKEN_SMART = gmgnProperties.getTokenSmartTradeUrl();
         AXIOM_PAIR_INFO = axiomProperties.getPairInfoUrl();
         AXIOM_TOKEN_INFO = axiomProperties.getTokenPairUrl();
         MORALIS_TOKEN_PAIR = moralisProperties.getTokenPairUrl();
@@ -108,7 +114,6 @@ public class ChainApiUtils {
         String s = HttpUtil.get(url);
         return success("success", s);
     }
-
 
     /**
      * 通过池子地址直接获取axiom代币信息（避免重复调用dex）
@@ -186,6 +191,16 @@ public class ChainApiUtils {
         if(JSONUtil.isNull(data)){
             return error("数据为空！");
         }
+
+        String gmgnTokenWallet = getGMGNTokenWallet(address, chainType);
+        if(StringUtils.isNotEmpty(gmgnTokenWallet) && JSONUtil.isJson(gmgnTokenWallet)){
+            JSONObject jsonWallet = JSONUtil.parseObj(gmgnTokenWallet);
+            code = jsonWallet.getStr("code");
+            if("0".equals(code)){
+                JSONObject walletData = jsonWallet.getJSONObject("data");
+                data.append("walletData", walletData);
+            }
+        }
         return successSource("gmgn", data);
     }
     
@@ -237,6 +252,14 @@ public class ChainApiUtils {
      */
     public String getGMGNTokenSecurity(String address, String chainType){
         return getGMGNResult(address, chainType, GMGN_TOKEN_SECURITY);
+    }
+
+    public String getGMGNTokenStat(String address, String chainType){
+        return getGMGNResult(address, chainType, GMGN_TOKEN_Stat);
+    }
+
+    public String getGMGNTokenSmart(String address, String chainType){
+        return getGMGNResult(address, chainType, GMGN_TOKEN_SMART);
     }
 
     /**
@@ -450,7 +473,7 @@ public class ChainApiUtils {
     }
 
     private String getGMGNResult(String address, String chainType, String gmgnUrl){
-        String url = gmgnUrl + chainType + "/" + address + GMGN_COMMON_PARAM;
+        String url = gmgnUrl + "/" + chainType + "/" + address + GMGN_COMMON_PARAM;
         String referer = "https://gmgn.ai/" + chainType + "/token/" + address;
         Map<String, String> headers = new HashMap<>(gmgnProperties.getHeaders());
         headers.put("referer", referer);
@@ -459,14 +482,19 @@ public class ChainApiUtils {
     }
 
     public String doGet(String url, Map<String, String> headers) {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .headers(Headers.of(headers))
+                .build();
+        Response response = null;
         try {
-            HttpResponse response = HttpRequest.get(url)
-                    .contentType("application/json")
-                    .headerMap(headers, true)
-                    .execute();
-            return response.body();
+            response = client.newCall(request).execute();
+            String string = response.body().string();
+            return string;
         }catch (Exception e){
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
@@ -520,6 +548,7 @@ public class ChainApiUtils {
         CryptoPairInfo pairInfo = new CryptoPairInfo();
         CryptoSecurityData securityData = new CryptoSecurityData();
         CryptoRealtimeData cryptoRealtimeData = new CryptoRealtimeData();
+        CryptoWalletData cryptoWalletData = new CryptoWalletData();
         vo.setAddress(obj.getStr("address"));
         vo.setSymbol(obj.getStr("symbol"));
         vo.setName(obj.getStr("name"));
@@ -575,6 +604,20 @@ public class ChainApiUtils {
             priceChange.put("h24", calcPriceChange(priceJson.getDouble("price_24h"), priceJson.getDouble("price")));
             cryptoRealtimeData.setPriceChange(priceChange);
             vo.setRealtimeData(cryptoRealtimeData);
+        }
+        // Wallet信息
+        JSONObject walletData = obj.getJSONArray("walletData").getJSONObject(0);
+        if(walletData != null){
+            cryptoWalletData.setSmartWallets(walletData.getInt("smart_wallets"));
+            cryptoWalletData.setFreshWallets(walletData.getInt("fresh_wallets"));
+            cryptoWalletData.setRenownedWallets(walletData.getInt("renowned_wallets"));
+            cryptoWalletData.setSniperWallets(walletData.getInt("sniper_wallets"));
+            cryptoWalletData.setRatTraderWallets(walletData.getInt("rat_trader_wallets"));
+            cryptoWalletData.setWhaleWallets(walletData.getInt("whale_wallets"));
+            cryptoWalletData.setTopWallets(walletData.getInt("top_wallets"));
+            cryptoWalletData.setFollowingWallets(walletData.getInt("following_wallets"));
+            cryptoWalletData.setBundlerWallets(walletData.getInt("bundler_wallets"));
+            vo.setCryptoWalletData(cryptoWalletData);
         }
         System.err.println(vo);
         return vo;

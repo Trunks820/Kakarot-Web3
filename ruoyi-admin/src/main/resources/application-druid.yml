@@ -6,9 +6,9 @@ spring:
         druid:
             # 主库数据源
             master:
-                url: jdbc:mysql://localhost:3307/ry_vue?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+                url: jdbc:mysql://localhost:3306/ry_vue?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
                 username: root
-                password: wy1997
+                password: Wy1997
             # 从库数据源
             slave:
                 # 从数据源开关/默认关闭
@@ -59,3 +59,72 @@ spring:
                 wall:
                     config:
                         multi-statement-allow: true
+crypto:
+    gmgn:
+        token-info-url: https://gmgn.ai/api/v1/mutil_window_token_info
+        token-wallet-url: https://gmgn.ai/api/v1/token_wallet_tags_stat
+        token-stat-url: https://gmgn.ai/api/v1/token_stat
+        token-holders-url: https://gmgn.ai/vas/api/v1/token_holders
+        token-security-url: https://gmgn.ai/api/v1/mutil_window_token_security_launchpad
+        token-smart-trade-url: https://gmgn.ai/vas/api/v1/token_trades
+        device-id: 5461cc48-2e83-4740-8e90-8409db8cf33d
+        client-id: gmgn_web_20250603-1799-730df90
+        from-app: gmgn
+        app-ver: 20250603-1799-730df90
+        tz-name: Asia%2FShanghai
+        tz-offset: 28800
+        app-lang: zh-CN
+        fp-did: 68fd1291b5f4f826d98e6378c0e3a663
+        os: web
+        headers:
+            User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+            Accept: "application/json, text/plain, */*"
+            sentry-trace: "47817276c5b44d07b2627d8c2f221f30-aeb3f1408e5f05b5-0"
+            ec-ch-ua-platform: "Windows"
+            sec-ch-ua: "Chromium;v=136, Google Chrome;v=136, Not.A/Brand;v=99"
+            sec-ch-ua-mobile: "?0"
+            baggage: "sentry-environment=production,sentry-release=20250603-1799-730df90,sentry-public_key=93c25bab7246077dc3eb85b59d6e7d40,sentry-trace_id=47817276c5b44d07b2627d8c2f221f30,sentry-sample_rate=0.005,sentry-sampled=false"
+            sec-fetch-site: "same-origin"
+            sec-fetch-mode: "cors"
+            sec-fetch-dest: "empty"
+            accept-language: "zh-CN,zh;q=0.9"
+            priority: "u=1, i"
+            Cookie: "_ga=GA1.1.704572436.1712248135; _ga_0XM0LYXGC8=deleted; b-user-id=f3b3bb30-0b5c-fc55-f1fa-5af0522175ce; GMGN_LOCALE=zh-CN; GMGN_THEME=dark; sid=gmgn%7C691295b013c0e5714ab5f79835145729; _ga_UGLVBMV4Z0=GS1.2.1748597965489087.a12f85a73d09c2e4fe36d46f9d41ade6.QaPK6yv2T4rQ6xjGBTlGnA%3D%3D.jX0Cij%2B%2BT0w5vaKwjl4PnA%3D%3D.lzf%2FKVwJ2Frr9r77jD4QUQ%3D%3D.H3EBykaM5jrX9MGPSyFtfg%3D%3D; GMGN_CHAIN=sol; __cf_bm=9HnOPa4neqo6CA1vYBePh.sI48rtejnAzm5xHZQordU-1748965722-1.0.1.1-atM7ddn7JsqfjPVOix7QEoTpAl4DAAQ69n277jcJJ9bk0vggGlP6dk4rubolKo8QeCDrav7LG2gX_s4N8ukUiGdq_bUvOuq0ySiZOUclslw; cf_clearance=2PgwveiglxlNmOCwrkQgXTEN.tEdWFmJ0fCisOogrIM-1748966032-1.2.1.1-nqhd1Mx2jE49qDWUWtWiBxLB9h0mzwt9OmLfUy48pGOwZuuGVYEElM1YPK.4tnPbyt7Yt6ov3DDrRHp2eagNwywx81TE9JV8AKNt9KUBskZ2wVjvzK4QFRdjzLDjFghz_ApXecOhczoMe8vUtpLV4Z9Jf5omck4Drnh5u4bV1JwlRpAd5CBhvVTI3T0FKZNHCuVVMLEFJiu7_qXx7pshWYIjC9iId3c6nkG64.r5Y91NSK577fRnxSNOPYBe7BMF9OqalS5_dBRERhZosGkSE2st6MiGQJpKdX7mD2Ef0BWmihC3oz9u.tMO5zL956jsekp2Xrc6LW4NayrO_zxUZWxHsN0Mlzv3VhW5txhILbs; _ga_0XM0LYXGC8=GS2.1.s1748966033$o32$g1$t1748966094$j60$l0$h0"
+
+    moralis:
+        token-pair-url: https://solana-gateway.moralis.io/token/mainnet/
+        pair-info-url: https://solana-gateway.moralis.io/token/mainnet/pairs/
+        token-trade-url: https://deep-index.moralis.io/api/v2.2/tokens/
+        headers:
+            Accept: "application/json"
+            X-API-KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjdmYjkxNzAyLTIwY2QtNDVkOS1iNjI5LTY1MzNkMzA2YjA3MCIsIm9yZ0lkIjoiNDUwODc1IiwidXNlcklkIjoiNDYzOTE2IiwidHlwZUlkIjoiOWY1MGNjYTgtODEwNC00NzU0LWI2MDAtYmMyZmM5YzU4MDM5IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDkwMjEyMDcsImV4cCI6NDkwNDc4MTIwN30.9RgqquajqDX38Df0EauxayYQcDuiFkkwopD5k0BnOCU"
+
+    axiom:
+        token-pair-url: https://api2.axiom.trade/pair-info?pairAddress=
+        pair-info-url: https://api2.axiom.trade/token-info?pairAddress=
+        headers:
+            User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+            Accept: "application/json, text/plain, */*"
+            Accept-Encoding: "gzip, deflate, br, zstd"
+            ec-ch-ua-platform: "\"Windows\""
+            sec-ch-ua: "\"Chromium\";v=\"136\", \"Google Chrome\";v=\"136\", \"Not.A/Brand\";v=\"99\""
+            sec-ch-ua-mobile: "?0"
+            origin: "https://axiom.trade"
+            referer: "https://axiom.trade/"
+            sec-fetch-site: "same-origin"
+            sec-fetch-mode: "cors"
+            sec-fetch-dest: "empty"
+            accept-language: "zh-CN,zh;q=0.9"
+            priority: "u=1, i"
+            Cookie: "auth-refresh-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWZyZXNoVG9rZW5JZCI6IjRhODM5ZWJkLTRlMzUtNDUzMy05ZjdiLTBiMjQ5MDhkODlhNSIsImlhdCI6MTc0ODg4Nzc1OH0.-XRWiCkfcswkGH1-T-neknarXIkVR1zK7YopISLXH30; auth-access-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoZW50aWNhdGVkVXNlcklkIjoiOGQxNmY1OTktNjJlNC00Njk3LTljMTYtZDM0ZmE3M2Y4ZTc2IiwiaWF0IjoxNzQ4OTY0MDI0LCJleHAiOjE3NDg5NjQ5ODR9.hpiLxOeJtIdYkqi5aZFOwbY3qkAv5kLzeeBd9YOc48g"
+
+    dex:
+        token-info-url: https://api.dexscreener.com/latest/dex/tokens/
+
+    go-plus:
+        token-security-url: https://api.gopluslabs.io/api/v1/solana/token_security?contract_addresses=
+
+proxy:
+    http-host: 127.0.0.1
+    https-host: 127.0.0.1
+    port: 1081

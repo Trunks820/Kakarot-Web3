@@ -545,6 +545,50 @@
             </div>
           </div>
         </div>
+
+        <!-- 钱包信息 - 多行 -->
+        <div class="data-section" v-if="tokenData.walletInfo && hasWalletData()">
+          <h4 class="section-title">💼 钱包分析</h4>
+          <div class="trading-cards-row">
+            <div class="trading-card smart-money">
+              <div class="trading-label">聪明钱</div>
+              <div class="trading-value">{{ formatWalletCount(tokenData.walletInfo.smartWallets) }}</div>
+            </div>
+            <div class="trading-card kol-vc">
+              <div class="trading-label">KOL/VC</div>
+              <div class="trading-value">{{ formatWalletCount(tokenData.walletInfo.renownedWallets) }}</div>
+            </div>
+            <div class="trading-card whale">
+              <div class="trading-label">鲸鱼</div>
+              <div class="trading-value">{{ formatWalletCount(tokenData.walletInfo.whaleWallets) }}</div>
+            </div>
+            <div class="trading-card top-holder">
+              <div class="trading-label">持仓大户</div>
+              <div class="trading-value">{{ formatWalletCount(tokenData.walletInfo.topWallets) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="data-section" v-if="tokenData.walletInfo && hasWalletData()">
+          <div class="trading-cards-row">
+            <div class="trading-card fresh">
+              <div class="trading-label">新钱包</div>
+              <div class="trading-value">{{ formatWalletCount(tokenData.walletInfo.freshWallets) }}</div>
+            </div>
+            <div class="trading-card sniper">
+              <div class="trading-label">狙击者</div>
+              <div class="trading-value">{{ formatWalletCount(tokenData.walletInfo.sniperWallets) }}</div>
+            </div>
+            <div class="trading-card rat-trader">
+              <div class="trading-label">老鼠仓</div>
+              <div class="trading-value">{{ formatWalletCount(tokenData.walletInfo.ratTraderWallets) }}</div>
+            </div>
+            <div class="trading-card bundler">
+              <div class="trading-label">捆绑</div>
+              <div class="trading-value">{{ formatWalletCount(tokenData.walletInfo.bundlerWallets) }}</div>
+            </div>
+          </div>
+        </div>
       </el-col>
     </el-row>
 
@@ -1169,9 +1213,11 @@ const getTokenInfo = () => {
         // 新增：实时交易数据
         realtimeData: processRealtimeData(tokenPair),
         // 新增：官方社媒链接
-        socialLinks: extractSocialLinks(tokenPair)
+        socialLinks: extractSocialLinks(tokenPair),
+        // 新增：钱包信息
+        walletInfo: processWalletInfo(tokenPair)
       }
-      
+
       // 主要数据加载完成
       loading.tokenData = false
       
@@ -1312,6 +1358,22 @@ const processRealtimeData = (tokenPair) => {
   const volume = realtimeData?.volume || {}
 
   return { txns, priceChange, volume }
+}
+
+const processWalletInfo = (tokenPair) => {
+  const walletInfo = tokenPair.cryptoWalletData || {};
+  
+  // 提供默认值，确保所有字段都存在
+  return {
+    smartWallets: walletInfo.smartWallets || 0,      // 聪明钱
+    renownedWallets: walletInfo.renownedWallets || 0, // KOL/VC
+    whaleWallets: walletInfo.whaleWallets || 0,       // 鲸鱼
+    topWallets: walletInfo.topWallets || 0,           // 持仓大户数量
+    freshWallets: walletInfo.freshWallets || 0,       // 新钱包数量
+    sniperWallets: walletInfo.sniperWallets || 0,     // 狙击者数量
+    ratTraderWallets: walletInfo.ratTraderWallets || 0, // 老鼠仓数量
+    bundlerWallets: walletInfo.bundlerWallets || 0,   // 捆绑钱包数量
+  };
 }
 
 const generateMockTxnsFromPriceChange = (priceChange) => {
@@ -1742,6 +1804,14 @@ watch(
   },
   { deep: true }
 )
+
+function hasWalletData() {
+  return tokenData.value && tokenData.value.walletInfo && Object.keys(tokenData.value.walletInfo).length > 0
+}
+
+function formatWalletCount(value) {
+  return formatNumber(value)
+}
 </script>
 
 <style scoped>
@@ -3062,5 +3132,119 @@ watch(
     flex-direction: column;
     gap: 8px;
   }
+}
+
+/* 钱包分析卡片专用样式 */
+.trading-card.smart-money {
+  background: linear-gradient(135deg, var(--el-color-success-light-9), var(--el-color-success-light-8));
+  border: 1px solid var(--el-color-success-light-6);
+}
+
+.trading-card.smart-money .trading-value {
+  color: var(--el-color-success-dark-2);
+  font-weight: 700;
+}
+
+.trading-card.kol-vc {
+  background: linear-gradient(135deg, var(--el-color-primary-light-9), var(--el-color-primary-light-8));
+  border: 1px solid var(--el-color-primary-light-6);
+}
+
+.trading-card.kol-vc .trading-value {
+  color: var(--el-color-primary-dark-2);
+  font-weight: 700;
+}
+
+.trading-card.whale {
+  background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
+  border: 1px solid #4fc3f7;
+}
+
+.trading-card.whale .trading-value {
+  color: #0277bd;
+  font-weight: 700;
+}
+
+.trading-card.top-holder {
+  background: linear-gradient(135deg, var(--el-color-warning-light-9), var(--el-color-warning-light-8));
+  border: 1px solid var(--el-color-warning-light-6);
+}
+
+.trading-card.top-holder .trading-value {
+  color: var(--el-color-warning-dark-2);
+  font-weight: 700;
+}
+
+.trading-card.fresh {
+  background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+  border: 1px solid #ba68c8;
+}
+
+.trading-card.fresh .trading-value {
+  color: #7b1fa2;
+  font-weight: 700;
+}
+
+.trading-card.sniper {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+  border: 1px solid #ef5350;
+}
+
+.trading-card.sniper .trading-value {
+  color: #c62828;
+  font-weight: 700;
+}
+
+.trading-card.rat-trader {
+  background: linear-gradient(135deg, var(--el-color-danger-light-9), var(--el-color-danger-light-8));
+  border: 1px solid var(--el-color-danger-light-6);
+}
+
+.trading-card.rat-trader .trading-value {
+  color: var(--el-color-danger-dark-2);
+  font-weight: 700;
+}
+
+.trading-card.bundler {
+  background: linear-gradient(135deg, #fafafa, #f5f5f5);
+  border: 1px solid #bdbdbd;
+}
+
+.trading-card.bundler .trading-value {
+  color: #424242;
+  font-weight: 700;
+}
+
+/* 钱包卡片悬停效果增强 */
+.trading-card.smart-money:hover,
+.trading-card.kol-vc:hover,
+.trading-card.whale:hover,
+.trading-card.top-holder:hover,
+.trading-card.fresh:hover,
+.trading-card.sniper:hover,
+.trading-card.rat-trader:hover,
+.trading-card.bundler:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* 钱包分析标题图标增强 */
+.section-title:has-text("💼 钱包分析") {
+  background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-success));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+}
+
+.section-title:has-text("💼 钱包分析")::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 30%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--el-color-primary), var(--el-color-success));
+  border-radius: 1px;
 }
 </style>
