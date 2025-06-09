@@ -48,8 +48,7 @@ CREATE TABLE crypto_ca_record (
                                   update_time           DATETIME                             COMMENT '更新时间',
                                   chain_type            VARCHAR(20)   DEFAULT 'SOL'          COMMENT '链类型',
                                   PRIMARY KEY (id),
-                                  INDEX idx_ca_id (ca_id),
-                                  INDEX idx_max_multiple (max_multiple)
+                                  INDEX idx_ca_id (ca_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=200 COMMENT='代币记录表';
 
 -- ----------------------------
@@ -95,8 +94,8 @@ CREATE TABLE crypto_group_statistics (
                                          update_by             VARCHAR(64)  DEFAULT ''              COMMENT '更新者',
                                          update_time           DATETIME                             COMMENT '更新时间',
                                          PRIMARY KEY (id),
-                                         UNIQUE INDEX idx_group_id (group_id),
-                                         UNIQUE idx_win_rate (win_rate)
+                                         INDEX idx_group_id (group_id),
+                                         INDEX idx_win_rate (win_rate)
 ) ENGINE=InnoDB AUTO_INCREMENT=200 COMMENT='群组CA统计表';
 
 -- ----------------------------
@@ -221,7 +220,7 @@ CREATE TABLE crypto_price_history (
 INSERT INTO crypto_coin 
 (address, symbol, name, create_time, chain_type, description)
 VALUES
-('EsDZUf7cDUU7FSPjePkksaJ8TzvC9QY5YRqeuiy5pump', 'Mitsuki', 'Doge's Original Name', NOW(), 'SOL', '我们都知道Doge的名字叫Kabosu'),
+('EsDZUf7cDUU7FSPjePkksaJ8TzvC9QY5YRqeuiy5pump', 'Mitsuki', 'Doge\'s Original Name', NOW(), 'SOL', '我们都知道Doge的名字叫Kabosu'),
 ('So11111111111111111111111111111111111111112', 'SOL', 'Solana', NOW(), 'SOL', ''),
 ('0x5417994ae69e6ccb283bb6dbdba3006b3d3f9f95', 'ETHCHAN', 'ETH Chan', NOW(), 'ETH', ''),
 ('0x945cd29a40629ada610c2f6eba3f393756aa4444', 'USD1DOGE', 'USD1DOGE', NOW(), 'BSC', '');
@@ -237,23 +236,6 @@ VALUES
 (2, '1002', '用户B', '2002', '群组B', DATE_SUB(NOW(), INTERVAL 5 DAY), 2000000.00, 100.00000000, 
 3000000.00, 150.00000000, DATE_SUB(NOW(), INTERVAL 2 DAY), 1.50, 1, 30, NOW(), 'SOL');
 
--- 3. 插入CA查询记录
-INSERT INTO crypto_ca_query_record 
-(ca_id, user_id, group_id, query_time, market_cap_at_query, price_at_query, 
-multiple_from_first, create_time, chain_type) 
-VALUES
-(1, '1001', '2001', DATE_SUB(NOW(), INTERVAL 6 DAY), 1100000.00, 1.10000000, 1.10, NOW(), 'SOL'),
-(1, '1002', '2001', DATE_SUB(NOW(), INTERVAL 5 DAY), 1200000.00, 1.20000000, 1.20, NOW(), 'SOL'),
-(2, '1001', '2002', DATE_SUB(NOW(), INTERVAL 4 DAY), 2200000.00, 110.00000000, 1.10, NOW(), 'SOL');
-
--- 4. 插入群组CA统计
-INSERT INTO crypto_group_statistics 
-(group_id, total_ca_queries, unique_ca_count, successful_ca_count, win_rate, 
-create_time, chain_type) 
-VALUES
-('2001', 100, 20, 10, 50.00, NOW(), 'SOL'),
-('2002', 80, 15, 8, 53.33, NOW(), 'SOL');
-
 -- 5. 插入监控配置
 INSERT INTO crypto_monitor_config 
 (coin_id, user_id, min_price, max_price, percent_change, notification_type, 
@@ -264,10 +246,10 @@ VALUES
 
 -- 6. 插入机器人群组
 INSERT INTO crypto_bot_group 
-(platform, group_id, group_name, win_threshold, is_active, create_time, chain_type) 
+(platform, group_id, group_name, win_threshold, is_active, create_time)
 VALUES
-('telegram', '2001', 'TG群组A', 0.50, 1, NOW(), 'SOL'),
-('wechat', '2002', '微信群组A', 0.50, 1, NOW(), 'SOL');
+('telegram', '2001', 'TG群组A', 0.50, 1, NOW()),
+('wechat', '2002', '微信群组A', 0.50, 1, NOW());
 
 -- 7. 插入钱包数据
 INSERT INTO crypto_wallet 
