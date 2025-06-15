@@ -201,6 +201,17 @@ public class ChainApiUtils {
                 data.append("walletData", walletData);
             }
         }
+
+        String gmgnTokenSmart = getGMGNTokenSmart(address, chainType);
+        if(StringUtils.isNotEmpty(gmgnTokenSmart) && JSONUtil.isJson(gmgnTokenSmart)){
+            JSONObject jsonSmart = JSONUtil.parseObj(gmgnTokenSmart);
+            code = jsonSmart.getStr("code");
+            if("0".equals(code)){
+                JSONObject smartData = jsonSmart.getJSONObject("data");
+                System.err.println(smartData.getJSONArray("history"));
+                data.append("smartData", smartData);
+            }
+        }
         return successSource("gmgn", data);
     }
     
@@ -467,6 +478,7 @@ public class ChainApiUtils {
         }
         if(!JSONUtil.isTypeJSON(result)){
             return error("查询ca信息为空！");
+
         }
 
         return success("success", result);
@@ -475,6 +487,13 @@ public class ChainApiUtils {
     private String getGMGNResult(String address, String chainType, String gmgnUrl){
         String url = gmgnUrl + "/" + chainType + "/" + address + GMGN_COMMON_PARAM;
         String referer = "https://gmgn.ai/" + chainType + "/token/" + address;
+        if(GMGN_TOKEN_SMART.equals(gmgnUrl)){
+            url += "&limt=" + gmgnProperties.getLimit()
+                    + "&event=" + gmgnProperties.getEvent()
+                    + "&maker="
+                    + "&tag=" + gmgnProperties.getTag();
+            referer += "?tag=" + gmgnProperties.getTag() + "&filter=buy";
+        }
         Map<String, String> headers = new HashMap<>(gmgnProperties.getHeaders());
         headers.put("referer", referer);
         String body = doGet(url, headers);

@@ -26,5 +26,9 @@ public class GmgnProperties {
     private String appLang;
     private String fpDid;
     private String os;
+    private String limit;
+    private String event;
+    private String maker;
+    private String tag;
     private Map<String, String> headers;
 }
