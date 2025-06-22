@@ -737,6 +737,10 @@
 import { ref, reactive, getCurrentInstance, onMounted, onUnmounted, watch } from 'vue'
 import { Search, Link, DocumentCopy, ArrowDown, Delete } from '@element-plus/icons-vue'
 import { tokenInfo, securityInfo, getTopCoin, saveCryptoMonitorConfig, checkTokenMonitored} from "@/api/crypto/index"
+import BTC from '@/assets/crypto-icons/BTC.png'
+import ETH from '@/assets/crypto-icons/ETH.png'
+import BNB from '@/assets/crypto-icons/BNB.png'
+import SOL from '@/assets/crypto-icons/SOL.png'
 const { proxy } = getCurrentInstance()
 let securityTimer = null
 
@@ -877,7 +881,7 @@ const mainCoins = ref([
   { 
     symbol: 'BTC', 
     name: 'Bitcoin', 
-    icon: '/src/assets/crypto-icons/BTC.png',
+    icon: BTC,
     price: 0, 
     change24h: 0, 
     volume24h: 0,
@@ -888,7 +892,7 @@ const mainCoins = ref([
   { 
     symbol: 'ETH', 
     name: 'Ethereum', 
-    icon: '/src/assets/crypto-icons/ETH.png',
+    icon: ETH,
     price: 0, 
     change24h: 0, 
     volume24h: 0,
@@ -899,7 +903,7 @@ const mainCoins = ref([
   { 
     symbol: 'BNB', 
     name: 'BNB', 
-    icon: '/src/assets/crypto-icons/BNB.png',
+    icon: BNB,
     price: 0, 
     change24h: 0, 
     volume24h: 0,
@@ -910,7 +914,7 @@ const mainCoins = ref([
   { 
     symbol: 'SOL', 
     name: 'Solana', 
-    icon: '/src/assets/crypto-icons/SOL.png',
+    icon: SOL,
     price: 0, 
     change24h: 0, 
     volume24h: 0,

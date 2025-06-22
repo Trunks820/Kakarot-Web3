@@ -70,10 +70,10 @@ public class ChainApiUtils {
     public void init() {
         // 设置代理，添加空值检查
 
-        System.setProperty("http.proxyHost", proxyProperties.getHttpHost());
-        System.setProperty("http.proxyPort", String.valueOf(proxyProperties.getPort()));
-        System.setProperty("https.proxyHost", proxyProperties.getHttpsHost());
-        System.setProperty("https.proxyPort", String.valueOf(proxyProperties.getPort()));
+//        System.setProperty("http.proxyHost", proxyProperties.getHttpHost());
+//        System.setProperty("http.proxyPort", String.valueOf(proxyProperties.getPort()));
+//        System.setProperty("https.proxyHost", proxyProperties.getHttpsHost());
+//        System.setProperty("https.proxyPort", String.valueOf(proxyProperties.getPort()));
 
         GMGN_TOKEN_INFO = gmgnProperties.getTokenInfoUrl();
         GMGN_TOKEN_WALLET = gmgnProperties.getTokenWalletUrl();
