@@ -11,4 +11,11 @@ public interface CryptoApiService {
     AjaxResult getTokenSecurityInfo(String address);
 
     AjaxResult getTopCoin(String coin);
+
+    AjaxResult getWalletActivity(String address, String chainType);
+
+    AjaxResult WalletUnfollow(String address, String chainType);
+
+    AjaxResult WalletFollow(String address, String chainType);
+
 }

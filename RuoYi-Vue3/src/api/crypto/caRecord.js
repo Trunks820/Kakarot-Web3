@@ -43,15 +43,6 @@ export function delCoin(coinIds) {
   })
 }
 
-// 导出代币
-export function exportCoin(query) {
-  return request({
-    url: '/crypto/coin/export',
-    method: 'get',
-    params: query
-  })
-}
-
 // 获取币种统计数据
 export function getCoinStatistics() {
   return request({

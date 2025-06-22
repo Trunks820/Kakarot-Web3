@@ -37,4 +37,19 @@ public class CryptoApiController extends BaseController {
     public AjaxResult getTopCoin(String coin){
         return cryptoApiService.getTopCoin(coin);
     }
+
+    @GetMapping("/getWalletActivity")
+    public AjaxResult getWalletActivity(String address, String chainType){
+        return cryptoApiService.getWalletActivity(address, chainType);
+    }
+
+    @GetMapping("/walletUnfollow")
+    public AjaxResult walletUnfollow(String address, String chainType){
+        return cryptoApiService.WalletUnfollow(address, chainType);
+    }
+
+    @GetMapping("/walletFollow")
+    public AjaxResult walletFollow(String address, String chainType){
+        return cryptoApiService.WalletFollow(address, chainType);
+    }
 }

@@ -130,6 +130,9 @@ public class CryptoConfigManager {
                     urls.put("tokenSecurityUrl", gmgnProperties.getTokenSecurityUrl());
                     urls.put("tokenStatUrl", gmgnProperties.getTokenStatUrl());
                     urls.put("tokenSmartTradeUrl", gmgnProperties.getTokenSmartTradeUrl());
+                    urls.put("walletUnfollowUrl", gmgnProperties.getWalletUnfollowUrl());
+                    urls.put("walletFollowUrl", gmgnProperties.getWalletFollowUrl());
+                    urls.put("walletActivityUrl", gmgnProperties.getWalletActivityUrl());
                 }
                 break;
             case "moralis":

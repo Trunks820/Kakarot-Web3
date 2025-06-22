@@ -1,8 +1,6 @@
 package com.ruoyi.crypto.utils;
 
 
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -12,9 +10,9 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.crypto.config.*;
 import com.ruoyi.crypto.domain.*;
 import com.ruoyi.crypto.domain.vo.CryptoApiResultVo;
+import com.ruoyi.crypto.domain.vo.CryptoWalletData;
 import com.ruoyi.crypto.service.ApiSupplier;
 import okhttp3.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -51,6 +49,9 @@ public class ChainApiUtils {
     private String GMGN_TOKEN_WALLET = "";
     private String GMGN_TOKEN_HOLDERS = "";
     private String GMGN_TOKEN_SECURITY = "";
+    private String GMGN_WALLET_UNFOLLOW = "";
+    private String GMGN_WALLET_FOLLOW = "";
+    private String GMGN_WALLET_ACTIVITY = "";
 
     private String GMGN_TOKEN_Stat = "";
 
@@ -80,6 +81,9 @@ public class ChainApiUtils {
         GMGN_TOKEN_SECURITY = gmgnProperties.getTokenSecurityUrl();
         GMGN_TOKEN_Stat = gmgnProperties.getTokenStatUrl();
         GMGN_TOKEN_SMART = gmgnProperties.getTokenSmartTradeUrl();
+        GMGN_WALLET_UNFOLLOW = gmgnProperties.getWalletUnfollowUrl();
+        GMGN_WALLET_FOLLOW = gmgnProperties.getWalletFollowUrl();
+        GMGN_WALLET_ACTIVITY = gmgnProperties.getWalletActivityUrl();
         AXIOM_PAIR_INFO = axiomProperties.getPairInfoUrl();
         AXIOM_TOKEN_INFO = axiomProperties.getTokenPairUrl();
         MORALIS_TOKEN_PAIR = moralisProperties.getTokenPairUrl();
@@ -91,7 +95,7 @@ public class ChainApiUtils {
         // GMGN的动态参数现在将从数据库读取，这里不再硬编码
         // 先暂时保留兜底值，避免启动时出错
 
-        GMGN_COMMON_PARAM = "?device_id=" + (gmgnProperties.getDeviceId() != null ? gmgnProperties.getDeviceId() : "")
+        GMGN_COMMON_PARAM = "device_id=" + (gmgnProperties.getDeviceId() != null ? gmgnProperties.getDeviceId() : "")
                 + "&client_id=" + (gmgnProperties.getClientId() != null ? gmgnProperties.getClientId() : "")
                 + "&from_app=" + (gmgnProperties.getFromApp() != null ? gmgnProperties.getFromApp() : "")
                 + "&app_ver=" + (gmgnProperties.getAppVer() != null ? gmgnProperties.getAppVer() : "")
@@ -271,6 +275,101 @@ public class ChainApiUtils {
 
     public String getGMGNTokenSmart(String address, String chainType){
         return getGMGNResult(address, chainType, GMGN_TOKEN_SMART);
+    }
+
+    /**
+     * 钱包最新活动
+     */
+    public String getGmgnWalletActivity(String walletAddress, String chainType){
+        String url = GMGN_WALLET_ACTIVITY + "/" + chainType.toLowerCase() + "?type=buy&type=sell&"
+                + GMGN_COMMON_PARAM + "&wallet=" + walletAddress + "&limit=50&cost=10";
+        String referer = "https://gmgn.ai/" + chainType + "/address/" + walletAddress;
+        Map<String, String> headers = new HashMap<>(gmgnProperties.getHeaders());
+        headers.put("referer", referer);
+        String body = doGet(url, headers);
+        return body;
+    }
+
+    public String gmgnWalletUnfollow(String walletAddress, String chainType){
+        chainType = chainType.toLowerCase();
+        Map<String, Object> param = new HashMap<>();
+        param.put("chain", chainType);
+        param.put("network", chainType);
+        param.put("address", walletAddress);
+        param.put("wallet_addresses", Collections.singletonList(walletAddress));
+        param.put("group_ids", Collections.singletonList("657f4761-1b15-4b16-990f-f3e4b734fd41"));
+        String json = JSONUtil.toJsonStr(param);
+
+        // 从配置管理器获取最新的headers和params
+        Map<String, String> headers = new HashMap<>();
+        Map<String, String> params = new HashMap<>();
+
+        try {
+            // 获取动态配置，如果获取失败则使用yml配置兜底
+            headers = configManager.getHeaders("gmgn");
+            params = configManager.getParams("gmgn");
+
+            // 如果动态配置为空，使用yml配置兜底
+            if (headers.isEmpty() && gmgnProperties != null && gmgnProperties.getHeaders() != null) {
+                headers = new HashMap<>(gmgnProperties.getHeaders());
+            }
+        } catch (Exception e) {
+            // 如果配置管理器出错，使用yml配置兜底
+            if (gmgnProperties != null && gmgnProperties.getHeaders() != null) {
+                headers = new HashMap<>(gmgnProperties.getHeaders());
+            }
+        }
+
+        // 动态构建参数字符串
+        String commonParam = buildGmgnParams(params, gmgnProperties);
+
+        String referer = "https://gmgn.ai/" + chainType + "/address/" + walletAddress;
+        headers.put("referer", referer);
+
+        String url = GMGN_WALLET_UNFOLLOW + commonParam;
+        String body = doPost(GMGN_WALLET_UNFOLLOW + commonParam, headers, json);
+        return body;
+    }
+
+    public String gmgnWalletFollow(String walletAddress, String chainType){
+        chainType = chainType.toLowerCase();
+
+        Map<String, Object> param = new HashMap<>();
+        param.put("chain", chainType);
+        param.put("network", chainType);
+        param.put("address", walletAddress);
+        param.put("wallet_addresses", Collections.singletonList(walletAddress));
+        param.put("group_ids", Collections.singletonList("657f4761-1b15-4b16-990f-f3e4b734fd41"));
+        String json = JSONUtil.toJsonStr(param);
+
+        // 从配置管理器获取最新的headers和params
+        Map<String, String> headers = new HashMap<>();
+        Map<String, String> params = new HashMap<>();
+
+        try {
+            // 获取动态配置，如果获取失败则使用yml配置兜底
+            headers = configManager.getHeaders("gmgn");
+            params = configManager.getParams("gmgn");
+
+            // 如果动态配置为空，使用yml配置兜底
+            if (headers.isEmpty() && gmgnProperties != null && gmgnProperties.getHeaders() != null) {
+                headers = new HashMap<>(gmgnProperties.getHeaders());
+            }
+        } catch (Exception e) {
+            // 如果配置管理器出错，使用yml配置兜底
+            if (gmgnProperties != null && gmgnProperties.getHeaders() != null) {
+                headers = new HashMap<>(gmgnProperties.getHeaders());
+            }
+        }
+
+        // 动态构建参数字符串
+        String commonParam = buildGmgnParams(params, gmgnProperties);
+
+        String referer = "https://gmgn.ai/" + chainType + "/address/" + walletAddress;
+        headers.put("referer", referer);
+
+        String body = doPost(GMGN_WALLET_FOLLOW + commonParam, headers, json);
+        return body;
     }
 
     /**
@@ -485,7 +584,7 @@ public class ChainApiUtils {
     }
 
     private String getGMGNResult(String address, String chainType, String gmgnUrl){
-        String url = gmgnUrl + "/" + chainType + "/" + address + GMGN_COMMON_PARAM;
+        String url = gmgnUrl + "/" + chainType + "/" + address + "?" + GMGN_COMMON_PARAM;
         String referer = "https://gmgn.ai/" + chainType + "/token/" + address;
         if(GMGN_TOKEN_SMART.equals(gmgnUrl)){
             url += "&limt=" + gmgnProperties.getLimit()

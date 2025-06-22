@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.CryptoWalletMapper">
+
+    <resultMap id="CryptoWalletResult" type="CryptoWallet">
+        <id property="id" column="id"/>
+        <result property="walletAddress"     column="wallet_address"></result>
+        <result property="walletName"      column="wallet_name"></result>
+        <result property="lastActiveTime"     column="last_active_time"></result>
+        <result property="monitorState"   column="monitor_state"></result>
+        <result property="chainType"   column="chain_type"></result>
+        <result property="delFlag"     column="del_flag"    />
+        <result property="createBy"    column="create_by"   />
+        <result property="createTime"  column="create_time" />
+        <result property="updateBy"    column="update_by"   />
+        <result property="updateTime"  column="update_time" />
+    </resultMap>
+
+    <sql id="selectWalletVo">
+        select id, wallet_address, wallet_name, last_active_time, monitor_state, chain_type,
+               del_flag, create_by, create_time, update_by, update_time
+    </sql>
+
+    <sql id="selectWalletFullVo">
+        SELECT
+            cw.id,
+            cw.wallet_address,
+            cw.wallet_name,
+            cw.monitor_state,
+            cw.chain_type,
+            cw.del_flag,
+            cw.create_by,
+            cw.create_time,
+            cw.update_by,
+            cw.update_time,
+            cwt.transaction_time as last_active_time
+    </sql>
+
+    
+    <sql id="walletJoinTransaction">
+        LEFT JOIN (
+        SELECT wallet_address, MAX(transaction_time) AS transaction_time
+        FROM crypto_wallet_transactions
+        GROUP BY wallet_address
+    ) cwt ON cw.wallet_address = cwt.wallet_address
+    </sql>
+
+    <select id="selectCryptoWalletById" parameterType="Long" resultMap="CryptoWalletResult">
+        <include refid="selectWalletFullVo"></include>
+        FROM crypto_wallet cw
+        <include refid="walletJoinTransaction"></include>
+        <where>
+            cw.del_flag = '0'
+            AND cw.id = #{id}
+        </where>
+    </select>
+
+    <select id="selectCryptoWalletList" parameterType="CryptoWallet" resultMap="CryptoWalletResult">
+        <include refid="selectWalletFullVo"></include>
+        FROM crypto_wallet cw
+        LEFT JOIN (
+            SELECT t1.*
+            FROM crypto_wallet_transactions t1
+            INNER JOIN (
+            SELECT wallet_address, MAX(transaction_time) AS max_time
+            FROM crypto_wallet_transactions
+            GROUP BY wallet_address
+            ) t2 ON t1.wallet_address = t2.wallet_address AND t1.transaction_time = t2.max_time
+        ) cwt ON cw.wallet_address = cwt.wallet_address
+        <where>
+            cw.del_flag = '0'
+            <if test="walletAddress != null and walletAddress != ''">
+                AND cw.wallet_address = #{walletAddress}
+            </if>
+            <if test="walletName != null and walletName != ''">
+                AND (cw.wallet_name like concat('%', #{walletName}, '%'))
+
+            </if>
+            <if test="monitorState != null and monitorState != ''">
+                AND cw.monitor_state = #{monitorState}
+            </if>
+        </where>
+        order by cw.create_time desc
+    </select>
+
+    <select id="checkWalletUnique" parameterType="CryptoWallet" resultMap="CryptoWalletResult">
+        <include refid="selectWalletVo"/>
+        FROM crypto_wallet
+        WHERE wallet_address = #{walletAddress}
+        AND del_flag = '0'
+        LIMIT 1
+    </select>
+
+    <insert id="insertCryptoWallet" useGeneratedKeys="true" keyProperty="id" parameterType="CryptoWallet">
+        INSERT INTO crypto_wallet (
+        <trim suffixOverrides=",">
+            <if test="walletAddress != null and walletAddress != ''">wallet_address,</if>
+            <if test="walletName != null and walletName != ''">wallet_name,</if>
+            <if test="monitorState != null">monitor_state,</if>
+            <if test="chainType != null and chainType != ''">chain_type,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+        </trim>
+        )
+        VALUES (
+        <trim suffixOverrides=",">
+            <if test="walletAddress != null and walletAddress != ''">#{walletAddress},</if>
+            <if test="walletName != null and walletName != ''">#{walletName},</if>
+            <if test="monitorState != null">#{monitorState},</if>
+            <if test="chainType != null and chainType != ''">#{chainType},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            NOW()
+        </trim>
+        )
+    </insert>
+
+
+    <update id="updateCryptoWallet" parameterType="CryptoWallet">
+        UPDATE crypto_wallet
+        <set>
+            <if test="walletName != null and walletName != ''">
+                wallet_name = #{walletName},
+            </if>
+            <if test="monitorState != null">
+                monitor_state = #{monitorState},
+            </if>
+            <if test="chainType != null and chainType != ''">
+                chain_type = #{chainType},
+            </if>
+            <if test="updateBy != null and updateBy != ''">
+                update_by = #{updateBy},
+            </if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteCryptoWalletByIds" parameterType="Long">
+        UPDATE crypto_wallet SET del_flag = '2' WHERE id IN
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

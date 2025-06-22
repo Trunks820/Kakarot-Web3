@@ -197,7 +197,6 @@
 1. **crypto_wallet**：钱包表
    - wallet_address: 钱包地址(主键)
    - wallet_name: 钱包备注
-   - wallet_level: 重要度分级
    - wallet_chain_type: 链类型
    - add_time: 添加时间
    - last_active_time: 最后活跃时间

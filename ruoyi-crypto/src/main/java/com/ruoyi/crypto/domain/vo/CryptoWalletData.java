@@ -1,4 +1,4 @@
-package com.ruoyi.crypto.domain;
+package com.ruoyi.crypto.domain.vo;
 
 import lombok.Data;
 

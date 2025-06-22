@@ -67,6 +67,9 @@ crypto:
         token-holders-url: https://gmgn.ai/vas/api/v1/token_holders
         token-security-url: https://gmgn.ai/api/v1/mutil_window_token_security_launchpad
         token-smart-trade-url: https://gmgn.ai/vas/api/v1/token_trades
+        wallet-unfollow-url: https://gmgn.ai/api/v1/follow/unfollow_wallet
+        wallet-follow-url: https://gmgn.ai/api/v1/follow/follow_wallet
+        wallet-activity-url: https://gmgn.ai/vas/api/v1/wallet_activity
         device-id: 5461cc48-2e83-4740-8e90-8409db8cf33d
         client-id: gmgn_web_20250603-1799-730df90
         from-app: gmgn
@@ -94,7 +97,7 @@ crypto:
             accept-language: "zh-CN,zh;q=0.9"
             priority: "u=1, i"
             Cookie: "_ga=GA1.1.704572436.1712248135; _ga_0XM0LYXGC8=deleted; b-user-id=f3b3bb30-0b5c-fc55-f1fa-5af0522175ce; GMGN_LOCALE=zh-CN; GMGN_THEME=dark; sid=gmgn%7C691295b013c0e5714ab5f79835145729; _ga_UGLVBMV4Z0=GS1.2.1748597965489087.a12f85a73d09c2e4fe36d46f9d41ade6.QaPK6yv2T4rQ6xjGBTlGnA%3D%3D.jX0Cij%2B%2BT0w5vaKwjl4PnA%3D%3D.lzf%2FKVwJ2Frr9r77jD4QUQ%3D%3D.H3EBykaM5jrX9MGPSyFtfg%3D%3D; GMGN_CHAIN=sol; __cf_bm=9HnOPa4neqo6CA1vYBePh.sI48rtejnAzm5xHZQordU-1748965722-1.0.1.1-atM7ddn7JsqfjPVOix7QEoTpAl4DAAQ69n277jcJJ9bk0vggGlP6dk4rubolKo8QeCDrav7LG2gX_s4N8ukUiGdq_bUvOuq0ySiZOUclslw; cf_clearance=2PgwveiglxlNmOCwrkQgXTEN.tEdWFmJ0fCisOogrIM-1748966032-1.2.1.1-nqhd1Mx2jE49qDWUWtWiBxLB9h0mzwt9OmLfUy48pGOwZuuGVYEElM1YPK.4tnPbyt7Yt6ov3DDrRHp2eagNwywx81TE9JV8AKNt9KUBskZ2wVjvzK4QFRdjzLDjFghz_ApXecOhczoMe8vUtpLV4Z9Jf5omck4Drnh5u4bV1JwlRpAd5CBhvVTI3T0FKZNHCuVVMLEFJiu7_qXx7pshWYIjC9iId3c6nkG64.r5Y91NSK577fRnxSNOPYBe7BMF9OqalS5_dBRERhZosGkSE2st6MiGQJpKdX7mD2Ef0BWmihC3oz9u.tMO5zL956jsekp2Xrc6LW4NayrO_zxUZWxHsN0Mlzv3VhW5txhILbs; _ga_0XM0LYXGC8=GS2.1.s1748966033$o32$g1$t1748966094$j60$l0$h0"
-
+            authorization: "Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiNDVUWGk5NXBCRmlFdUt5RVRlRUgxR0NwN1RuZzl1V0ZobnlxVkVVUkg3eVgiLCJhdWQiOiJnbWduLmFpL2FjY2VzcyIsImNoYWluIjoic29sIiwiZGF0YSI6eyJhZGRyZXNzIjoiNDVUWGk5NXBCRmlFdUt5RVRlRUgxR0NwN1RuZzl1V0ZobnlxVkVVUkg3eVgiLCJhcHAiOiJnbWduIiwiY2hhaW4iOiJzb2wiLCJjbGllbnRfaWQiOiJnbWduX3dlYl8yMDI1MDYwNi0xOTQxLWYyNjU1ZDQiLCJkZXZpY2VfaWQiOiJmODMwNTBhNC04ZTYzLTQ5YjAtYTgyMy1mOTg5NTgxMTZjN2MiLCJmYXRoZXJfaWQiOiI1OTNhNmRmYi0xZTlmLTQzYmMtYjcwNi01MjQ4N2QxZDc1OGYiLCJmaW5nZXJwcmludCI6InYxMGZmYzk2MzA3YWM0YzFmMjM3NTc0ODllNjg5N2QzZjYiLCJwbGF0Zm9ybSI6IndlYiIsInVzZXJfaWQiOiIwYjNhYTY2YmQtMjhkYzEtMjM4NmItODBmZDktMTE3ZmRhZjIifSwiZXhwIjoxNzUwNTYyOTYxLCJpYXQiOjE3NTA1NjExNjEsImlzcyI6ImdtZ24uYWkvc2lnbmVyIiwianRpIjoiYWUyZTJhYzQtNjE4MC00NjM1LWEwMWEtMWM2NmZkYjI2Y2I3IiwibmJmIjoxNzUwNTYxMTYxLCJzdWIiOiJnbWduLmFpL2FjY2VzcyIsInZlciI6IjEuMCIsInZlcnNpb24iOiIyLjAifQ.OtccryMXogQAQDwnlFhybjwN06TKFOlSaic1nEISWjc5fhidamr7ZDOTg5aC6oggVlKEja4Cbey0-bXSDRAexA"
     moralis:
         token-pair-url: https://solana-gateway.moralis.io/token/mainnet/
         pair-info-url: https://solana-gateway.moralis.io/token/mainnet/pairs/

@@ -3,6 +3,8 @@ package com.ruoyi.crypto.service.impl;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import java.util.List;
+import java.util.Map;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.crypto.service.CryptoApiService;
@@ -182,5 +184,58 @@ public class CryptoApiServiceImpl implements CryptoApiService {
         }
         JSONObject object = JSONUtil.parseObj(objects.get(0));
         return success(object);
+    }
+
+    @Override
+    public AjaxResult getWalletActivity(String address, String chainType) {
+        String gmgnWalletActivity = chainApiUtils.getGmgnWalletActivity(address, chainType);
+        if(JSONUtil.isNull(gmgnWalletActivity)){
+            return error("未查询到此地址最近活动");
+        }
+
+        JSONObject jsonObject = JSONUtil.parseObj(gmgnWalletActivity);
+        String code = jsonObject.getStr("code");
+        String reason = jsonObject.getStr("reason");
+        if(!"0".equals(code)){
+            return error(reason);
+        }
+        JSONArray jsonArray = jsonObject.getJSONObject("data").getJSONArray("activities");
+        
+        // 将HuTool的JSONArray转换为普通的List，避免JSONNull序列化问题
+        List<?> activities = jsonArray.toList(Map.class);
+        
+        return success(activities);
+    }
+
+    @Override
+    public AjaxResult WalletUnfollow(String address, String chainType) {
+        String result = chainApiUtils.gmgnWalletUnfollow(address, chainType);
+        if(JSONUtil.isNull(result)){
+            return error("请求取消关注失败");
+        }
+
+        JSONObject jsonObject = JSONUtil.parseObj(result);
+        String code = jsonObject.getStr("code");
+        String reason = jsonObject.getStr("reason");
+        if(!"0".equals(code)){
+            return error(reason);
+        }
+        return success();
+    }
+
+    @Override
+    public AjaxResult WalletFollow(String address, String chainType) {
+        String result = chainApiUtils.gmgnWalletFollow(address, chainType);
+        if(JSONUtil.isNull(result)){
+            return error("请求关注失败");
+        }
+
+        JSONObject jsonObject = JSONUtil.parseObj(result);
+        String code = jsonObject.getStr("code");
+        String reason = jsonObject.getStr("reason");
+        if(!"0".equals(code)){
+            return error(reason);
+        }
+        return success();
     }
 }
