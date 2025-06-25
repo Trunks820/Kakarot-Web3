@@ -3,6 +3,7 @@ package com.ruoyi.crypto.mapper;
 import com.ruoyi.crypto.domain.CryptoWallet;
 import com.ruoyi.crypto.domain.vo.CryptoCoinVO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -20,4 +21,5 @@ public interface CryptoWalletMapper {
     int updateCryptoWallet(CryptoWallet cryptoWallet);
 
     int deleteCryptoWalletByIds(Long[] ids);
+    int batchUpdateWalletStatus(@Param("ids") Long[] ids, @Param("monitorState") Integer monitorState);
 }

@@ -33,7 +33,8 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
 
     @Override
     public AjaxResult getTgBotStatus() {
-        String url = "http://localhost:5000/api/status";
+//        String url = "http://localhost:5000/api/status";
+        String url = "http://108.160.135.74:5000/api/status";
         try{
             Map<String, String> headers = new HashMap<>();
             headers.put("Authorization", "Bearer abcdefg");

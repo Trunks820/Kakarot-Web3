@@ -29,4 +29,5 @@ public interface CryptoWalletService {
     String importWallet(List<CryptoWallet> cryptoWalletList, String operName);
 
     int deleteCryptoWalletByIds(Long[] ids);
+    int batchUpdateWalletStatus(Long[] ids, Integer monitorState);
 }

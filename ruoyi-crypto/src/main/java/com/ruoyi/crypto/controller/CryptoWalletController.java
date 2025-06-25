@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -80,6 +81,18 @@ public class CryptoWalletController extends BaseController {
         }
         cryptoWallet.setUpdateBy(getUsername());
         return toAjax(cryptoWalletService.updateWallet(cryptoWallet));
+    }
+    @PreAuthorize("@ss.hasPermi('crypto:wallet:edit')")
+    @Log(title = "钱包管理", businessType = BusinessType.UPDATE)
+    @PutMapping("/batchUpdateStatus")
+    public AjaxResult batchUpdateWalletStatus(@RequestBody Map<String, Object> params) {
+        Long[] ids = ((List<Integer>) params.get("ids")).stream()
+                .map(Long::valueOf)
+                .toArray(Long[]::new);
+        Integer monitorState = (Integer) params.get("monitorState");
+
+        int result = cryptoWalletService.batchUpdateWalletStatus(ids, monitorState);
+        return result > 0 ? success() : error("批量更新失败");
     }
 
     /**

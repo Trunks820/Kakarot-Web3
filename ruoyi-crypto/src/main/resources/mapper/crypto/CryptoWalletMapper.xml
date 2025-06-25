@@ -144,4 +144,13 @@
         </foreach>
     </delete>
 
+    <update id="batchUpdateWalletStatus">
+        UPDATE crypto_wallet
+        SET monitor_state = #{monitorState}, update_time = NOW()
+        WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
 </mapper>

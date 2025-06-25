@@ -36,6 +36,12 @@
                 <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete" v-hasPermi="['crypto:wallet:remove']">删除</el-button>
               </el-col>
               <el-col :span="1.5">
+                <el-button type="warning" plain icon="VideoPlay" :disabled="multiple" @click="handleBatchEnable" v-hasPermi="['crypto:wallet:edit']">一键启用</el-button>
+              </el-col>
+              <el-col :span="1.5">
+                <el-button type="info" plain icon="VideoPause" :disabled="multiple" @click="handleBatchDisable" v-hasPermi="['crypto:wallet:edit']">一键禁用</el-button>
+              </el-col>
+              <el-col :span="1.5">
                 <el-button type="info" plain icon="Upload" @click="handleImport" v-hasPermi="['crypto:wallet:import']">导入</el-button>
               </el-col>
               <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
@@ -240,7 +246,7 @@
 <script setup name="CryptoWallet">
 import { getToken } from "@/utils/auth"
 import useAppStore from '@/store/modules/app'
-import { listWallets, getWallet, addWallet, updateWallet, delWallet } from "@/api/crypto/wallet"
+import { listWallets, getWallet, addWallet, updateWallet, delWallet, batchUpdateWalletStatus} from "@/api/crypto/wallet"
 import { getWalletActivity } from "@/api/crypto/activity"
 import { Splitpanes, Pane } from "splitpanes"
 import "splitpanes/dist/splitpanes.css"
@@ -584,6 +590,60 @@ function getExplorerUrl(txHash, chain) {
     'base': `https://basescan.org/tx/${txHash}`
   }
   return explorers[chain.toLowerCase()] || `https://solscan.io/tx/${txHash}`
+}
+
+/** 一键启用按钮操作 */
+function handleBatchEnable() {
+  if (!ids.value || ids.value.length === 0) {
+    proxy.$modal.msgError("请先选择要启用的钱包")
+    return
+  }
+  
+  const selectedWallets = walletList.value.filter(wallet => ids.value.includes(wallet.id))
+  const walletNames = selectedWallets.map(w => w.walletName || w.walletAddress).join('、')
+  
+  proxy.$modal.confirm(`确认要启用监控 ${selectedWallets.length} 个钱包（${walletNames}）吗？`).then(function () {
+    // 调用批量更新API，一次请求完成所有更新
+    batchUpdateWalletStatus(ids.value, 1).then(() => {
+      proxy.$modal.msgSuccess(`成功启用 ${selectedWallets.length} 个钱包的监控`)
+      // 清空选择
+      ids.value = []
+      single.value = true
+      multiple.value = true
+      // 清空表格选择状态
+      proxy.$refs.walletTable?.clearSelection()
+      getList()
+    }).catch(() => {
+      proxy.$modal.msgError("批量启用失败，请重试")
+    })
+  }).catch(() => {})
+}
+
+/** 一键禁用按钮操作 */
+function handleBatchDisable() {
+  if (!ids.value || ids.value.length === 0) {
+    proxy.$modal.msgError("请先选择要禁用的钱包")
+    return
+  }
+  
+  const selectedWallets = walletList.value.filter(wallet => ids.value.includes(wallet.id))
+  const walletNames = selectedWallets.map(w => w.walletName || w.walletAddress).join('、')
+  
+  proxy.$modal.confirm(`确认要禁用监控 ${selectedWallets.length} 个钱包（${walletNames}）吗？`).then(function () {
+    // 调用批量更新API，一次请求完成所有更新
+    batchUpdateWalletStatus(ids.value, 0).then(() => {
+      proxy.$modal.msgSuccess(`成功禁用 ${selectedWallets.length} 个钱包的监控`)
+      // 清空选择
+      ids.value = []
+      single.value = true
+      multiple.value = true
+      // 清空表格选择状态
+      proxy.$refs.walletTable?.clearSelection()
+      getList()
+    }).catch(() => {
+      proxy.$modal.msgError("批量禁用失败，请重试")
+    })
+  }).catch(() => {})
 }
 
 getList()

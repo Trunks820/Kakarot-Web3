@@ -70,4 +70,9 @@ public class CryptoWalletServiceImpl implements CryptoWalletService {
     public int deleteCryptoWalletByIds(Long[] ids) {
         return cryptoWalletMapper.deleteCryptoWalletByIds(ids);
     }
+
+    @Override
+    public int batchUpdateWalletStatus(Long[] ids, Integer monitorState) {
+        return cryptoWalletMapper.batchUpdateWalletStatus(ids, monitorState);
+    }
 }

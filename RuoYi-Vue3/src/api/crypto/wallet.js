@@ -43,3 +43,15 @@ export function delWallet(ids) {
     })
 }
 
+// 批量更新
+export function batchUpdateWalletStatus(ids, status) {
+    return request({
+        url: '/crypto/wallet/batchUpdateStatus',
+        method: 'put',
+        data: {
+            ids: ids,
+            monitorState: status
+        }
+    })
+}
+
