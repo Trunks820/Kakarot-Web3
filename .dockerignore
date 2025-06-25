@@ -1,0 +1,12 @@
+node_modules
+target
+.git
+.gitignore
+README.md
+docker-compose.yml
+deploy.sh
+*.log
+.idea
+.vscode
+RuoYi-Vue3/node_modules
+RuoYi-Vue3/dist
