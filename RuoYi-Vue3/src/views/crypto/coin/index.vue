@@ -925,6 +925,7 @@ const mainCoins = ref([
 ])
 
 let priceUpdateTimer = null
+let dataRefreshTimer = null
 
 // 监控弹窗相关方法
 const toggleMonitor = () => {
@@ -1180,9 +1181,11 @@ const formatAddress = (address) => {
 }
 
 // 获取代币信息
-const getTokenInfo = () => {
-  loading.tokenData = true
-  loading.securityData = true
+const getTokenInfo = (silent = false) => {
+  if (!silent) {
+    loading.tokenData = true
+    loading.securityData = true
+  }
   
   // 调用API获取数据
   tokenInfo(searchCA.value).then(response => {
@@ -1223,24 +1226,41 @@ const getTokenInfo = () => {
       }
 
       // 主要数据加载完成
-      loading.tokenData = false
+      if (!silent) {
+        loading.tokenData = false
+      }
       
       // 自动获取安全数据
-      getTokenSecurity(tokenData.value.address, tokenPair)
+      getTokenSecurity(tokenData.value.address, tokenPair, silent)
       
       // 保存到搜索历史
       saveToHistory(tokenData.value)
+      
+      // 只在非静默模式下启动定时刷新（即首次加载成功后）
+      if (!silent) {
+        startDataRefresh()
+      }
     } else {
-      loading.tokenData = false
-      loading.securityData = false
-      proxy.$modal.msgError('未找到该代币信息，请检查CA地址是否正确')
+      if (!silent) {
+        loading.tokenData = false
+        loading.securityData = false
+        proxy.$modal.msgError('未找到该代币信息，请检查CA地址是否正确')
+        // 未找到代币信息时停止定时刷新
+        stopDataRefresh()
+      }
     }
   }).catch(error => {
-    loading.tokenData = false
-    loading.securityData = false
-    proxy.$modal.msgError('查询失败: ' + (error.message || '网络错误'))
+    if (!silent) {
+      loading.tokenData = false
+      loading.securityData = false
+      proxy.$modal.msgError('查询失败: ' + (error.message || '网络错误'))
+    }
     
-    tokenData.value = null
+    if (!silent) {
+      tokenData.value = null
+      // 搜索失败时停止定时刷新
+      stopDataRefresh()
+    }
   })
 }
 
@@ -1253,7 +1273,11 @@ const searchToken = () => {
   // 重置状态，但保留tokenData避免布局切换
   monitorStatus.value = 'not_monitored'
 
-  getTokenInfo()
+  // 停止当前的定时刷新
+  stopDataRefresh()
+
+  // 手动查询显示loading
+  getTokenInfo(false)
 }
 
 // 其他工具函数和方法...
@@ -1329,6 +1353,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   stopPriceUpdates()
+  stopDataRefresh()
 })
 
 // 其他必要的函数（简化版本）...
@@ -1414,9 +1439,11 @@ const openSocialLink = (url) => {
   window.open(url, '_blank')
 }
 
-const getTokenSecurity = async (address, tokenPair) => {
+const getTokenSecurity = async (address, tokenPair, silent = false) => {
   if (!address) {
-    loading.securityData = false
+    if (!silent) {
+      loading.securityData = false
+    }
     return
   }
   
@@ -1462,16 +1489,22 @@ const getTokenSecurity = async (address, tokenPair) => {
         riskLevel: calculateRiskLevel(riskTagValue)
       }
       
-      loading.securityData = false
+      if (!silent) {
+        loading.securityData = false
+      }
     } else {
       loadDemoSecurityData()
-      loading.securityData = false
-      proxy.$modal.msgWarning('获取安全数据失败，使用演示数据')
+      if (!silent) {
+        loading.securityData = false
+        proxy.$modal.msgWarning('获取安全数据失败，使用演示数据')
+      }
     }
   } catch (error) {
     loadDemoSecurityData()
-    loading.securityData = false
-    proxy.$modal.msgWarning('网络异常，使用演示数据')
+    if (!silent) {
+      loading.securityData = false
+      proxy.$modal.msgWarning('网络异常，使用演示数据')
+    }
   }
 }
 
@@ -1614,6 +1647,44 @@ const stopPriceUpdates = () => {
     priceUpdateTimer = null
   }
 }
+
+// 数据自动刷新相关函数
+const startDataRefresh = () => {
+  // 先清除已存在的定时器
+  stopDataRefresh()
+  
+  if (!searchCA.value) return
+  
+  console.log('启动定时刷新，地址:', searchCA.value) // 调试日志
+  
+  // 每15秒刷新一次数据（无感刷新）
+  dataRefreshTimer = setInterval(() => {
+          if (searchCA.value) {
+        console.log('执行定时刷新') // 调试日志
+        // 静默刷新，不显示loading
+        getTokenInfo(true)
+        
+        // 给用户一个微妙的更新提示
+        if (tokenData.value) {
+          // 触发数据卡片的轻微动画
+          triggerDataCardAnimation()
+          setTimeout(() => {
+            triggerDataValueAnimation()
+          }, 200)
+        }
+      }
+  }, 15000) // 15秒 = 15000毫秒
+}
+
+const stopDataRefresh = () => {
+  if (dataRefreshTimer) {
+    console.log('停止定时刷新') // 调试日志
+    clearInterval(dataRefreshTimer)
+    dataRefreshTimer = null
+  }
+}
+
+
 
 // 交易相关方法
 const formatChange = (change) => {
@@ -2602,6 +2673,8 @@ function formatWalletCount(value) {
   padding: 8px 16px;
   font-weight: 500;
 }
+
+
 
 /* 主流币紧凑布局 */
 .main-coins-compact {

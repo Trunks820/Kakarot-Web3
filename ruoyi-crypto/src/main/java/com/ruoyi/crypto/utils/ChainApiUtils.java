@@ -724,20 +724,22 @@ public class ChainApiUtils {
             vo.setRealtimeData(cryptoRealtimeData);
         }
         // Wallet信息
-        JSONObject walletData = obj.getJSONArray("walletData").getJSONObject(0);
-        if(walletData != null){
-            cryptoWalletData.setSmartWallets(walletData.getInt("smart_wallets"));
-            cryptoWalletData.setFreshWallets(walletData.getInt("fresh_wallets"));
-            cryptoWalletData.setRenownedWallets(walletData.getInt("renowned_wallets"));
-            cryptoWalletData.setSniperWallets(walletData.getInt("sniper_wallets"));
-            cryptoWalletData.setRatTraderWallets(walletData.getInt("rat_trader_wallets"));
-            cryptoWalletData.setWhaleWallets(walletData.getInt("whale_wallets"));
-            cryptoWalletData.setTopWallets(walletData.getInt("top_wallets"));
-            cryptoWalletData.setFollowingWallets(walletData.getInt("following_wallets"));
-            cryptoWalletData.setBundlerWallets(walletData.getInt("bundler_wallets"));
-            vo.setCryptoWalletData(cryptoWalletData);
+        JSONArray walletDataJson = obj.getJSONArray("walletData");
+        if(walletDataJson != null){
+            JSONObject walletData = obj.getJSONArray("walletData").getJSONObject(0);
+            if(walletData != null){
+                cryptoWalletData.setSmartWallets(walletData.getInt("smart_wallets"));
+                cryptoWalletData.setFreshWallets(walletData.getInt("fresh_wallets"));
+                cryptoWalletData.setRenownedWallets(walletData.getInt("renowned_wallets"));
+                cryptoWalletData.setSniperWallets(walletData.getInt("sniper_wallets"));
+                cryptoWalletData.setRatTraderWallets(walletData.getInt("rat_trader_wallets"));
+                cryptoWalletData.setWhaleWallets(walletData.getInt("whale_wallets"));
+                cryptoWalletData.setTopWallets(walletData.getInt("top_wallets"));
+                cryptoWalletData.setFollowingWallets(walletData.getInt("following_wallets"));
+                cryptoWalletData.setBundlerWallets(walletData.getInt("bundler_wallets"));
+                vo.setCryptoWalletData(cryptoWalletData);
+            }
         }
-        System.err.println(vo);
         return vo;
     }
 
