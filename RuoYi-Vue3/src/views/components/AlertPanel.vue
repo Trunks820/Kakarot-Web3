@@ -20,8 +20,7 @@
         <div v-for="alert in recentAlerts" :key="alert.id" class="alert-item" 
              @click="handleAlertClick(alert)">
           <div class="alert-icon">
-            <img v-if="alert.token" :src="getTokenLogo(alert.token)" :alt="alert.token" @error="handleImageError">
-            <el-icon v-else :class="getAlertIconClass(alert.level)">
+            <el-icon :class="getAlertIconClass(alert.level)">
               <component :is="getAlertIcon(alert.level)" />
             </el-icon>
           </div>
@@ -150,15 +149,7 @@ const getAlertIconClass = (level) => {
   return `alert-icon-${level}`
 }
 
-// 获取代币图标
-const getTokenLogo = (token) => {
-  return `/src/assets/crypto-icons/${token}.png`
-}
-
-// 处理图片错误
-const handleImageError = (e) => {
-  e.target.src = '/src/assets/crypto-icons/BTC.png'
-}
+// 移除了图片相关函数，暂时使用图标替代
 
 // 获取价值样式
 const getValueClass = (value) => {

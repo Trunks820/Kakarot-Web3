@@ -10,7 +10,7 @@ import java.util.*;
  * OKX信号控制器
  */
 @RestController
-@RequestMapping("/crypto/okx-signal")
+@RequestMapping("/crypto/okxSignal")
 public class CryptoOkxSignalController extends BaseController {
 
     /**

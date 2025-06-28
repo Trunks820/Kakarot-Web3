@@ -17,9 +17,11 @@
       <div class="tokens-list">
         <div v-for="token in monitorTokens" :key="token.symbol" 
              class="token-item" @click="handleTokenClick(token)">
-          <div class="token-icon">
-            <img :src="token.logo" :alt="token.symbol" @error="handleImageError">
-          </div>
+                  <div class="token-icon">
+          <el-icon class="token-icon-default">
+            <Coin />
+          </el-icon>
+        </div>
           
           <div class="token-info">
             <div class="token-main">
@@ -69,11 +71,14 @@
 
 <script setup name="MonitorTokens">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { 
   Monitor, Coin, Setting, SuccessFilled, WarningFilled, 
   CircleCloseFilled, InfoFilled 
 } from '@element-plus/icons-vue'
+
+const router = useRouter()
 
 // 模拟监控代币数据
 const monitorTokens = ref([
@@ -82,7 +87,6 @@ const monitorTokens = ref([
     price: '0.00001234',
     change: 12.45,
     volume: 1250000,
-    logo: '/src/assets/crypto-icons/BTC.png',
     isMonitoring: true,
     alertStatus: 'normal'
   },
@@ -91,7 +95,6 @@ const monitorTokens = ref([
     price: '0.082156',
     change: -5.67,
     volume: 890000,
-    logo: '/src/assets/crypto-icons/BNB.png',
     isMonitoring: true,
     alertStatus: 'warning'
   },
@@ -100,7 +103,6 @@ const monitorTokens = ref([
     price: '0.000012',
     change: 8.91,
     volume: 2100000,
-    logo: '/src/assets/crypto-icons/ETH.png',
     isMonitoring: true,
     alertStatus: 'normal'
   },
@@ -109,7 +111,6 @@ const monitorTokens = ref([
     price: '0.000034',
     change: -15.23,
     volume: 560000,
-    logo: '/src/assets/crypto-icons/SOL.png',
     isMonitoring: true,
     alertStatus: 'danger'
   }
@@ -147,10 +148,7 @@ const formatVolume = (volume) => {
   return volume.toString()
 }
 
-// 处理图片错误
-const handleImageError = (e) => {
-  e.target.src = '/src/assets/crypto-icons/DEFAULT.png'
-}
+// 移除了图片错误处理函数，现在使用图标
 
 // 处理代币点击
 const handleTokenClick = (token) => {
@@ -166,12 +164,12 @@ const toggleMonitor = (token) => {
 
 // 添加代币
 const addToken = () => {
-  ElMessage.info('跳转到添加监控代币页面')
+  router.push('/crypto/coin')
 }
 
 // 管理代币
 const manageTokens = () => {
-  ElMessage.info('跳转到监控代币管理页面')
+  router.push('/crypto/monitor')
 }
 
 // 模拟价格更新
@@ -255,11 +253,10 @@ onMounted(() => {
           height: 32px;
           flex-shrink: 0;
 
-          img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
+          .token-icon-default {
+            width: 32px;
+            height: 32px;
+            color: var(--el-color-primary);
           }
         }
 
