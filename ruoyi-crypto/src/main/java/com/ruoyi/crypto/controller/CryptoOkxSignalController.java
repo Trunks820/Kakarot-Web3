@@ -2,6 +2,7 @@ package com.ruoyi.crypto.controller;
 
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -16,6 +17,7 @@ public class CryptoOkxSignalController extends BaseController {
     /**
      * 获取OKX信号列表
      */
+    @PreAuthorize("@ss.hasPermi('crypto:okxSignal:view')")
     @GetMapping("/list")
     public AjaxResult getSignalList(@RequestParam(defaultValue = "1") Integer pageNum,
                                    @RequestParam(defaultValue = "20") Integer pageSize,
@@ -67,6 +69,7 @@ public class CryptoOkxSignalController extends BaseController {
     /**
      * 获取信号统计数据
      */
+    @PreAuthorize("@ss.hasPermi('crypto:okxSignal:view')")
     @GetMapping("/statistics")
     public AjaxResult getStatistics() {
         Map<String, Object> stats = new HashMap<>();
