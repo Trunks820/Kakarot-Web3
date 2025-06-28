@@ -11,15 +11,6 @@
                   @keyup.enter="handleQuery" 
                 />
               </el-form-item>
-              <el-form-item label="代币符号" prop="tokenSymbol">
-                <el-input 
-                  v-model="queryParams.tokenSymbol" 
-                  placeholder="请输入代币符号" 
-                  clearable 
-                  style="width: 120px" 
-                  @keyup.enter="handleQuery" 
-                />
-              </el-form-item>
               <el-form-item label="监控模式" prop="alertMode">
                 <el-select v-model="queryParams.alertMode" placeholder="监控模式" clearable style="width: 120px">
                   <el-option label="定时提醒" value="timer"></el-option>
@@ -192,7 +183,7 @@
             />
 
     <!-- 添加或修改监控配置对话框 -->
-    <el-dialog :title="title" v-model="open" width="800px" append-to-body :close-on-click-modal="false">
+    <el-dialog :title="title" v-model="open" width="800px" append-to-body :close-on-click-modal="true">
       <el-form :model="form" :rules="rules" ref="monitorRef" label-width="120px">
         <el-row :gutter="16">
           <el-col :span="24">
