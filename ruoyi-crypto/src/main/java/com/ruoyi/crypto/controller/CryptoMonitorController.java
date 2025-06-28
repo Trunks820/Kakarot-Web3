@@ -177,17 +177,4 @@ public class CryptoMonitorController extends BaseController {
         return success(cryptoMonitorConfig);
     }
 
-    /**
-     * 测试接口 - 无权限验证
-     */
-    @GetMapping("/testList")
-    public AjaxResult testList() {
-        try {
-            CryptoMonitorConfig cryptoMonitorConfig = new CryptoMonitorConfig();
-            List<CryptoMonitorConfig> list = cryptoMonitorService.selectCryptoMonitorConfigList(cryptoMonitorConfig);
-            return success("查询成功，数据条数：" + list.size());
-        } catch (Exception e) {
-            return error("查询失败：" + e.getMessage());
-        }
-    }
 }
