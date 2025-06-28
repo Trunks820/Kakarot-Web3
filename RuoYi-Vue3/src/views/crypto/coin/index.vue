@@ -596,10 +596,10 @@
     <el-dialog v-model="monitorDialogVisible" title="设置代币监控" width="600px">
       <el-form :model="monitorForm" :rules="monitorRules" ref="monitorFormRef" label-width="120px">
         <!-- 基础信息 -->
-        <el-form-item label="代币地址" prop="contractAddress">
+        <el-form-item label="代币地址" prop="coinAddress">
           <el-input 
-            v-model="monitorForm.contractAddress" 
-            placeholder="请输入代币合约地址"
+            v-model="monitorForm.coinAddress" 
+            placeholder="请输入代币地址"
             clearable
           >
             <template #suffix>
@@ -759,7 +759,7 @@ const monitorSubmitting = ref(false)
 
 // 监控表单数据
 const monitorForm = reactive({
-  contractAddress: '',
+  coinAddress: '',
   alertMode: 'timer', // timer 或 condition
   timerInterval: '',
   conditionType: '',
@@ -772,8 +772,8 @@ const monitorForm = reactive({
 
 // 监控表单验证规则
 const monitorRules = reactive({
-  contractAddress: [
-    { required: true, message: '请输入代币合约地址', trigger: 'blur' }
+  coinAddress: [
+    { required: true, message: '请输入代币地址', trigger: 'blur' }
   ],
   alertMode: [
     { required: true, message: '请选择提醒模式', trigger: 'change' }
@@ -943,7 +943,7 @@ const openMonitorDialog = async () => {
   
   // 如果当前有代币数据，自动填入地址并检查是否已被监控
   if (tokenData.value && tokenData.value.address) {
-    monitorForm.contractAddress = tokenData.value.address
+    monitorForm.coinAddress = tokenData.value.address
     
     // 检查是否已被监控
     try {
@@ -975,7 +975,7 @@ const openMonitorDialog = async () => {
 
 const resetMonitorForm = () => {
   Object.assign(monitorForm, {
-    contractAddress: '',
+    coinAddress: '',
     alertMode: 'timer',
     timerInterval: '',
     conditionType: '',
@@ -994,7 +994,7 @@ const resetMonitorForm = () => {
 
 const useCurrentToken = () => {
   if (tokenData.value && tokenData.value.address) {
-    monitorForm.contractAddress = tokenData.value.address
+    monitorForm.coinAddress = tokenData.value.address
   }
 }
 
@@ -1037,7 +1037,7 @@ const submitMonitorConfig = async () => {
     
     // 构建提交数据
     const submitData = {
-      contractAddress: monitorForm.contractAddress,
+      coinAddress: monitorForm.coinAddress,
       alertMode: monitorForm.alertMode,
       timerInterval: monitorForm.alertMode === 'timer' ? parseInt(monitorForm.timerInterval) : null,
       conditionType: monitorForm.alertMode === 'condition' ? monitorForm.conditionType : null,
@@ -1048,7 +1048,6 @@ const submitMonitorConfig = async () => {
       remark: monitorForm.remark,
       tokenSymbol: tokenData.value?.symbol || '',
       tokenName: tokenData.value?.name || '',
-      createTime: new Date(),
       status: '1' // 启用状态
     }
     
@@ -1079,6 +1078,22 @@ const getMonitorButtonType = () => {
 
 const getMonitorButtonText = () => {
   return monitorStatus.value === 'monitored' ? '已监控' : '监控'
+}
+
+// 检查代币监控状态
+const checkMonitorStatus = async (coinAddress) => {
+  if (!coinAddress) return
+  
+  try {
+    const response = await checkTokenMonitored(coinAddress)
+    if (response && response.code === 200 && response.data) {
+      monitorStatus.value = response.data.monitored ? 'monitored' : 'not_monitored'
+    }
+  } catch (error) {
+    console.warn('检查监控状态失败:', error)
+    // 检查失败时保持默认状态
+    monitorStatus.value = 'not_monitored'
+  }
 }
 
 // 自动完成建议
@@ -1235,6 +1250,9 @@ const getTokenInfo = (silent = false) => {
       
       // 保存到搜索历史
       saveToHistory(tokenData.value)
+      
+      // 检查监控状态
+      checkMonitorStatus(tokenData.value.address)
       
       // 只在非静默模式下启动定时刷新（即首次加载成功后）
       if (!silent) {

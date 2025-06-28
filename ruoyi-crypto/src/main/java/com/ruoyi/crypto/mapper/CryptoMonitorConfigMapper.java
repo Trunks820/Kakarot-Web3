@@ -29,22 +29,6 @@ public interface CryptoMonitorConfigMapper
     public List<CryptoMonitorConfig> selectCryptoMonitorConfigList(CryptoMonitorConfig cryptoMonitorConfig);
 
     /**
-     * 根据用户ID查询监控配置
-     *
-     * @param userId 用户ID
-     * @return 监控配置集合
-     */
-    public List<CryptoMonitorConfig> selectCryptoMonitorConfigByUserId(String userId);
-
-    /**
-     * 根据代币ID查询监控配置
-     *
-     * @param coinId 代币ID
-     * @return 监控配置集合
-     */
-    public List<CryptoMonitorConfig> selectCryptoMonitorConfigByCoinId(Long coinId);
-
-    /**
      * 查询所有激活的监控配置
      *
      * @return 监控配置集合
@@ -78,10 +62,19 @@ public interface CryptoMonitorConfigMapper
     /**
      * 批量删除监控配置
      *
-     * @param ids 需要删除的数据ID
+     * @param ids 需要删除的监控配置ID
      * @return 结果
      */
     public int deleteCryptoMonitorConfigByIds(Long[] ids);
+
+    /**
+     * 根据代币地址和创建者查询监控配置
+     *
+     * @param coinAddress 代币地址
+     * @param createBy 创建者
+     * @return 监控配置集合
+     */
+    public List<CryptoMonitorConfig> selectByCoinAddressAndCreateBy(String coinAddress, String createBy);
 
     /**
      * 更新通知时间

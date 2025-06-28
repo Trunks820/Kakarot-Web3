@@ -19,57 +19,78 @@ public class CryptoMonitorConfig extends BaseEntity {
     @ApiModelProperty("配置ID")
     private Long id;
 
-    /** 代币ID */
-    @Excel(name = "代币ID")
-    @ApiModelProperty("代币ID")
-    private Long coinId;
+    /** 代币地址 */
+    @Excel(name = "代币地址")
+    @ApiModelProperty("代币地址")
+    private String coinAddress;
 
-    /** 用户ID */
-    @Excel(name = "用户ID")
-    @ApiModelProperty("用户ID")
-    private String userId;
+    /** 代币符号 */
+    @Excel(name = "代币符号")
+    @ApiModelProperty("代币符号")
+    private String tokenSymbol;
 
-    /** 最低价格监控 */
-    @Excel(name = "最低价格监控")
-    @ApiModelProperty("最低价格监控")
-    private BigDecimal minPrice;
+    /** 代币名称 */
+    @Excel(name = "代币名称")
+    @ApiModelProperty("代币名称")
+    private String tokenName;
 
-    /** 最高价格监控 */
-    @Excel(name = "最高价格监控")
-    @ApiModelProperty("最高价格监控")
-    private BigDecimal maxPrice;
+    /** 提醒模式 */
+    @Excel(name = "提醒模式", readConverterExp = "timer=定时提醒,condition=条件触发")
+    @ApiModelProperty("提醒模式(timer:定时提醒, condition:条件触发)")
+    private String alertMode;
 
-    /** 波动百分比 */
-    @Excel(name = "波动百分比")
-    @ApiModelProperty("波动百分比")
-    private BigDecimal percentChange;
+    /** 定时提醒间隔(分钟) */
+    @Excel(name = "定时间隔")
+    @ApiModelProperty("定时提醒间隔(分钟)")
+    private Integer timerInterval;
 
-    /** 通知类型 */
-    @Excel(name = "通知类型")
-    @ApiModelProperty("通知类型")
-    private Integer notificationType;
+    /** 条件类型 */
+    @Excel(name = "条件类型")
+    @ApiModelProperty("条件类型(priceAbove:价格高于, priceBelow:价格低于, marketCapBelow:市值低于, changeExceeds:涨跌幅超过)")
+    private String conditionType;
 
-    /** 是否激活 */
-    @Excel(name = "是否激活", readConverterExp = "0=否,1=是")
-    @ApiModelProperty("是否激活")
-    private Integer isActive;
+    /** 条件阈值 */
+    @Excel(name = "条件阈值")
+    @ApiModelProperty("条件阈值")
+    private BigDecimal conditionValue;
 
-    /** 通知目标(群ID或用户ID) */
-    @Excel(name = "通知目标")
-    @ApiModelProperty("通知目标(群ID或用户ID)")
-    private String notificationTarget;
+    /** 通知方式 */
+    @Excel(name = "通知方式")
+    @ApiModelProperty("通知方式(wechat,telegram)")
+    private String notifyMethods;
+
+    /** 微信名称 */
+    @Excel(name = "微信名称")
+    @ApiModelProperty("微信名称")
+    private String wechatName;
+
+    /** Telegram名称 */
+    @Excel(name = "Telegram名称")
+    @ApiModelProperty("Telegram名称")
+    private String telegramName;
+
+    /** 备注 */
+    @Excel(name = "备注")
+    @ApiModelProperty("备注")
+    private String remark;
+
+    // === 状态控制字段 ===
+
+    /** 状态 */
+    @Excel(name = "状态", readConverterExp = "0=停用,1=启用")
+    @ApiModelProperty("状态(0:停用, 1:启用)")
+    private String status;
 
     /** 上次通知时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Excel(name = "上次通知时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty("上次通知时间")
     private Date lastNotificationTime;
 
+    /** 链类型 */
+    @Excel(name = "链类型")
+    @ApiModelProperty("链类型")
+    private String chainType;
+
     /** 删除标志（0代表存在 2代表删除） */
     private String delFlag;
-
-
-
-
-
 }

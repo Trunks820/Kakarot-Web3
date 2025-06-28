@@ -109,12 +109,12 @@ export function delCryptoMonitorConfigs(ids) {
 }
 
 // 检查代币是否已被监控
-export function checkTokenMonitored(contractAddress) {
+export function checkTokenMonitored(coinAddress) {
   return request({
-    url: '/crypto/monitor/check',
+    url: '/crypto/monitor/checkMonitored',
     method: 'get',
     params: {
-      contractAddress: contractAddress
+      coinAddress: coinAddress
     }
   })
 }

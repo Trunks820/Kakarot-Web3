@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.CryptoMonitorConfigMapper">
+
+    <resultMap type="CryptoMonitorConfig" id="CryptoMonitorConfigResult">
+        <result property="id"                      column="id"                      />
+        <result property="coinAddress"             column="coin_address"            />
+        <result property="tokenSymbol"             column="token_symbol"            />
+        <result property="tokenName"               column="token_name"              />
+        <result property="alertMode"               column="alert_mode"              />
+        <result property="timerInterval"           column="timer_interval"          />
+        <result property="conditionType"           column="condition_type"          />
+        <result property="conditionValue"          column="condition_value"         />
+        <result property="notifyMethods"           column="notify_methods"          />
+        <result property="wechatName"              column="wechat_name"             />
+        <result property="telegramName"            column="telegram_name"           />
+        <result property="remark"                  column="remark"                  />
+        <result property="lastNotificationTime"    column="last_notification_time"  />
+        <result property="status"                  column="status"                  />
+        <result property="delFlag"                 column="del_flag"                />
+        <result property="createBy"                column="create_by"               />
+        <result property="createTime"              column="create_time"             />
+        <result property="updateBy"                column="update_by"               />
+        <result property="updateTime"              column="update_time"             />
+        <result property="chainType"               column="chain_type"              />
+    </resultMap>
+
+    <sql id="selectCryptoMonitorConfigVo">
+        select id, coin_address, token_symbol, token_name, alert_mode, timer_interval, 
+               condition_type, condition_value, notify_methods, wechat_name, telegram_name, remark,
+               last_notification_time, status, del_flag, create_by, create_time, 
+               update_by, update_time, chain_type 
+        from crypto_monitor_config
+    </sql>
+
+    <select id="selectCryptoMonitorConfigList" parameterType="CryptoMonitorConfig" resultMap="CryptoMonitorConfigResult">
+        <include refid="selectCryptoMonitorConfigVo"/>
+        <where>
+            <if test="coinAddress != null  and coinAddress != ''"> and coin_address = #{coinAddress}</if>
+            <if test="tokenSymbol != null  and tokenSymbol != ''"> and token_symbol like concat('%', #{tokenSymbol}, '%')</if>
+            <if test="tokenName != null  and tokenName != ''"> and token_name like concat('%', #{tokenName}, '%')</if>
+            <if test="alertMode != null  and alertMode != ''"> and alert_mode = #{alertMode}</if>
+            <if test="conditionType != null  and conditionType != ''"> and condition_type = #{conditionType}</if>
+            <if test="notifyMethods != null  and notifyMethods != ''"> and notify_methods like concat('%', #{notifyMethods}, '%')</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="chainType != null  and chainType != ''"> and chain_type = #{chainType}</if>
+            and del_flag = '0'
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="selectCryptoMonitorConfigById" parameterType="Long" resultMap="CryptoMonitorConfigResult">
+        <include refid="selectCryptoMonitorConfigVo"/>
+        where id = #{id} and del_flag = '0'
+    </select>
+
+    <select id="selectActiveCryptoMonitorConfig" resultMap="CryptoMonitorConfigResult">
+        <include refid="selectCryptoMonitorConfigVo"/>
+        where status = '1' and del_flag = '0'
+        order by create_time desc
+    </select>
+
+    <select id="selectByCoinAddressAndCreateBy" resultMap="CryptoMonitorConfigResult">
+        <include refid="selectCryptoMonitorConfigVo"/>
+        where coin_address = #{coinAddress} and create_by = #{createBy} and del_flag = '0'
+    </select>
+
+    <insert id="insertCryptoMonitorConfig" parameterType="CryptoMonitorConfig" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO crypto_monitor_config (
+        <trim suffixOverrides=",">
+            <if test="coinAddress != null and coinAddress != ''">coin_address,</if>
+            <if test="tokenSymbol != null and tokenSymbol != ''">token_symbol,</if>
+            <if test="tokenName != null and tokenName != ''">token_name,</if>
+            <if test="alertMode != null and alertMode != ''">alert_mode,</if>
+            <if test="timerInterval != null">timer_interval,</if>
+            <if test="conditionType != null and conditionType != ''">condition_type,</if>
+            <if test="conditionValue != null">condition_value,</if>
+            <if test="notifyMethods != null and notifyMethods != ''">notify_methods,</if>
+            <if test="wechatName != null and wechatName != ''">wechat_name,</if>
+            <if test="telegramName != null and telegramName != ''">telegram_name,</if>
+            <if test="remark != null">remark,</if>
+            <if test="lastNotificationTime != null">last_notification_time,</if>
+            <if test="status != null">status,</if>
+            <if test="chainType != null and chainType != ''">chain_type,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+        </trim>
+        )
+        VALUES (
+        <trim suffixOverrides=",">
+            <if test="coinAddress != null and coinAddress != ''">#{coinAddress},</if>
+            <if test="tokenSymbol != null and tokenSymbol != ''">#{tokenSymbol},</if>
+            <if test="tokenName != null and tokenName != ''">#{tokenName},</if>
+            <if test="alertMode != null and alertMode != ''">#{alertMode},</if>
+            <if test="timerInterval != null">#{timerInterval},</if>
+            <if test="conditionType != null and conditionType != ''">#{conditionType},</if>
+            <if test="conditionValue != null">#{conditionValue},</if>
+            <if test="notifyMethods != null and notifyMethods != ''">#{notifyMethods},</if>
+            <if test="wechatName != null and wechatName != ''">#{wechatName},</if>
+            <if test="telegramName != null and telegramName != ''">#{telegramName},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="lastNotificationTime != null">#{lastNotificationTime},</if>
+            <if test="status != null">#{status},</if>
+            <if test="chainType != null and chainType != ''">#{chainType},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            NOW()
+        </trim>
+        )
+    </insert>
+
+    <update id="updateCryptoMonitorConfig" parameterType="CryptoMonitorConfig">
+        UPDATE crypto_monitor_config
+        <set>
+            <if test="coinAddress != null and coinAddress != ''">
+                coin_address = #{coinAddress},
+            </if>
+            <if test="tokenSymbol != null and tokenSymbol != ''">
+                token_symbol = #{tokenSymbol},
+            </if>
+            <if test="tokenName != null and tokenName != ''">
+                token_name = #{tokenName},
+            </if>
+            <if test="alertMode != null and alertMode != ''">
+                alert_mode = #{alertMode},
+            </if>
+            <if test="timerInterval != null">
+                timer_interval = #{timerInterval},
+            </if>
+            <if test="conditionType != null and conditionType != ''">
+                condition_type = #{conditionType},
+            </if>
+            <if test="conditionValue != null">
+                condition_value = #{conditionValue},
+            </if>
+            <if test="notifyMethods != null and notifyMethods != ''">
+                notify_methods = #{notifyMethods},
+            </if>
+            <if test="wechatName != null and wechatName != ''">
+                wechat_name = #{wechatName},
+            </if>
+            <if test="telegramName != null and telegramName != ''">
+                telegram_name = #{telegramName},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+            <if test="lastNotificationTime != null">
+                last_notification_time = #{lastNotificationTime},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="chainType != null and chainType != ''">
+                chain_type = #{chainType},
+            </if>
+            <if test="updateBy != null and updateBy != ''">
+                update_by = #{updateBy},
+            </if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteCryptoMonitorConfigById" parameterType="Long">
+        update crypto_monitor_config set del_flag = '2' where id = #{id}
+    </delete>
+
+    <delete id="deleteCryptoMonitorConfigByIds" parameterType="String">
+        update crypto_monitor_config set del_flag = '2' where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper> 

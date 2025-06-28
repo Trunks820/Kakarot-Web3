@@ -23,6 +23,12 @@ export default {
       meta: { title: '代币管理', icon: 'list' }
     },
     {
+      path: 'monitor',
+      component: () => import('@/views/crypto/monitor/index'),
+      name: 'CryptoMonitor',
+      meta: { title: '监控配置', icon: 'monitor' }
+    },
+    {
       path: 'wallet',
       component: () => import('@/views/crypto/wallet/index'),
       name: 'CryptoWallet',
@@ -33,13 +39,6 @@ export default {
       component: () => import('@/views/crypto/okx-signals/index'),
       name: 'OkxSignals',
       meta: { title: 'OKX信号', icon: 'chart' }
-    },
-    {
-      path: 'monitor',
-      component: () => import('@/views/crypto/monitor/index'),
-      name: 'CryptoMonitor',
-      meta: { title: '监控配置', icon: 'eye-open' },
-      hidden: true
     },
     {
       path: 'records',
