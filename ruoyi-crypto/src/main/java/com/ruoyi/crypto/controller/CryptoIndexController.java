@@ -60,11 +60,6 @@ public class CryptoIndexController extends BaseController {
         return success(hotCaByTelegram);
     }
 
-    @GetMapping("/getTgBotStatus")
-    public AjaxResult getTgBotStatus()
-    {
-        return cryptoIndexService.getTgBotStatus();
-    }
 
     @GetMapping("/getUserRange")
     public AjaxResult getUserRange()

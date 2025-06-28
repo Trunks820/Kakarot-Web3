@@ -3,7 +3,7 @@ import Layout from '@/layout'
 export default {
   path: '/crypto',
   component: Layout,
-  redirect: '/crypto/dashboard',
+  redirect: '/crypto/caRecord',
   name: 'Crypto',
   meta: {
     title: '加密货币管理',
@@ -11,16 +11,28 @@ export default {
   },
   children: [
     {
-      path: 'dashboard',
-      component: () => import('@/views/crypto/index'),
-      name: 'CryptoDashboard',
-      meta: { title: '概览', icon: 'dashboard' }
+      path: 'caRecord',
+      component: () => import('@/views/crypto/caRecord/index'),
+      name: 'CryptoCaRecord',
+      meta: { title: 'CA记录', icon: 'documentation' }
     },
     {
       path: 'coin',
       component: () => import('@/views/crypto/coin/index'),
       name: 'CryptoCoin',
       meta: { title: '代币管理', icon: 'list' }
+    },
+    {
+      path: 'wallet',
+      component: () => import('@/views/crypto/wallet/index'),
+      name: 'CryptoWallet',
+      meta: { title: '钱包管理', icon: 'wallet' }
+    },
+    {
+      path: 'okx-signals',
+      component: () => import('@/views/crypto/okx-signals/index'),
+      name: 'OkxSignals',
+      meta: { title: 'OKX信号', icon: 'chart' }
     },
     {
       path: 'monitor',

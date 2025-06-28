@@ -101,18 +101,54 @@ export function getHotCaByTelegram() {
   })
 }
 
-// 获取机器人状态
-export function getTgBotStatus() {
-  return request({
-    url: '/crypto/record/getTgBotStatus',
-    method: 'get'
-  })
-}
-
 // 获取系统信息
 export function getUserRange() {
   return request({
     url: '/crypto/record/getUserRange',
     method: 'get'
+  })
+}
+
+// 获取机器人状态
+export function getTgBotStatus() {
+  return request({
+    url: '/crypto/bot/tg/getTgBotStatus',
+    method: 'get'
+  })
+}
+
+// 重启TG机器人
+export function restartTgBot(pid) {
+  return request({
+    url: '/crypto/bot/tg/restart',
+    method: 'get',
+    params: { pid: pid }
+  })
+}
+
+// 启动TG机器人
+export function startTgBot(pid) {
+  return request({
+    url: '/crypto/bot/tg/start',
+    method: 'get',
+    params: { pid: pid }
+  })
+}
+
+// 停止TG机器人
+export function stopTgBot(pid) {
+  return request({
+    url: '/crypto/bot/tg/stop',
+    method: 'get',
+    params: { pid: pid }
+  })
+}
+
+// 获取消息历史
+export function getMessages(params) {
+  return request({
+    url: '/api/messages',
+    method: 'get',
+    params: params
   })
 }

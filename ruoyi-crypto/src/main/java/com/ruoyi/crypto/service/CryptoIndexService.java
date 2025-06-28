@@ -3,6 +3,7 @@ package com.ruoyi.crypto.service;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.crypto.domain.vo.CryptoIndexVO;
 import com.ruoyi.crypto.domain.vo.CryptoUserVO;
+import org.aspectj.weaver.loadtime.Aj;
 
 import java.util.List;
 
@@ -15,7 +16,14 @@ public interface CryptoIndexService {
      */
     CryptoIndexVO getDailyActivityStats();
 
-    AjaxResult getTgBotStatus();
-
     List<CryptoUserVO> getUserRange();
+
+    AjaxResult getBotStatus(String type);
+
+    AjaxResult restartTgBot(String pid);
+
+    AjaxResult startTgBot(String pid);
+
+    AjaxResult stopTgBot(String pid);
+
 }
