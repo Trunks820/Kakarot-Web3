@@ -7,6 +7,7 @@ import com.ruoyi.crypto.service.CryptoMonitorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,7 +24,8 @@ public class CryptoMonitorServiceImpl implements CryptoMonitorService {
      */
     @Override
     public List<CryptoMonitorConfig> selectCryptoMonitorConfigList(CryptoMonitorConfig cryptoMonitorConfig) {
-        return cryptoMonitorConfigMapper.selectCryptoMonitorConfigList(cryptoMonitorConfig);
+        List<CryptoMonitorConfig> list = cryptoMonitorConfigMapper.selectCryptoMonitorConfigList(cryptoMonitorConfig);
+        return list != null ? list : new ArrayList<>();
     }
 
     /**
@@ -124,7 +126,8 @@ public class CryptoMonitorServiceImpl implements CryptoMonitorService {
      */
     @Override
     public List<CryptoMonitorConfig> selectActiveCryptoMonitorConfig() {
-        return cryptoMonitorConfigMapper.selectActiveCryptoMonitorConfig();
+        List<CryptoMonitorConfig> list = cryptoMonitorConfigMapper.selectActiveCryptoMonitorConfig();
+        return list != null ? list : new ArrayList<>();
     }
 
     // === 兼容旧版本的方法实现 ===
