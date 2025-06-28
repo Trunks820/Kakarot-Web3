@@ -60,7 +60,7 @@
             coin_name
         ORDER BY
             query_count DESC
-            LIMIT 4;
+            LIMIT 5;
     </select>
 
     <select id="getMaxMultipleCa" parameterType="CryptoCaRecordVO" resultMap="CryptoCaRecordVOResult">

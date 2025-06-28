@@ -81,15 +81,15 @@
     </el-col>
 
     <el-col :span="12">
-      <el-card class="data-card" v-loading="botLoading || wxBotLoading" element-loading-background="rgba(0, 0, 0, 0.1)" element-loading-text="加载中...">
+      <el-card class="data-card" v-loading="botLoading" element-loading-background="rgba(0, 0, 0, 0.1)" element-loading-text="加载中...">
         <template #header>
           <div class="card-header">
             <span>机器人状态</span>
             <div>
               <el-button 
                 type="text" 
-                @click="fetchBotStatus(); fetchWxBotStatus()" 
-                :loading="botLoading || wxBotLoading"
+                @click="fetchBotStatus()" 
+                :loading="botLoading"
                 class="refresh-btn"
               >
                 <el-icon><Refresh /></el-icon>
@@ -103,49 +103,29 @@
             <div class="col-bot">机器人</div>
             <div class="col-status">状态</div>
             <div class="col-uptime">运行时长</div>
-            <div class="col-lastcheck">最后检查</div>
-            <div class="col-errors">错误次数</div>
-            <div class="col-actions">重启按钮</div>
+            <div class="col-actions">操作</div>
           </div>
           <div class="bot-table-row">
-            <div class="col-bot">TG</div>
+            <div class="col-bot">
+              <div class="bot-info">
+                <span class="bot-name">Telegram</span>
+                <span class="bot-pid">PID: {{ tgBotStatus.pid || '-' }}</span>
+              </div>
+            </div>
             <div class="col-status">
               <el-tag :type="getBotStatusType(tgBotStatus.status)" size="small">
                 {{ getBotStatusText(tgBotStatus.status) }}
               </el-tag>
             </div>
             <div class="col-uptime">{{ currentUptime.tg }}</div>
-            <div class="col-lastcheck">{{ tgBotStatus.last_check_time || '-' }}</div>
-            <div class="col-errors">{{ tgBotStatus.restart_count || 0 }}次</div>
             <div class="col-actions">
               <el-button 
                 type="primary"
-                link
-                :loading="tgActionLoading"
-                @click="handleTgBotAction('restart')"
+                size="small"
+                @click="showBotDetails"
               >
-                <el-icon><RefreshRight /></el-icon>
-              </el-button>
-            </div>
-          </div>
-          <div class="bot-table-row">
-            <div class="col-bot">WX</div>
-            <div class="col-status">
-              <el-tag :type="wxBotStatus.online ? 'success' : 'danger'" size="small">
-                {{ wxBotStatus.online ? '在线' : '离线' }}
-              </el-tag>
-            </div>
-            <div class="col-uptime">{{ currentUptime.wx }}</div>
-            <div class="col-lastcheck">{{ wxBotStatus.lastCheckTime || '-' }}</div>
-            <div class="col-errors">{{ wxBotStatus.restartCount || 0 }}次</div>
-            <div class="col-actions">
-              <el-button 
-                type="primary"
-                link
-                :loading="wxActionLoading"
-                @click="handleWxBotAction('restart')"
-              >
-                <el-icon><RefreshRight /></el-icon>
+                <el-icon><InfoFilled /></el-icon>
+                详情
               </el-button>
             </div>
           </div>
@@ -153,21 +133,156 @@
       </el-card>
     </el-col>
   </el-row>
+
+  <!-- 机器人详情弹窗 -->
+  <el-dialog 
+    v-model="botDetailVisible" 
+    title="机器人详情" 
+    width="70%" 
+    class="bot-detail-dialog"
+    :close-on-click-modal="false"
+  >
+    <el-tabs v-model="currentTab" class="bot-detail-tabs">
+      <!-- 基础信息 -->
+      <el-tab-pane label="基础信息" name="info">
+        <div class="bot-info-panel">
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="机器人类型">
+              <el-tag type="primary">Telegram Bot</el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="运行状态">
+              <el-tag :type="getBotStatusType(tgBotStatus.status)">
+                {{ getBotStatusText(tgBotStatus.status) }}
+              </el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="进程ID">
+              <el-text type="info" style="font-family: monospace;">
+                {{ tgBotStatus.pid || '未知' }}
+              </el-text>
+            </el-descriptions-item>
+            <el-descriptions-item label="启动时间">
+              {{ tgBotStatus.start_time || '未知' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="运行时长">
+              <el-text type="success">{{ currentUptime.tg || '未知' }}</el-text>
+            </el-descriptions-item>
+            <el-descriptions-item label="重启次数">
+              <el-text :type="tgBotStatus.restart_count > 3 ? 'warning' : 'info'">
+                {{ tgBotStatus.restart_count || 0 }} 次
+              </el-text>
+            </el-descriptions-item>
+            <el-descriptions-item label="最后检查">
+              {{ tgBotStatus.last_check_time || '未知' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="操作">
+              <div class="dialog-actions">
+                <el-button 
+                  :type="getStartStopButtonType(tgBotStatus.status)"
+                  size="small"
+                  :loading="tgActionLoading"
+                  @click="handleTgBotAction(getStartStopAction(tgBotStatus.status))"
+                  :disabled="isActionDisabled(tgBotStatus.status)"
+                >
+                  <el-icon><component :is="getStartStopIcon(tgBotStatus.status)" /></el-icon>
+                  {{ getStartStopText(tgBotStatus.status) }}
+                </el-button>
+                <el-button 
+                  type="warning"
+                  size="small"
+                  :loading="tgActionLoading"
+                  @click="handleTgBotAction('restart')"
+                  :disabled="isRestartDisabled(tgBotStatus.status)"
+                >
+                  <el-icon><RefreshRight /></el-icon>
+                  重启
+                </el-button>
+              </div>
+            </el-descriptions-item>
+          </el-descriptions>
+        </div>
+      </el-tab-pane>
+
+      <!-- 历史消息 -->
+      <el-tab-pane label="历史消息" name="messages">
+        <div class="message-history-panel">
+          <div class="message-header">
+            <div class="message-stats">
+              <el-statistic title="总消息数" :value="messageHistory.length" />
+            </div>
+            <el-button 
+              type="primary" 
+              size="small"
+              :loading="messagesLoading"
+              @click="fetchMessageHistory"
+            >
+              <el-icon><Refresh /></el-icon>
+              刷新
+            </el-button>
+          </div>
+          
+          <div class="message-list" v-loading="messagesLoading">
+            <el-empty v-if="!messagesLoading && messageHistory.length === 0" description="暂无历史消息" />
+            <div 
+              v-else
+              v-for="(message, index) in messageHistory" 
+              :key="index"
+              class="message-item"
+            >
+              <div class="message-header-info">
+                <div class="message-type">
+                  <el-tag 
+                    :type="getMessageTypeTag(message.type).type" 
+                    size="small"
+                  >
+                    {{ getMessageTypeTag(message.type).text }}
+                  </el-tag>
+                </div>
+                <div class="message-time">
+                  {{ formatMessageTime(message.timestamp) }}
+                </div>
+              </div>
+              <div class="message-content">
+                <div class="message-details">
+                  <p v-if="message.wallet_address" class="message-wallet">
+                    <strong>钱包地址：</strong>
+                    <el-text type="info" style="font-family: monospace; font-size: 12px;">
+                      {{ message.wallet_address }}
+                    </el-text>
+                  </p>
+                  <p v-if="message.token_address" class="message-token">
+                    <strong>代币地址：</strong>
+                    <el-text type="primary" style="font-family: monospace; font-size: 12px;">
+                      {{ message.token_address }}
+                    </el-text>
+                  </p>
+                  <p v-if="message.amount" class="message-amount">
+                    <strong>金额：</strong>{{ message.amount }}
+                  </p>
+                  <p v-if="message.message" class="message-text">
+                    <strong>消息：</strong>{{ message.message }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-tab-pane>
+    </el-tabs>
+  </el-dialog>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { Search, User, Refresh, RefreshRight, ArrowRight } from '@element-plus/icons-vue'
+import { Search, User, Refresh, RefreshRight, ArrowRight, VideoPlay, VideoPause, InfoFilled } from '@element-plus/icons-vue'
 import useSettingsStore from '@/store/modules/settings'
 import { ElMessage } from 'element-plus'
-import { getDailyActivityStats, getTgBotStatus, getUserRange } from '@/api/crypto/caRecord'
+import { getDailyActivityStats, getTgBotStatus, getUserRange, restartTgBot, startTgBot, stopTgBot, getMessages } from '@/api/crypto/caRecord'
 
 const settingsStore = useSettingsStore()
 
 // 为每个卡片添加独立的loading状态
 const platformLoading = ref(false)
 const botLoading = ref(false)
-const wxBotLoading = ref(false)
 
 // 数据统计
 const queryCount = ref(0)
@@ -179,13 +294,7 @@ const tgBotStatus = ref({
   start_time: '-',
   last_check_time: '-'
 })
-const wxBotStatus = ref({
-  online: true,
-  pid: '-',
-  restartCount: 0,
-  startTime: '-',
-  lastCheckTime: '-'
-})
+
 
 // 告警统计数据
 const alertStats = ref({
@@ -207,7 +316,12 @@ const systemStatus = ref({
 
 // 操作相关的loading状态
 const tgActionLoading = ref(false)
-const wxActionLoading = ref(false)
+
+// 弹窗相关状态
+const botDetailVisible = ref(false)
+const messagesLoading = ref(false)
+const messageHistory = ref([])
+const currentTab = ref('info')
 
 // 添加用户排行相关的状态
 const rankLoading = ref(false)
@@ -245,45 +359,189 @@ const formatUptime = (startTimeStr) => {
 // 添加自动更新运行时长的功能
 const uptimeTimer = ref(null)
 const currentUptime = ref({
-  tg: '-',
-  wx: '-'
+  tg: '-'
 })
 
 // 更新运行时长显示
 const updateUptime = () => {
   currentUptime.value.tg = formatUptime(tgBotStatus.value.start_time)
-  currentUptime.value.wx = formatUptime(wxBotStatus.value.startTime)
 }
 
 // 处理TG机器人操作
 const handleTgBotAction = async (action) => {
+  // 检查是否有PID
+  if (!tgBotStatus.value.pid || tgBotStatus.value.pid === '-') {
+    ElMessage.error('无法获取机器人PID，请先刷新状态')
+    return
+  }
+
   tgActionLoading.value = true
   try {
-    // 这里添加实际的API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    ElMessage.success(`TG机器人${action === 'restart' ? '重启' : '停止'}成功`)
-    fetchBotStatus()
+    let response
+    const pid = tgBotStatus.value.pid
+    
+    switch (action) {
+      case 'restart':
+        response = await restartTgBot(pid)
+        break
+      case 'start':
+        response = await startTgBot(pid)
+        break
+      case 'stop':
+        response = await stopTgBot(pid)
+        break
+      default:
+        throw new Error('不支持的操作类型')
+    }
+    
+    if (response.success || response.code === 200) {
+      ElMessage.success(response.message || response.msg || `TG机器人${getActionText(action)}成功`)
+      // 重新获取机器人状态
+      await fetchBotStatus()
+    } else {
+      throw new Error(response.message || response.msg || `TG机器人${getActionText(action)}失败`)
+    }
   } catch (error) {
-    ElMessage.error(`TG机器人${action === 'restart' ? '重启' : '停止'}失败`)
+    console.error('TG机器人操作失败:', error)
+    ElMessage.error(error.message || `TG机器人${getActionText(action)}失败`)
   } finally {
     tgActionLoading.value = false
   }
 }
 
-// 处理微信机器人操作
-const handleWxBotAction = async (action) => {
-  wxActionLoading.value = true
-  try {
-    // 这里添加实际的API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    ElMessage.success(`微信机器人${action === 'restart' ? '重启' : '停止'}成功`)
-    fetchWxBotStatus()
-  } catch (error) {
-    ElMessage.error(`微信机器人${action === 'restart' ? '重启' : '停止'}失败`)
-  } finally {
-    wxActionLoading.value = false
+// 获取操作文本
+const getActionText = (action) => {
+  switch (action) {
+    case 'restart': return '重启'
+    case 'start': return '启动'
+    case 'stop': return '停止'
+    default: return '操作'
   }
 }
+
+// 根据机器人状态获取启动/停止按钮的类型
+const getStartStopButtonType = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'running':
+      return 'danger'  // 运行中显示停止按钮（红色）
+    case 'stopped':
+    case 'error':
+      return 'success' // 停止状态显示启动按钮（绿色）
+    default:
+      return 'primary'
+  }
+}
+
+// 根据机器人状态获取启动/停止按钮的操作
+const getStartStopAction = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'running':
+      return 'stop'    // 运行中显示停止操作
+    case 'stopped':
+    case 'error':
+      return 'start'   // 停止状态显示启动操作
+    default:
+      return 'start'
+  }
+}
+
+// 根据机器人状态获取启动/停止按钮的文本
+const getStartStopText = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'running':
+      return '停止'
+    case 'stopped':
+    case 'error':
+      return '启动'
+    default:
+      return '启动'
+  }
+}
+
+// 根据机器人状态获取启动/停止按钮的图标
+const getStartStopIcon = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'running':
+      return VideoPause  // 运行中显示暂停图标
+    case 'stopped':
+    case 'error':
+      return VideoPlay   // 停止状态显示播放图标
+    default:
+      return VideoPlay
+  }
+}
+
+// 判断启动/停止按钮是否禁用
+const isActionDisabled = (status) => {
+  // 在启动中、重启中等过渡状态时禁用按钮
+  return ['starting', 'stopping', 'restarting'].includes(status?.toLowerCase())
+}
+
+// 判断重启按钮是否禁用
+const isRestartDisabled = (status) => {
+  // 在任何过渡状态时禁用重启按钮
+  return ['starting', 'stopping', 'restarting'].includes(status?.toLowerCase())
+}
+
+// 显示机器人详情
+const showBotDetails = () => {
+  botDetailVisible.value = true
+  currentTab.value = 'info'
+  // 打开弹窗时自动加载历史消息
+  fetchMessageHistory()
+}
+
+// 获取历史消息
+const fetchMessageHistory = async () => {
+  messagesLoading.value = true
+  try {
+    const res = await getMessages({
+      limit: 100,
+      offset: 0
+    })
+    
+    if (res.code === 200 && res.data) {
+      messageHistory.value = res.data.transactions || []
+    } else {
+      ElMessage.warning('获取历史消息失败: ' + (res.msg || '未知错误'))
+      messageHistory.value = []
+    }
+  } catch (error) {
+    console.error('获取历史消息失败:', error)
+    ElMessage.error('获取历史消息异常，请检查网络连接')
+    messageHistory.value = []
+  } finally {
+    messagesLoading.value = false
+  }
+}
+
+// 格式化消息时间
+const formatMessageTime = (timestamp) => {
+  if (!timestamp) return '-'
+  const date = new Date(timestamp)
+  if (isNaN(date.getTime())) return '-'
+  
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+}
+
+// 获取消息类型标签
+const getMessageTypeTag = (type) => {
+  switch (type) {
+    case 'buy': return { type: 'success', text: '买入' }
+    case 'sell': return { type: 'danger', text: '卖出' }
+    case 'query': return { type: 'info', text: '查询' }
+    default: return { type: 'warning', text: '其他' }
+  }
+}
+
+
 
 // 添加API请求方法 - 获取每日统计数据
 const fetchDailyStats = async () => {
@@ -369,34 +627,7 @@ const formatDateTime = (date) => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 }
 
-// 修改微信机器人状态的模拟数据
-const fetchWxBotStatus = async () => {
-  wxBotLoading.value = true
-  try {
-    // 这里添加实际的API调用
-    // 模拟数据更新
-    setTimeout(() => {
-      wxBotStatus.value = {
-        online: true,
-        pid: '12345',
-        restartCount: Math.floor(Math.random() * 5),
-        startTime: '2025-05-24 08:30:00',
-        lastCheckTime: formatDateTime(new Date())
-      }
-      wxBotLoading.value = false
-    }, 600)
-  } catch (error) {
-    wxBotStatus.value = {
-      online: false,
-      pid: '-',
-      restartCount: 0,
-      startTime: '-',
-      lastCheckTime: '-'
-    }
-    ElMessage.error('获取微信机器人状态异常')
-    wxBotLoading.value = false
-  }
-}
+
 
 // 更新TG机器人状态的模拟数据格式
 const fetchBotStatus = async () => {
@@ -438,7 +669,6 @@ const fetchBotStatus = async () => {
 const refreshAllData = () => {
   fetchDailyStats()
   fetchBotStatus()
-  fetchWxBotStatus()
 }
 
 // 添加定时刷新
@@ -484,11 +714,9 @@ const top3Users = computed(() => {
 
 onMounted(() => {
   fetchBotStatus()
-  fetchWxBotStatus()
   // 每60秒更新一次状态
   statusTimer = setInterval(() => {
     fetchBotStatus()
-    fetchWxBotStatus()
   }, 60000)
 
   // 组件挂载时获取数据
@@ -930,14 +1158,13 @@ onMounted(() => {
 }
 
 .col-bot {
-  width: 80px;
+  width: 150px;
   flex-shrink: 0;
-  text-align: center;
-  padding-left: 20px;
+  padding-left: 16px;
 }
 
 .col-status {
-  width: 80px;
+  width: 100px;
   flex-shrink: 0;
   text-align: center;
 }
@@ -948,23 +1175,41 @@ onMounted(() => {
   text-align: center;
 }
 
-.col-lastcheck {
-  width: 160px;
-  flex-shrink: 0;
-  text-align: center;
-}
-
-.col-errors {
-  width: 80px;
-  flex-shrink: 0;
-  text-align: center;
-}
-
 .col-actions {
   width: 80px;
   flex-shrink: 0;
   text-align: center;
-  padding-right: 20px;
+  padding-right: 16px;
+  
+  .el-button {
+    margin: 0;
+    font-size: 12px;
+    
+    .el-icon {
+      font-size: 12px;
+      margin-right: 3px;
+    }
+  }
+}
+
+/* 新增的机器人信息样式 */
+.bot-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  
+  .bot-name {
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+    font-size: 14px;
+  }
+  
+  .bot-pid {
+    font-size: 11px;
+    color: var(--el-text-color-secondary);
+    font-family: 'Consolas', 'Monaco', monospace;
+  }
 }
 
 :deep(.el-button--link) {
@@ -1077,6 +1322,142 @@ onMounted(() => {
   height: 24px;
 }
 
+/* 弹窗样式 */
+.bot-detail-dialog {
+  .el-dialog__body {
+    padding: 10px 20px 20px;
+  }
+}
+
+.bot-detail-tabs {
+  .el-tabs__content {
+    padding-top: 15px;
+  }
+}
+
+.bot-info-panel {
+  .el-descriptions {
+    .el-descriptions__body {
+      .el-descriptions__table {
+        .el-descriptions__cell {
+          padding: 12px 16px;
+        }
+      }
+    }
+  }
+  
+  .dialog-actions {
+    display: flex;
+    gap: 8px;
+    
+    .el-button {
+      margin: 0;
+    }
+  }
+}
+
+.message-history-panel {
+  .message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background-color: var(--el-fill-color-light);
+    border-radius: 6px;
+    
+    .message-stats {
+      .el-statistic {
+        .el-statistic__content {
+          font-size: 16px;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+  
+  .message-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 6px;
+    
+    .message-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--el-border-color-lighter);
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: var(--el-fill-color-light);
+      }
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      .message-header-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        
+        .message-time {
+          font-size: 12px;
+          color: var(--el-text-color-secondary);
+          font-family: monospace;
+        }
+      }
+      
+      .message-content {
+        .message-details {
+          p {
+            margin: 4px 0;
+            font-size: 13px;
+            line-height: 1.4;
+            
+            strong {
+              color: var(--el-text-color-primary);
+              margin-right: 8px;
+            }
+          }
+          
+          .message-wallet, .message-token {
+            .el-text {
+              word-break: break-all;
+            }
+          }
+          
+          .message-text {
+            background-color: var(--el-fill-color-lighter);
+            padding: 8px 12px;
+            border-radius: 4px;
+            border-left: 3px solid var(--el-color-primary);
+          }
+        }
+      }
+    }
+  }
+}
+
+/* 滚动条样式 */
+.message-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.message-list::-webkit-scrollbar-track {
+  background: var(--el-fill-color-lighter);
+  border-radius: 3px;
+}
+
+.message-list::-webkit-scrollbar-thumb {
+  background: var(--el-border-color);
+  border-radius: 3px;
+  
+  &:hover {
+    background: var(--el-border-color-dark);
+  }
+}
+
 /* 暗黑模式适配 */
 :global(html.dark) {
   .rank-number {
@@ -1090,6 +1471,74 @@ onMounted(() => {
     
     &.rank-3 {
       background-color: rgba(205, 127, 50, 0.8) !important;
+    }
+  }
+  
+  /* 机器人信息暗黑模式适配 */
+  .bot-info {
+    .bot-name {
+      color: #ffffff !important;
+    }
+    
+    .bot-pid {
+      color: #a8a8a8 !important;
+    }
+  }
+  
+  /* 表格头部暗黑模式 */
+  .bot-table-header {
+    background-color: #141414 !important;
+    border-color: #434343 !important;
+    color: #ffffff !important;
+  }
+  
+  /* 表格行暗黑模式 */
+  .bot-table-row {
+    border-color: #434343 !important;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+  }
+  
+  /* 弹窗暗黑模式 */
+  .bot-detail-dialog {
+    .el-dialog {
+      background-color: #1d1e1f !important;
+      
+      .el-dialog__header {
+        background-color: #1d1e1f !important;
+        border-color: #434343 !important;
+      }
+      
+      .el-dialog__body {
+        background-color: #1d1e1f !important;
+      }
+    }
+  }
+  
+  .message-history-panel {
+    .message-header {
+      background-color: #141414 !important;
+      border-color: #434343 !important;
+    }
+    
+    .message-list {
+      border-color: #434343 !important;
+      background-color: #1d1e1f !important;
+      
+      .message-item {
+        border-color: #434343 !important;
+        
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        
+        .message-content .message-details .message-text {
+          background-color: #141414 !important;
+          border-left-color: #409EFF !important;
+        }
+      }
     }
   }
 }
