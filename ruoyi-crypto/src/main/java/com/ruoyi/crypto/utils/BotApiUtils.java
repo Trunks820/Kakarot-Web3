@@ -17,7 +17,7 @@ public class BotApiUtils {
             headers.put("Authorization", "Bearer abcdefg");
             String res = HttpUtils.sendGet(url, headers);
             if(!JSONUtil.isJson(res)){
-                return AjaxResult.error("机器人请求失败");
+                return AjaxResult.error("机器人请求失败：响应不是有效JSON");
             }
             JSONObject jsonObject = JSONUtil.parseObj(res);
             String msg = jsonObject.getStr("msg");
@@ -25,9 +25,9 @@ public class BotApiUtils {
             if(!"200".equals(code)){
                 return AjaxResult.error(msg);
             }
-            return AjaxResult.success(jsonObject.getJSONObject("data"));
+            return AjaxResult.success(jsonObject.get("data"));
         }catch (Exception e){
-            return AjaxResult.error("机器人请求异常");
+            return AjaxResult.error("机器人请求异常: " + e.getMessage());
         }
     }
 

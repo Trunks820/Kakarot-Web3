@@ -39,15 +39,14 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
     @Override
     public AjaxResult getBotStatus(String type) {
         String url = "http://tgalert-app:5000/api/status";
+//        String url = "http://108.160.135.74:5000/api/status";
         AjaxResult botApi = BotApiUtils.getBotApi(url);
         if(botApi.isError()){
             return botApi;
         }
 
         try {
-            // botApi.get("data") 获取到的是完整的JSON字符串
             String jsonString = botApi.get("data") + "";
-            
             // 移除可能的前后空白字符
             jsonString = jsonString.trim();
             
