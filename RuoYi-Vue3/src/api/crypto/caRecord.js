@@ -144,11 +144,4 @@ export function stopTgBot(name) {
   })
 }
 
-// 获取消息历史
-export function getMessages(params) {
-  return request({
-    url: '/api/messages',
-    method: 'get',
-    params: params
-  })
-}
+

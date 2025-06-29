@@ -420,7 +420,7 @@ const stopBot = async () => {
   }
 }
 
-// 状态判断方法（与DataSummary.vue保持一致）
+// 状态判断方法
 const getBotStatusType = (status) => {
   switch (status?.toLowerCase()) {
     case 'running':
@@ -626,5 +626,10 @@ onMounted(async () => {
       }
     }
   }
+}
+
+/* 暗黑模式适配 */
+:global(html.dark) {
+  
 }
 </style> 
