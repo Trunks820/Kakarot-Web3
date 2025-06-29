@@ -26,4 +26,5 @@ public interface CryptoIndexService {
 
     AjaxResult stopTgBot(String pid);
 
+    AjaxResult startAllTgBot();
 }

@@ -67,4 +67,10 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
         String url = "http://tgalert-app:5000/api/bot/" + pid + "/stop";
         return BotApiUtils.postBotApi(url);
     }
+
+    @Override
+    public AjaxResult startAllTgBot() {
+        String url = "http://tgalert-app:5000/api/bots/start_all";
+        return BotApiUtils.postBotApi(url);
+    }
 }

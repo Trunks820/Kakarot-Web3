@@ -86,11 +86,18 @@
 
     <!-- 机器人状态 -->
     <el-col :span="5">
-      <el-card class="data-card">
+      <el-card class="data-card clickable" @click="showBotDetails">
         <template #header>
           <div class="card-header">
-            <span>机器人状态</span>
-            <el-tag type="success" size="small">在线</el-tag>
+            <div class="header-left">
+              <span>机器人状态</span>
+              <el-button type="primary" size="small" @click.stop="showBotDetails" class="header-action-btn">
+                详情
+              </el-button>
+            </div>
+            <el-tag :type="botStats.isRunning ? 'success' : 'danger'" size="small">
+              {{ botStats.isRunning ? '在线' : '离线' }}
+            </el-tag>
           </div>
         </template>
         <div class="card-body">
@@ -99,7 +106,9 @@
               <el-icon><Service /></el-icon>
               <span>TG机器人</span>
             </div>
-            <h3 class="success">运行中</h3>
+            <h3 :class="botStats.isRunning ? 'success' : 'danger'">
+              {{ botStats.isRunning ? '运行中' : '已停止' }}
+            </h3>
           </div>
           <div class="stat-item">
             <div class="stat-label">
@@ -140,14 +149,76 @@
       </el-card>
     </el-col>
   </el-row>
+
+  <!-- 机器人详情弹窗 -->
+  <el-dialog 
+    v-model="botDialogVisible" 
+    title="机器人详情" 
+    width="600px"
+    :close-on-click-modal="false"
+  >
+    <div class="bot-details">
+      <div class="bot-info">
+        <h4>基础信息</h4>
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="状态">
+            <el-tag :type="getBotStatusType(botDetails.status)">
+              {{ getBotStatusText(botDetails.status) }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="PID">{{ botDetails.pid || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="运行时长">{{ botDetails.uptime }}</el-descriptions-item>
+          <el-descriptions-item label="启动时间">{{ botDetails.startTime || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="重启次数">{{ botDetails.restartCount || 0 }} 次</el-descriptions-item>
+          <el-descriptions-item label="最后检查">{{ botDetails.lastCheck }}</el-descriptions-item>
+        </el-descriptions>
+      </div>
+
+      <div class="bot-actions" style="margin-top: 20px;">
+        <h4>操作控制</h4>
+        <div class="action-buttons">
+          <el-button 
+            v-if="!botDetails.isRunning"
+            type="success" 
+            @click="startBot"
+            :loading="actionLoading"
+            icon="VideoPlay"
+          >
+            启动机器人
+          </el-button>
+          <el-button 
+            v-if="botDetails.isRunning"
+            type="warning" 
+            @click="restartBot"
+            :loading="actionLoading"
+            icon="RefreshRight"
+          >
+            重启机器人
+          </el-button>
+          <el-button 
+            v-if="botDetails.isRunning"
+            type="danger" 
+            @click="stopBot"
+            :loading="actionLoading"
+            icon="VideoPause"
+          >
+            停止机器人
+          </el-button>
+        </div>
+      </div>
+    </div>
+  </el-dialog>
 </template>
 
 <script setup name="EnhancedDataSummary">
 import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { 
   Warning, Clock, Monitor, TrendCharts, 
-  DataLine, Timer, Service, Cpu, Operation 
+  DataLine, Timer, Service, Cpu, Operation,
+  VideoPlay, VideoPause, RefreshRight
 } from '@element-plus/icons-vue'
+import { getTgBotStatus, restartTgBot, startTgBot, stopTgBot } from '@/api/crypto/caRecord'
 
 // 模拟数据
 const alertStats = ref({
@@ -166,7 +237,8 @@ const okxStats = ref({
 })
 
 const botStats = ref({
-  uptime: '2天15小时'
+  isRunning: false,
+  uptime: '-'
 })
 
 const systemStats = ref({
@@ -174,8 +246,195 @@ const systemStats = ref({
   memoryUsage: 67
 })
 
-// 模拟实时数据更新
-onMounted(() => {
+// 机器人详情弹窗
+const botDialogVisible = ref(false)
+const botDetails = ref({
+  isRunning: false,
+  pid: null,
+  uptime: '-',
+  lastCheck: '-',
+  status: 'unknown',
+  startTime: '-',
+  restartCount: 0
+})
+const actionLoading = ref(false)
+
+// 获取机器人状态
+const getBotStatus = async () => {
+  try {
+    const response = await getTgBotStatus()
+    if (response.code === 200 && response.data) {
+      const data = response.data
+      const isRunning = data.status?.toLowerCase() === 'running'
+      
+      botStats.value.isRunning = isRunning
+      botStats.value.uptime = calculateUptime(data.start_time) || '-'
+      
+      // 更新详情数据
+      botDetails.value = {
+        isRunning: isRunning,
+        pid: data.pid,
+        uptime: calculateUptime(data.start_time) || '-',
+        lastCheck: new Date().toLocaleString(),
+        status: data.status,
+        startTime: data.start_time,
+        restartCount: data.restart_count || 0
+      }
+    }
+  } catch (error) {
+    console.error('获取机器人状态失败:', error)
+    // 使用模拟数据作为后备
+    botStats.value.isRunning = false
+    botStats.value.uptime = '-'
+  }
+}
+
+// 计算运行时长
+const calculateUptime = (startTime) => {
+  if (!startTime) return '-'
+  
+  try {
+    const start = new Date(startTime)
+    const now = new Date()
+    const diff = now - start
+    
+    if (diff < 0) return '-'
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    
+    if (days > 0) {
+      return `${days}天${hours}小时`
+    } else if (hours > 0) {
+      return `${hours}小时${minutes}分钟`
+    } else {
+      return `${minutes}分钟`
+    }
+  } catch (error) {
+    return '-'
+  }
+}
+
+// 显示机器人详情
+const showBotDetails = async () => {
+  await getBotStatus() // 获取最新状态
+  botDialogVisible.value = true
+}
+
+// 启动机器人
+const startBot = async () => {
+  if (!botDetails.value.pid) {
+    ElMessage.error('PID不存在，无法启动')
+    return
+  }
+  
+  actionLoading.value = true
+  try {
+    const response = await startTgBot(botDetails.value.pid)
+    
+    if (response.code === 200) {
+      ElMessage.success('机器人启动成功')
+      await getBotStatus() // 刷新状态
+    } else {
+      ElMessage.error(response.msg || '启动失败')
+    }
+  } catch (error) {
+    ElMessage.error('启动失败：' + error.message)
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+// 重启机器人
+const restartBot = async () => {
+  if (!botDetails.value.pid) {
+    ElMessage.error('PID不存在，无法重启')
+    return
+  }
+  
+  actionLoading.value = true
+  try {
+    const response = await restartTgBot(botDetails.value.pid)
+    
+    if (response.code === 200) {
+      ElMessage.success('机器人重启成功')
+      await getBotStatus() // 刷新状态
+    } else {
+      ElMessage.error(response.msg || '重启失败')
+    }
+  } catch (error) {
+    ElMessage.error('重启失败：' + error.message)
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+// 停止机器人
+const stopBot = async () => {
+  if (!botDetails.value.pid) {
+    ElMessage.error('PID不存在，无法停止')
+    return
+  }
+  
+  actionLoading.value = true
+  try {
+    const response = await stopTgBot(botDetails.value.pid)
+    
+    if (response.code === 200) {
+      ElMessage.success('机器人停止成功')
+      await getBotStatus() // 刷新状态
+    } else {
+      ElMessage.error(response.msg || '停止失败')
+    }
+  } catch (error) {
+    ElMessage.error('停止失败：' + error.message)
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+// 状态判断方法（与DataSummary.vue保持一致）
+const getBotStatusType = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'running':
+      return 'success'
+    case 'starting':
+      return 'info'
+    case 'restarting':
+      return 'warning'
+    case 'stopped':
+      return 'danger'
+    case 'error':
+      return 'danger'
+    default:
+      return 'info'
+  }
+}
+
+const getBotStatusText = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'running':
+      return '运行中'
+    case 'starting':
+      return '启动中'
+    case 'restarting':
+      return '重启中'
+    case 'stopped':
+      return '已停止'
+    case 'error':
+      return '错误'
+    default:
+      return '未知'
+  }
+}
+
+// 初始化和定时更新
+onMounted(async () => {
+  // 获取初始机器人状态
+  await getBotStatus()
+  
+  // 模拟实时数据更新
   setInterval(() => {
     // 随机更新一些数据，模拟实时变化
     if (Math.random() > 0.8) {
@@ -187,6 +446,11 @@ onMounted(() => {
     systemStats.value.cpuUsage = 40 + Math.floor(Math.random() * 20)
     systemStats.value.memoryUsage = 60 + Math.floor(Math.random() * 15)
   }, 5000)
+  
+  // 定时获取机器人状态
+  setInterval(async () => {
+    await getBotStatus()
+  }, 30000) // 每30秒更新一次机器人状态
 })
 </script>
 
@@ -195,10 +459,19 @@ onMounted(() => {
   height: 140px;
   border: 1px solid var(--el-border-color-light);
   transition: all 0.3s ease;
+  position: relative;
 
   &:hover {
     border-color: var(--el-color-primary);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &.clickable {
+    cursor: pointer;
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
   }
 
   :deep(.el-card__header) {
@@ -211,10 +484,23 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     span {
       font-size: 14px;
       color: var(--el-text-color-primary);
       font-weight: 600;
+    }
+
+    .header-action-btn {
+      font-size: 10px;
+      padding: 2px 6px;
+      height: 20px;
+      border-radius: 10px;
     }
 
     .el-tag {
@@ -276,6 +562,25 @@ onMounted(() => {
           color: var(--el-color-primary);
         }
       }
+    }
+  }
+}
+
+/* 机器人详情弹窗样式 */
+.bot-details {
+  h4 {
+    margin: 0 0 12px 0;
+    color: var(--el-text-color-primary);
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 12px;
+    
+    .el-button {
+      flex: 1;
     }
   }
 }

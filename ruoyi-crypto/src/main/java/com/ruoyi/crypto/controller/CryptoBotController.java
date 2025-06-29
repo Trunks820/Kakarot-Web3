@@ -54,4 +54,9 @@ public class CryptoBotController extends BaseController {
          return cryptoIndexService.stopTgBot(pid);
      }
 
+     @GetMapping("/tg/startAll")
+    public AjaxResult startAllTgBot() {
+         return cryptoIndexService.startAllTgBot();
+     }
+
 } 
