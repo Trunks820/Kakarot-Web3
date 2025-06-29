@@ -21,6 +21,8 @@ COPY . .
 # 复制前端构建结果到静态资源目录
 COPY --from=frontend-builder /app/frontend/dist ./ruoyi-admin/src/main/resources/static/
 
+# Maven构建Java项目
+RUN mvn clean package -DskipTests
 
 # =================
 # 第二阶段运行镜像
