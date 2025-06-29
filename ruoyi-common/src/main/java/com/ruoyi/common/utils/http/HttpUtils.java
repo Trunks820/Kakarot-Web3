@@ -264,6 +264,56 @@ public class HttpUtils
         return result.toString();
     }
 
+    public static String sendPost(String url, Map<String, String> headers) {
+        PrintWriter out = null;
+        BufferedReader in = null;
+        StringBuilder result = new StringBuilder();
+        try {
+            log.info("sendPost - {}", url);
+            URL realUrl = new URL(url);
+            URLConnection conn = realUrl.openConnection();
+
+            // 默认请求头
+            conn.setRequestProperty("accept", "*/*");
+            conn.setRequestProperty("connection", "Keep-Alive");
+            conn.setRequestProperty("user-agent", "Mozilla/5.0");
+
+            // 自定义请求头
+            if (headers != null) {
+                for (Map.Entry<String, String> entry : headers.entrySet()) {
+                    conn.setRequestProperty(entry.getKey(), entry.getValue());
+                }
+            }
+
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+
+            // 发送一个空的 POST 请求体（避免 411 Length Required）
+            out = new PrintWriter(conn.getOutputStream());
+            out.print("");  // 空 body
+            out.flush();
+
+            in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+            String line;
+            while ((line = in.readLine()) != null) {
+                result.append(line);
+            }
+
+            log.info("recv - {}", result);
+        } catch (Exception e) {
+            log.error("调用 sendPost 异常, url=" + url, e);
+        } finally {
+            try {
+                if (out != null) out.close();
+                if (in != null) in.close();
+            } catch (IOException ex) {
+                log.error("关闭流异常", ex);
+            }
+        }
+        return result.toString();
+    }
+
+
     public static String sendSSLPost(String url, String param)
     {
         return sendSSLPost(url, param, MediaType.APPLICATION_FORM_URLENCODED_VALUE);

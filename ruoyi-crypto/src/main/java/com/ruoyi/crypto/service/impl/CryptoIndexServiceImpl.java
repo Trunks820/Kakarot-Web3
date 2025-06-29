@@ -38,39 +38,75 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
 
     @Override
     public AjaxResult getBotStatus(String type) {
-        String url = "http://tgalert-app:5000/api/status";
+        String url = "http://108.160.135.74:5000/api/status";
         AjaxResult botApi = BotApiUtils.getBotApi(url);
         if(botApi.isError()){
             return botApi;
         }
 
-        JSONObject jsonObject = JSONUtil.parseObj(botApi.get("data") + "");
-        JSONObject data = jsonObject.getJSONObject("data");
-        JSONObject telegram = data.getJSONObject("bots").getJSONObject(type);
-        return AjaxResult.success(telegram);
+        try {
+            // botApi.get("data") 获取到的是完整的JSON字符串
+            String jsonString = botApi.get("data") + "";
+            
+            // 移除可能的前后空白字符
+            jsonString = jsonString.trim();
+            
+            // 解析完整的Python API响应
+            JSONObject fullResponse = JSONUtil.parseObj(jsonString);
+
+            // 获取bots信息
+            JSONObject bots = fullResponse.getJSONObject("bots");
+            
+            // 获取指定类型的机器人信息
+            JSONObject botInfo = bots.getJSONObject(type);
+            botInfo.put("name", type);
+            return AjaxResult.success(botInfo);
+        } catch (Exception e) {
+            return AjaxResult.error("解析机器人状态数据失败：" + e.getMessage());
+        }
     }
 
     @Override
-    public AjaxResult restartTgBot(String pid) {
-        String url = "http://tgalert-app:5000/api/bot/" + pid + "/restart";
-        return BotApiUtils.postBotApi(url);
+    public AjaxResult restartTgBot(String name) {
+        String url = "http://108.160.135.74:5000/api/bot/" + name + "/restart";
+        AjaxResult ajaxResult = BotApiUtils.postBotApi(url);
+        if(ajaxResult.isError()){
+            return ajaxResult;
+        } else{
+            return AjaxResult.success();
+        }
     }
 
     @Override
-    public AjaxResult startTgBot(String pid) {
-        String url = "http://tgalert-app:5000/api/bot/" + pid + "/start";
-        return BotApiUtils.postBotApi(url);
+    public AjaxResult startTgBot(String name) {
+        String url = "http://108.160.135.74:5000/api/bot/" + name + "/start";
+        AjaxResult ajaxResult = BotApiUtils.postBotApi(url);
+        if(ajaxResult.isError()){
+            return ajaxResult;
+        } else{
+            return AjaxResult.success();
+        }
     }
 
     @Override
-    public AjaxResult stopTgBot(String pid) {
-        String url = "http://tgalert-app:5000/api/bot/" + pid + "/stop";
-        return BotApiUtils.postBotApi(url);
+    public AjaxResult stopTgBot(String name) {
+        String url = "http://108.160.135.74:5000/api/bot/" + name + "/stop";
+        AjaxResult ajaxResult = BotApiUtils.postBotApi(url);
+        if(ajaxResult.isError()){
+            return ajaxResult;
+        } else{
+            return AjaxResult.success();
+        }
     }
 
     @Override
     public AjaxResult startAllTgBot() {
-        String url = "http://tgalert-app:5000/api/bots/start_all";
-        return BotApiUtils.postBotApi(url);
+        String url = "http://108.160.135.74:5000/api/bots/start_all";
+        AjaxResult ajaxResult = BotApiUtils.postBotApi(url);
+        if(ajaxResult.isError()){
+            return ajaxResult;
+        } else{
+            return AjaxResult.success();
+        }
     }
 }

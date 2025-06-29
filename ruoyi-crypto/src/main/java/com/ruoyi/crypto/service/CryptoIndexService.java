@@ -20,11 +20,11 @@ public interface CryptoIndexService {
 
     AjaxResult getBotStatus(String type);
 
-    AjaxResult restartTgBot(String pid);
+    AjaxResult restartTgBot(String name);
 
-    AjaxResult startTgBot(String pid);
+    AjaxResult startTgBot(String name);
 
-    AjaxResult stopTgBot(String pid);
+    AjaxResult stopTgBot(String name);
 
     AjaxResult startAllTgBot();
 }

@@ -166,7 +166,7 @@
               {{ getBotStatusText(botDetails.status) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="PID">{{ botDetails.pid || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="机器人名称">{{ botDetails.name || '-' }}</el-descriptions-item>
           <el-descriptions-item label="运行时长">{{ botDetails.uptime }}</el-descriptions-item>
           <el-descriptions-item label="启动时间">{{ botDetails.startTime || '-' }}</el-descriptions-item>
           <el-descriptions-item label="重启次数">{{ botDetails.restartCount || 0 }} 次</el-descriptions-item>
@@ -251,6 +251,7 @@ const botDialogVisible = ref(false)
 const botDetails = ref({
   isRunning: false,
   pid: null,
+  name: null,
   uptime: '-',
   lastCheck: '-',
   status: 'unknown',
@@ -263,18 +264,22 @@ const actionLoading = ref(false)
 const getBotStatus = async () => {
   try {
     const response = await getTgBotStatus()
+    console.log('机器人状态API响应:', response)
+    
     if (response.code === 200 && response.data) {
       const data = response.data
       const isRunning = data.status?.toLowerCase() === 'running'
-      
+      const uptime = calculateUptime(data.start_time)
+
       botStats.value.isRunning = isRunning
-      botStats.value.uptime = calculateUptime(data.start_time) || '-'
+      botStats.value.uptime = uptime || '-'
       
       // 更新详情数据
       botDetails.value = {
         isRunning: isRunning,
         pid: data.pid,
-        uptime: calculateUptime(data.start_time) || '-',
+        name: data.name,
+        uptime: uptime || '-',
         lastCheck: new Date().toLocaleString(),
         status: data.status,
         startTime: data.start_time,
@@ -282,7 +287,6 @@ const getBotStatus = async () => {
       }
     }
   } catch (error) {
-    console.error('获取机器人状态失败:', error)
     // 使用模拟数据作为后备
     botStats.value.isRunning = false
     botStats.value.uptime = '-'
@@ -294,7 +298,22 @@ const calculateUptime = (startTime) => {
   if (!startTime) return '-'
   
   try {
-    const start = new Date(startTime)
+    // 处理不同的日期格式
+    let start
+    if (typeof startTime === 'string') {
+      // 将 "2025-06-29 11:55:58" 格式转换为 "2025-06-29T11:55:58"
+      const isoTime = startTime.replace(' ', 'T')
+      start = new Date(isoTime)
+    } else {
+      start = new Date(startTime)
+    }
+    
+    // 检查日期是否有效
+    if (isNaN(start.getTime())) {
+      console.warn('无效的开始时间格式:', startTime)
+      return '-'
+    }
+    
     const now = new Date()
     const diff = now - start
     
@@ -305,13 +324,16 @@ const calculateUptime = (startTime) => {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
     
     if (days > 0) {
-      return `${days}天${hours}小时`
+      return `${days}天${hours}小时${minutes}分钟`
     } else if (hours > 0) {
       return `${hours}小时${minutes}分钟`
-    } else {
+    } else if (minutes > 0) {
       return `${minutes}分钟`
+    } else {
+      return '不到1分钟'
     }
   } catch (error) {
+    console.error('计算运行时长失败:', error)
     return '-'
   }
 }
@@ -324,14 +346,14 @@ const showBotDetails = async () => {
 
 // 启动机器人
 const startBot = async () => {
-  if (!botDetails.value.pid) {
-    ElMessage.error('PID不存在，无法启动')
+  if (!botDetails.value.name) {
+    ElMessage.error('机器人名称不存在，无法启动')
     return
   }
   
   actionLoading.value = true
   try {
-    const response = await startTgBot(botDetails.value.pid)
+    const response = await startTgBot(botDetails.value.name)
     
     if (response.code === 200) {
       ElMessage.success('机器人启动成功')
@@ -348,14 +370,18 @@ const startBot = async () => {
 
 // 重启机器人
 const restartBot = async () => {
-  if (!botDetails.value.pid) {
-    ElMessage.error('PID不存在，无法重启')
+  console.log('重启机器人 - botDetails.value:', botDetails.value)
+  console.log('重启机器人 - name值:', botDetails.value.name)
+  
+  if (!botDetails.value.name) {
+    ElMessage.error('机器人名称不存在，无法重启')
     return
   }
   
   actionLoading.value = true
   try {
-    const response = await restartTgBot(botDetails.value.pid)
+    console.log('调用重启API，传递name:', botDetails.value.name)
+    const response = await restartTgBot(botDetails.value.name)
     
     if (response.code === 200) {
       ElMessage.success('机器人重启成功')
@@ -372,14 +398,14 @@ const restartBot = async () => {
 
 // 停止机器人
 const stopBot = async () => {
-  if (!botDetails.value.pid) {
-    ElMessage.error('PID不存在，无法停止')
+  if (!botDetails.value.name) {
+    ElMessage.error('机器人名称不存在，无法停止')
     return
   }
   
   actionLoading.value = true
   try {
-    const response = await stopTgBot(botDetails.value.pid)
+    const response = await stopTgBot(botDetails.value.name)
     
     if (response.code === 200) {
       ElMessage.success('机器人停止成功')

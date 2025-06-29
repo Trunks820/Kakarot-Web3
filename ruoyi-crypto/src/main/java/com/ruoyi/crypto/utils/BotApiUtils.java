@@ -25,7 +25,7 @@ public class BotApiUtils {
             if(!"200".equals(code)){
                 return AjaxResult.error(msg);
             }
-            return AjaxResult.success(res);
+            return AjaxResult.success(jsonObject.getJSONObject("data"));
         }catch (Exception e){
             return AjaxResult.error("机器人请求异常");
         }
@@ -35,7 +35,7 @@ public class BotApiUtils {
         try{
             Map<String, String> headers = new HashMap<>();
             headers.put("Authorization", "Bearer abcdefg");
-            String res = HttpUtils.sendGet(url, headers);
+            String res = HttpUtils.sendPost(url, headers);
             if(!JSONUtil.isJson(res)){
                 return AjaxResult.error("机器人请求失败");
             }
@@ -45,7 +45,7 @@ public class BotApiUtils {
             if(!"200".equals(code)){
                 return AjaxResult.error(msg);
             }
-            return AjaxResult.success(res);
+            return AjaxResult.success(jsonObject.getJSONObject("data"));
         }catch (Exception e){
             return AjaxResult.error("机器人请求异常");
         }

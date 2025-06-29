@@ -118,29 +118,29 @@ export function getTgBotStatus() {
 }
 
 // 重启TG机器人
-export function restartTgBot(pid) {
+export function restartTgBot(name) {
   return request({
     url: '/crypto/bot/tg/restart',
     method: 'get',
-    params: { pid: pid }
+    params: { name: name }
   })
 }
 
 // 启动TG机器人
-export function startTgBot(pid) {
+export function startTgBot(name) {
   return request({
     url: '/crypto/bot/tg/start',
     method: 'get',
-    params: { pid: pid }
+    params: { name: name }
   })
 }
 
 // 停止TG机器人
-export function stopTgBot(pid) {
+export function stopTgBot(name) {
   return request({
     url: '/crypto/bot/tg/stop',
     method: 'get',
-    params: { pid: pid }
+    params: { name: name }
   })
 }
 
