@@ -38,7 +38,7 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
 
     @Override
     public AjaxResult getBotStatus(String type) {
-        String url = "http://108.160.135.74:5000/api/status";
+        String url = "http://tgalert-app:5000/api/status";
         AjaxResult botApi = BotApiUtils.getBotApi(url);
         if(botApi.isError()){
             return botApi;
@@ -68,7 +68,7 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
 
     @Override
     public AjaxResult restartTgBot(String name) {
-        String url = "http://108.160.135.74:5000/api/bot/" + name + "/restart";
+        String url = "http://tgalert-app:5000/api/bot/" + name + "/restart";
         AjaxResult ajaxResult = BotApiUtils.postBotApi(url);
         if(ajaxResult.isError()){
             return ajaxResult;
@@ -79,7 +79,7 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
 
     @Override
     public AjaxResult startTgBot(String name) {
-        String url = "http://108.160.135.74:5000/api/bot/" + name + "/start";
+        String url = "http://tgalert-app:5000/api/bot/" + name + "/start";
         AjaxResult ajaxResult = BotApiUtils.postBotApi(url);
         if(ajaxResult.isError()){
             return ajaxResult;
@@ -90,7 +90,7 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
 
     @Override
     public AjaxResult stopTgBot(String name) {
-        String url = "http://108.160.135.74:5000/api/bot/" + name + "/stop";
+        String url = "http://tgalert-app:5000/api/bot/" + name + "/stop";
         AjaxResult ajaxResult = BotApiUtils.postBotApi(url);
         if(ajaxResult.isError()){
             return ajaxResult;
@@ -101,7 +101,7 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
 
     @Override
     public AjaxResult startAllTgBot() {
-        String url = "http://108.160.135.74:5000/api/bots/start_all";
+        String url = "http://tgalert-app:5000/api/bots/start_all";
         AjaxResult ajaxResult = BotApiUtils.postBotApi(url);
         if(ajaxResult.isError()){
             return ajaxResult;
