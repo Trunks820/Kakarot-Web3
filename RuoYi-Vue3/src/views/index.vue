@@ -4,17 +4,17 @@
     <EnhancedDataSummary />
 
     <!-- 中间内容区域 - 三栏布局 -->
-    <el-row :gutter="16" class="mt20">
+    <el-row :gutter="16" class="mt20 main-content-row">
       <!-- 预警中心 -->
-      <el-col :span="8">
+      <el-col :span="8" :xs="24" class="content-col">
         <AlertPanel />
       </el-col>
       <!-- 监控代币 -->
-      <el-col :span="8">
+      <el-col :span="8" :xs="24" class="content-col">
         <MonitorTokens />
       </el-col>
       <!-- 热门CA -->
-      <el-col :span="8">
+      <el-col :span="8" :xs="24" class="content-col">
         <PopularCA />
       </el-col>
     </el-row>
@@ -67,11 +67,44 @@ onMounted(() => {
   }
 }
 
+/* 移动端适配 */
 @media (max-width: 768px) {
   .home {
-    .el-row {
-      .el-col {
+    padding: 10px;
+    
+    .mt20 {
+      margin-top: 16px;
+    }
+    
+    .main-content-row {
+      .content-col {
         margin-bottom: 16px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+      
+      // 移动端减少间距
+      .el-row {
+        --el-row-gutter: 8px;
+      }
+    }
+  }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+  .home {
+    padding: 8px;
+    
+    .mt20 {
+      margin-top: 12px;
+    }
+    
+    .main-content-row {
+      .content-col {
+        margin-bottom: 12px;
       }
     }
   }

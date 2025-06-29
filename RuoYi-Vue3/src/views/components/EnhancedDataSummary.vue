@@ -1,7 +1,7 @@
 <template>
-  <el-row :gutter="20">
+  <el-row :gutter="20" class="data-summary-row">
     <!-- 预警统计 -->
-    <el-col :span="5">
+    <el-col :span="5" :xs="24" class="data-col">
       <el-card class="data-card">
         <template #header>
           <div class="card-header">
@@ -29,7 +29,7 @@
     </el-col>
 
     <!-- 监控代币 -->
-    <el-col :span="5">
+    <el-col :span="5" :xs="24" class="data-col">
       <el-card class="data-card">
         <template #header>
           <div class="card-header">
@@ -57,7 +57,7 @@
     </el-col>
 
     <!-- OKX信号 -->
-    <el-col :span="5">
+    <el-col :span="5" :xs="24" class="data-col">
       <el-card class="data-card">
         <template #header>
           <div class="card-header">
@@ -85,7 +85,7 @@
     </el-col>
 
     <!-- 机器人状态 -->
-    <el-col :span="5">
+    <el-col :span="5" :xs="24" class="data-col">
       <el-card class="data-card clickable" @click="showBotDetails">
         <template #header>
           <div class="card-header">
@@ -122,7 +122,7 @@
     </el-col>
 
     <!-- 系统状态 -->
-    <el-col :span="4">
+    <el-col :span="4" :xs="24" class="data-col">
       <el-card class="data-card">
         <template #header>
           <div class="card-header">
@@ -611,7 +611,7 @@ onMounted(async () => {
   }
 }
 
-/* 响应式设计 */
+/* 响应式设计 - 只在移动端生效 */
 @media (max-width: 1200px) {
   .data-card {
     height: 130px;
@@ -622,6 +622,122 @@ onMounted(async () => {
         
         h3 {
           font-size: 14px;
+        }
+      }
+    }
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .data-summary-row {
+    .data-col {
+      margin-bottom: 10px;
+    }
+  }
+  
+  .data-card {
+    height: auto;
+    min-height: 100px;
+    
+    :deep(.el-card__header) {
+      padding: 10px 12px;
+    }
+    
+    .card-header {
+      span {
+        font-size: 13px;
+      }
+      
+      .header-left {
+        gap: 6px;
+        
+        .header-action-btn {
+          font-size: 9px;
+          padding: 1px 4px;
+          height: 16px;
+        }
+      }
+      
+      .el-tag {
+        font-size: 9px;
+        height: 14px;
+        line-height: 14px;
+        padding: 0 4px;
+      }
+    }
+    
+    .card-body {
+      padding: 8px 12px;
+      height: auto;
+      
+      .stat-item {
+        margin-bottom: 6px;
+        
+        .stat-label {
+          gap: 4px;
+          
+          .el-icon {
+            font-size: 12px;
+          }
+          
+          span {
+            font-size: 10px;
+          }
+        }
+        
+        h3 {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}
+
+/* 小屏幕设备优化 */
+@media (max-width: 480px) {
+  .data-summary-row {
+    :deep(.el-row) {
+      --el-row-gutter: 8px;
+    }
+    
+    .data-col {
+      margin-bottom: 8px;
+    }
+  }
+  
+  .data-card {
+    .card-header {
+      span {
+        font-size: 12px;
+      }
+      
+      .el-tag {
+        font-size: 8px;
+        height: 12px;
+        line-height: 12px;
+        padding: 0 3px;
+      }
+    }
+    
+    .card-body {
+      padding: 6px 10px;
+      
+      .stat-item {
+        margin-bottom: 4px;
+        
+        .stat-label {
+          .el-icon {
+            font-size: 10px;
+          }
+          
+          span {
+            font-size: 9px;
+          }
+        }
+        
+        h3 {
+          font-size: 11px;
         }
       }
     }

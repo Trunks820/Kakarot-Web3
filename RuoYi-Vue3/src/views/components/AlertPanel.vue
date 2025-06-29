@@ -451,10 +451,231 @@ onMounted(() => {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .alert-panel {
-    .alert-content .alert-list .alert-item {
-      .alert-content-main {
-        .alert-description {
-          display: none;
+    height: auto;
+    min-height: 300px;
+    
+    :deep(.el-card__header) {
+      padding: 12px 16px;
+    }
+    
+    .panel-header {
+      .header-left {
+        gap: 6px;
+        font-size: 14px;
+        
+        .el-icon {
+          font-size: 16px;
+        }
+      }
+      
+      .el-tag {
+        font-size: 10px;
+        height: 16px;
+        line-height: 16px;
+        padding: 0 4px;
+      }
+    }
+    
+    .alert-content {
+      .alert-list {
+        padding: 0 16px;
+        
+        .alert-item {
+          gap: 8px;
+          padding: 10px 0;
+          min-height: 60px;
+          
+          .alert-icon {
+            width: 28px;
+            height: 28px;
+            
+            .el-icon {
+              font-size: 14px;
+            }
+          }
+          
+          .alert-info {
+            .alert-main {
+              margin-bottom: 2px;
+              
+              .alert-token {
+                font-size: 13px;
+              }
+              
+              .alert-value {
+                font-size: 12px;
+              }
+            }
+            
+            .alert-meta {
+              .alert-type {
+                font-size: 11px;
+              }
+              
+              .alert-time {
+                font-size: 10px;
+              }
+            }
+          }
+          
+          .alert-status {
+            .status-indicator {
+              width: 18px;
+              height: 18px;
+              
+              .el-icon {
+                font-size: 10px;
+              }
+            }
+            
+            .alert-actions {
+              .el-button {
+                font-size: 10px;
+                padding: 1px 4px;
+                height: 18px;
+              }
+              
+              .processed-text {
+                font-size: 10px;
+              }
+            }
+          }
+        }
+      }
+      
+      .empty-state {
+        padding: 0 16px;
+        
+        .el-icon {
+          font-size: 36px;
+          margin-bottom: 8px;
+        }
+        
+        p {
+          font-size: 13px;
+        }
+      }
+      
+      .panel-footer {
+        padding: 10px 16px;
+        
+        .el-button {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}
+
+/* 小屏幕设备优化 */
+@media (max-width: 480px) {
+  .alert-panel {
+    min-height: 250px;
+    
+    :deep(.el-card__header) {
+      padding: 10px 12px;
+    }
+    
+    .panel-header {
+      .header-left {
+        font-size: 13px;
+        
+        .el-icon {
+          font-size: 14px;
+        }
+      }
+      
+      .el-tag {
+        font-size: 9px;
+        height: 14px;
+        line-height: 14px;
+        padding: 0 3px;
+      }
+    }
+    
+    .alert-content {
+      .alert-list {
+        padding: 0 12px;
+        
+        .alert-item {
+          gap: 6px;
+          padding: 8px 0;
+          min-height: 50px;
+          
+          .alert-icon {
+            width: 24px;
+            height: 24px;
+            
+            .el-icon {
+              font-size: 12px;
+            }
+          }
+          
+          .alert-info {
+            .alert-main {
+              .alert-token {
+                font-size: 12px;
+              }
+              
+              .alert-value {
+                font-size: 11px;
+              }
+            }
+            
+            .alert-meta {
+              .alert-type {
+                font-size: 10px;
+              }
+              
+              .alert-time {
+                font-size: 9px;
+              }
+            }
+          }
+          
+          .alert-status {
+            .status-indicator {
+              width: 16px;
+              height: 16px;
+              
+              .el-icon {
+                font-size: 8px;
+              }
+            }
+            
+            .alert-actions {
+              .el-button {
+                font-size: 9px;
+                padding: 1px 3px;
+                height: 16px;
+              }
+              
+              .processed-text {
+                font-size: 9px;
+              }
+            }
+          }
+        }
+      }
+      
+      .empty-state {
+        padding: 0 12px;
+        
+        .el-icon {
+          font-size: 32px;
+          margin-bottom: 6px;
+        }
+        
+        p {
+          font-size: 12px;
+        }
+      }
+      
+      .panel-footer {
+        padding: 8px 12px;
+        
+        .el-button {
+          font-size: 11px;
         }
       }
     }

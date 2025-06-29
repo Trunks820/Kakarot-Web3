@@ -399,10 +399,231 @@ onMounted(() => {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .monitor-tokens {
-    .tokens-content .tokens-list .token-item {
-      .token-info .token-meta {
-        .token-volume {
-          display: none;
+    height: auto;
+    min-height: 300px;
+    
+    :deep(.el-card__header) {
+      padding: 12px 16px;
+    }
+    
+    .panel-header {
+      .header-left {
+        gap: 6px;
+        font-size: 14px;
+        
+        .el-icon {
+          font-size: 16px;
+        }
+      }
+      
+      .el-tag {
+        font-size: 10px;
+        height: 16px;
+        line-height: 16px;
+        padding: 0 4px;
+      }
+    }
+    
+    .tokens-content {
+      .tokens-list {
+        padding: 0 16px;
+        
+        .token-item {
+          gap: 8px;
+          padding: 10px 0;
+          min-height: 60px;
+          
+          .token-icon {
+            width: 28px;
+            height: 28px;
+            
+            .token-icon-default {
+              width: 28px;
+              height: 28px;
+            }
+          }
+          
+          .token-info {
+            .token-main {
+              margin-bottom: 2px;
+              
+              .token-symbol {
+                font-size: 13px;
+              }
+              
+              .token-price {
+                font-size: 12px;
+              }
+            }
+            
+            .token-meta {
+              .token-change {
+                font-size: 11px;
+              }
+              
+              .token-volume {
+                display: none;
+              }
+            }
+          }
+          
+          .token-status {
+            .status-indicator {
+              width: 18px;
+              height: 18px;
+              
+              .el-icon {
+                font-size: 10px;
+              }
+            }
+            
+            .monitor-actions {
+              .el-button {
+                font-size: 10px;
+                padding: 1px 4px;
+                height: 18px;
+              }
+            }
+          }
+        }
+      }
+      
+      .empty-state {
+        gap: 8px;
+        
+        .el-icon {
+          font-size: 36px;
+          margin-bottom: 0;
+        }
+        
+        p {
+          margin: 0;
+          font-size: 13px;
+        }
+        
+        .el-button {
+          font-size: 12px;
+          padding: 6px 12px;
+        }
+      }
+      
+      .panel-footer {
+        padding: 10px 16px;
+        
+        .el-button {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}
+
+/* 小屏幕设备优化 */
+@media (max-width: 480px) {
+  .monitor-tokens {
+    min-height: 250px;
+    
+    :deep(.el-card__header) {
+      padding: 10px 12px;
+    }
+    
+    .panel-header {
+      .header-left {
+        font-size: 13px;
+        
+        .el-icon {
+          font-size: 14px;
+        }
+      }
+      
+      .el-tag {
+        font-size: 9px;
+        height: 14px;
+        line-height: 14px;
+        padding: 0 3px;
+      }
+    }
+    
+    .tokens-content {
+      .tokens-list {
+        padding: 0 12px;
+        
+        .token-item {
+          gap: 6px;
+          padding: 8px 0;
+          min-height: 50px;
+          
+          .token-icon {
+            width: 24px;
+            height: 24px;
+            
+            .token-icon-default {
+              width: 24px;
+              height: 24px;
+            }
+          }
+          
+          .token-info {
+            .token-main {
+              .token-symbol {
+                font-size: 12px;
+              }
+              
+              .token-price {
+                font-size: 11px;
+              }
+            }
+            
+            .token-meta {
+              .token-change {
+                font-size: 10px;
+              }
+            }
+          }
+          
+          .token-status {
+            .status-indicator {
+              width: 16px;
+              height: 16px;
+              
+              .el-icon {
+                font-size: 8px;
+              }
+            }
+            
+            .monitor-actions {
+              .el-button {
+                font-size: 9px;
+                padding: 1px 3px;
+                height: 16px;
+              }
+            }
+          }
+        }
+      }
+      
+      .empty-state {
+        gap: 6px;
+        
+        .el-icon {
+          font-size: 32px;
+        }
+        
+        p {
+          font-size: 12px;
+        }
+        
+        .el-button {
+          font-size: 11px;
+          padding: 4px 8px;
+        }
+      }
+      
+      .panel-footer {
+        padding: 8px 12px;
+        
+        .el-button {
+          font-size: 11px;
         }
       }
     }

@@ -316,10 +316,195 @@ onUnmounted(() => {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .popular-ca-panel {
-    .ca-content .ca-list .ca-item {
-      .ca-header {
-        .ca-info .ca-address-display {
-          display: none;
+    height: auto;
+    min-height: 300px;
+    
+    :deep(.el-card__header) {
+      padding: 12px 16px;
+    }
+    
+    .panel-header {
+      .header-left {
+        gap: 6px;
+        font-size: 14px;
+        
+        .el-icon {
+          font-size: 16px;
+        }
+      }
+      
+      .el-tag {
+        font-size: 10px;
+        height: 16px;
+        line-height: 16px;
+        padding: 0 4px;
+      }
+    }
+    
+    .ca-content {
+      .ca-list {
+        padding: 0 16px;
+        
+        .ca-item {
+          gap: 8px;
+          padding: 8px 0;
+          min-height: 50px;
+          
+          .ca-icon {
+            .rank-circle {
+              width: 24px;
+              height: 24px;
+              
+              .rank-number {
+                font-size: 10px;
+              }
+            }
+          }
+          
+          .ca-info {
+            .ca-main {
+              margin-bottom: 2px;
+              
+              .token-symbol {
+                font-size: 12px;
+              }
+              
+              .query-count {
+                font-size: 11px;
+              }
+            }
+            
+            .ca-meta {
+              .ca-address-display {
+                font-size: 10px;
+                padding: 1px 4px;
+              }
+              
+              .ca-time {
+                font-size: 9px;
+              }
+            }
+          }
+          
+          .ca-status {
+            .ca-actions {
+              .el-button {
+                font-size: 9px;
+                padding: 1px 3px;
+                height: 18px;
+              }
+            }
+          }
+        }
+      }
+      
+      .empty-state {
+        padding: 0 16px;
+        
+        .el-icon {
+          font-size: 36px;
+          margin-bottom: 8px;
+        }
+        
+        p {
+          font-size: 13px;
+        }
+      }
+    }
+  }
+}
+
+/* 小屏幕设备优化 */
+@media (max-width: 480px) {
+  .popular-ca-panel {
+    min-height: 250px;
+    
+    :deep(.el-card__header) {
+      padding: 10px 12px;
+    }
+    
+    .panel-header {
+      .header-left {
+        font-size: 13px;
+        
+        .el-icon {
+          font-size: 14px;
+        }
+      }
+      
+      .el-tag {
+        font-size: 9px;
+        height: 14px;
+        line-height: 14px;
+        padding: 0 3px;
+      }
+    }
+    
+    .ca-content {
+      .ca-list {
+        padding: 0 12px;
+        
+        .ca-item {
+          gap: 6px;
+          padding: 6px 0;
+          min-height: 45px;
+          
+          .ca-icon {
+            .rank-circle {
+              width: 20px;
+              height: 20px;
+              
+              .rank-number {
+                font-size: 9px;
+              }
+            }
+          }
+          
+          .ca-info {
+            .ca-main {
+              .token-symbol {
+                font-size: 11px;
+              }
+              
+              .query-count {
+                font-size: 10px;
+              }
+            }
+            
+            .ca-meta {
+              .ca-address-display {
+                font-size: 9px;
+                padding: 1px 3px;
+              }
+              
+              .ca-time {
+                font-size: 8px;
+              }
+            }
+          }
+          
+          .ca-status {
+            .ca-actions {
+              .el-button {
+                font-size: 8px;
+                padding: 1px 2px;
+                height: 16px;
+              }
+            }
+          }
+        }
+      }
+      
+      .empty-state {
+        padding: 0 12px;
+        
+        .el-icon {
+          font-size: 32px;
+          margin-bottom: 6px;
+        }
+        
+        p {
+          font-size: 12px;
         }
       }
     }

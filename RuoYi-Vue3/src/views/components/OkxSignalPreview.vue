@@ -460,14 +460,229 @@ onMounted(() => {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .okx-signal-preview {
-    .signal-content .signal-list .signal-item {
-      .signal-footer {
-        flex-direction: column;
-        gap: 8px;
-        align-items: flex-start;
+    height: auto;
+    min-height: 300px;
+    
+    :deep(.el-card__header) {
+      padding: 12px 16px;
+    }
+    
+    .panel-header {
+      .header-left {
+        gap: 6px;
+        font-size: 14px;
+        
+        .el-icon {
+          font-size: 16px;
+        }
+      }
+      
+      .el-tag {
+        font-size: 10px;
+        height: 16px;
+        line-height: 16px;
+        padding: 0 4px;
+      }
+    }
+    
+    .signal-content {
+      .signal-list {
+        padding: 0 16px;
+        
+        .signal-item {
+          padding: 12px 0;
+          
+          .signal-header {
+            margin-bottom: 6px;
+            
+            .signal-token {
+              gap: 6px;
+              
+              .token-symbol {
+                font-size: 14px;
+              }
+            }
+            
+            .signal-time {
+              font-size: 11px;
+            }
+          }
+          
+          .signal-body {
+            margin-bottom: 6px;
+            
+            .signal-price,
+            .signal-change {
+              gap: 3px;
+              
+              .label {
+                font-size: 11px;
+              }
+              
+              .value {
+                font-size: 12px;
+              }
+            }
+          }
+          
+          .signal-footer {
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-start;
+            
+            .smart-money {
+              gap: 3px;
+              font-size: 11px;
+              
+              .el-icon {
+                font-size: 12px;
+              }
+            }
+            
+            .signal-volume {
+              align-items: flex-start;
+              
+              .volume-label {
+                font-size: 10px;
+              }
+              
+              .volume-value {
+                font-size: 11px;
+              }
+            }
+          }
+        }
+      }
+      
+      .empty-state {
+        .el-icon {
+          font-size: 36px;
+          margin-bottom: 8px;
+        }
+        
+        p {
+          font-size: 13px;
+        }
+      }
+      
+      .panel-footer {
+        padding: 10px 16px;
+        
+        .el-button {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}
 
-        .signal-strength {
-          width: 100%;
+/* 小屏幕设备优化 */
+@media (max-width: 480px) {
+  .okx-signal-preview {
+    min-height: 250px;
+    
+    :deep(.el-card__header) {
+      padding: 10px 12px;
+    }
+    
+    .panel-header {
+      .header-left {
+        font-size: 13px;
+        
+        .el-icon {
+          font-size: 14px;
+        }
+      }
+      
+      .el-tag {
+        font-size: 9px;
+        height: 14px;
+        line-height: 14px;
+        padding: 0 3px;
+      }
+    }
+    
+    .signal-content {
+      .signal-list {
+        padding: 0 12px;
+        
+        .signal-item {
+          padding: 10px 0;
+          
+          .signal-header {
+            margin-bottom: 4px;
+            
+            .signal-token {
+              gap: 4px;
+              
+              .token-symbol {
+                font-size: 13px;
+              }
+            }
+            
+            .signal-time {
+              font-size: 10px;
+            }
+          }
+          
+          .signal-body {
+            margin-bottom: 4px;
+            
+            .signal-price,
+            .signal-change {
+              gap: 2px;
+              
+              .label {
+                font-size: 10px;
+              }
+              
+              .value {
+                font-size: 11px;
+              }
+            }
+          }
+          
+          .signal-footer {
+            gap: 4px;
+            
+            .smart-money {
+              gap: 2px;
+              font-size: 10px;
+              
+              .el-icon {
+                font-size: 11px;
+              }
+            }
+            
+            .signal-volume {
+              .volume-label {
+                font-size: 9px;
+              }
+              
+              .volume-value {
+                font-size: 10px;
+              }
+            }
+          }
+        }
+      }
+      
+      .empty-state {
+        .el-icon {
+          font-size: 32px;
+          margin-bottom: 6px;
+        }
+        
+        p {
+          font-size: 12px;
+        }
+      }
+      
+      .panel-footer {
+        padding: 8px 12px;
+        
+        .el-button {
+          font-size: 11px;
         }
       }
     }
