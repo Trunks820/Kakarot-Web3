@@ -24,20 +24,20 @@ public class CryptoMonitorConfig extends BaseEntity {
     @ApiModelProperty("代币地址")
     private String coinAddress;
 
-    /** 代币符号 */
-    @Excel(name = "代币符号")
-    @ApiModelProperty("代币符号")
-    private String tokenSymbol;
-
     /** 代币名称 */
     @Excel(name = "代币名称")
     @ApiModelProperty("代币名称")
     private String tokenName;
 
     /** 提醒模式 */
-    @Excel(name = "提醒模式", readConverterExp = "timer=定时提醒,condition=条件触发")
-    @ApiModelProperty("提醒模式(timer:定时提醒, condition:条件触发)")
+    @Excel(name = "提醒模式", readConverterExp = "timer=定时提醒,condition=价格触发,event=事件监控")
+    @ApiModelProperty("提醒模式(timer:定时提醒, condition:价格触发, event:事件监控)")
     private String alertMode;
+
+    /** 事件类型 */
+    @Excel(name = "事件类型")
+    @ApiModelProperty("事件类型(largeTransaction:大额交易监控, holdingChange:持仓异动监控)")
+    private String eventType;
 
     /** 定时提醒间隔(分钟) */
     @Excel(name = "定时间隔")
@@ -85,11 +85,6 @@ public class CryptoMonitorConfig extends BaseEntity {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty("上次通知时间")
     private Date lastNotificationTime;
-
-    /** 链类型 */
-    @Excel(name = "链类型")
-    @ApiModelProperty("链类型")
-    private String chainType;
 
     /** 删除标志（0代表存在 2代表删除） */
     private String delFlag;

@@ -1,20 +1,28 @@
 package com.ruoyi.crypto.service.impl;
 
 
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
+import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.crypto.domain.CryptoMonitorConfig;
 import com.ruoyi.crypto.mapper.CryptoMonitorConfigMapper;
 import com.ruoyi.crypto.service.CryptoMonitorService;
+import com.ruoyi.crypto.utils.ChainApiUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class CryptoMonitorServiceImpl implements CryptoMonitorService {
 
-    @Autowired
+    @Resource
     private CryptoMonitorConfigMapper cryptoMonitorConfigMapper;
+
+    @Resource
+    private ChainApiUtils chainApiUtils;
 
     /**
      * 查询监控配置列表
@@ -47,6 +55,12 @@ public class CryptoMonitorServiceImpl implements CryptoMonitorService {
      */
     @Override
     public int insertCryptoMonitorConfig(CryptoMonitorConfig cryptoMonitorConfig) {
+        String coinAddress = cryptoMonitorConfig.getCoinAddress();
+        AjaxResult dexPairInfo = chainApiUtils.getDexPairInfo(coinAddress);
+        if(dexPairInfo.isSuccess()){
+            JSONObject jsonObject = JSONUtil.parseObj(dexPairInfo.get("data"));
+            cryptoMonitorConfig.setTokenName(jsonObject.getStr("symbol"));
+        }
         // 默认状态为启用
         if (cryptoMonitorConfig.getStatus() == null) {
             cryptoMonitorConfig.setStatus("1");

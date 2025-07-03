@@ -7,9 +7,9 @@
     <resultMap type="CryptoMonitorConfig" id="CryptoMonitorConfigResult">
         <result property="id"                      column="id"                      />
         <result property="coinAddress"             column="coin_address"            />
-        <result property="tokenSymbol"             column="token_symbol"            />
         <result property="tokenName"               column="token_name"              />
         <result property="alertMode"               column="alert_mode"              />
+        <result property="eventType"               column="event_type"              />
         <result property="timerInterval"           column="timer_interval"          />
         <result property="conditionType"           column="condition_type"          />
         <result property="conditionValue"          column="condition_value"         />
@@ -24,14 +24,13 @@
         <result property="createTime"              column="create_time"             />
         <result property="updateBy"                column="update_by"               />
         <result property="updateTime"              column="update_time"             />
-        <result property="chainType"               column="chain_type"              />
     </resultMap>
 
     <sql id="selectCryptoMonitorConfigVo">
-        select id, coin_address, token_symbol, token_name, alert_mode, timer_interval, 
+        select id, coin_address, token_name, alert_mode, event_type, timer_interval, 
                condition_type, condition_value, notify_methods, wechat_name, telegram_name, remark,
                last_notification_time, status, del_flag, create_by, create_time, 
-               update_by, update_time, chain_type 
+               update_by, update_time 
         from crypto_monitor_config
     </sql>
 
@@ -39,13 +38,13 @@
         <include refid="selectCryptoMonitorConfigVo"/>
         <where>
             <if test="coinAddress != null  and coinAddress != ''"> and coin_address = #{coinAddress}</if>
-            <if test="tokenSymbol != null  and tokenSymbol != ''"> and token_symbol like concat('%', #{tokenSymbol}, '%')</if>
-            <if test="tokenName != null  and tokenName != ''"> and token_name like concat('%', #{tokenName}, '%')</if>
             <if test="alertMode != null  and alertMode != ''"> and alert_mode = #{alertMode}</if>
+            <if test="eventType != null  and eventType != ''"> and event_type = #{eventType}</if>
             <if test="conditionType != null  and conditionType != ''"> and condition_type = #{conditionType}</if>
             <if test="notifyMethods != null  and notifyMethods != ''"> and notify_methods like concat('%', #{notifyMethods}, '%')</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
-            <if test="chainType != null  and chainType != ''"> and chain_type = #{chainType}</if>
+            <!-- 权限控制：非admin用户只能查看自己创建的监控配置 -->
+            <if test="createBy != null  and createBy != ''"> and create_by = #{createBy}</if>
             and del_flag = '0'
         </where>
         order by create_time desc
@@ -71,9 +70,9 @@
         INSERT INTO crypto_monitor_config (
         <trim suffixOverrides=",">
             <if test="coinAddress != null and coinAddress != ''">coin_address,</if>
-            <if test="tokenSymbol != null and tokenSymbol != ''">token_symbol,</if>
             <if test="tokenName != null and tokenName != ''">token_name,</if>
             <if test="alertMode != null and alertMode != ''">alert_mode,</if>
+            <if test="eventType != null and eventType != ''">event_type,</if>
             <if test="timerInterval != null">timer_interval,</if>
             <if test="conditionType != null and conditionType != ''">condition_type,</if>
             <if test="conditionValue != null">condition_value,</if>
@@ -83,7 +82,6 @@
             <if test="remark != null">remark,</if>
             <if test="lastNotificationTime != null">last_notification_time,</if>
             <if test="status != null">status,</if>
-            <if test="chainType != null and chainType != ''">chain_type,</if>
             <if test="createBy != null and createBy != ''">create_by,</if>
             create_time
         </trim>
@@ -91,9 +89,9 @@
         VALUES (
         <trim suffixOverrides=",">
             <if test="coinAddress != null and coinAddress != ''">#{coinAddress},</if>
-            <if test="tokenSymbol != null and tokenSymbol != ''">#{tokenSymbol},</if>
             <if test="tokenName != null and tokenName != ''">#{tokenName},</if>
             <if test="alertMode != null and alertMode != ''">#{alertMode},</if>
+            <if test="eventType != null and eventType != ''">#{eventType},</if>
             <if test="timerInterval != null">#{timerInterval},</if>
             <if test="conditionType != null and conditionType != ''">#{conditionType},</if>
             <if test="conditionValue != null">#{conditionValue},</if>
@@ -103,7 +101,6 @@
             <if test="remark != null">#{remark},</if>
             <if test="lastNotificationTime != null">#{lastNotificationTime},</if>
             <if test="status != null">#{status},</if>
-            <if test="chainType != null and chainType != ''">#{chainType},</if>
             <if test="createBy != null and createBy != ''">#{createBy},</if>
             NOW()
         </trim>
@@ -116,14 +113,14 @@
             <if test="coinAddress != null and coinAddress != ''">
                 coin_address = #{coinAddress},
             </if>
-            <if test="tokenSymbol != null and tokenSymbol != ''">
-                token_symbol = #{tokenSymbol},
-            </if>
             <if test="tokenName != null and tokenName != ''">
                 token_name = #{tokenName},
             </if>
             <if test="alertMode != null and alertMode != ''">
                 alert_mode = #{alertMode},
+            </if>
+            <if test="eventType != null and eventType != ''">
+                event_type = #{eventType},
             </if>
             <if test="timerInterval != null">
                 timer_interval = #{timerInterval},
@@ -151,9 +148,6 @@
             </if>
             <if test="status != null">
                 status = #{status},
-            </if>
-            <if test="chainType != null and chainType != ''">
-                chain_type = #{chainType},
             </if>
             <if test="updateBy != null and updateBy != ''">
                 update_by = #{updateBy},

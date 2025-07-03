@@ -35,6 +35,12 @@ public class CryptoMonitorController extends BaseController {
     @GetMapping("/list")
     public TableDataInfo list(CryptoMonitorConfig cryptoMonitorConfig) {
         startPage();
+        
+        // 权限控制：非admin用户只能查看自己创建的监控配置
+        if (!SecurityUtils.isAdmin(SecurityUtils.getUserId())) {
+            cryptoMonitorConfig.setCreateBy(getUsername());
+        }
+        
         List<CryptoMonitorConfig> list = cryptoMonitorService.selectCryptoMonitorConfigList(cryptoMonitorConfig);
         return getDataTable(list);
     }

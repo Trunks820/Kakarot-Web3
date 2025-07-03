@@ -14,7 +14,8 @@
               <el-form-item label="监控模式" prop="alertMode">
                 <el-select v-model="queryParams.alertMode" placeholder="监控模式" clearable style="width: 120px">
                   <el-option label="定时提醒" value="timer"></el-option>
-                  <el-option label="条件触发" value="condition"></el-option>
+                  <el-option label="价格触发" value="condition"></el-option>
+                  <el-option label="事件监控" value="event"></el-option>
                 </el-select>
               </el-form-item>
               <el-form-item label="通知方式" prop="notifyMethods">
@@ -46,12 +47,7 @@
               <el-col :span="1.5">
                 <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete" v-hasPermi="['crypto:monitor:remove']">删除</el-button>
               </el-col>
-              <el-col :span="1.5">
-                <el-button type="warning" plain icon="VideoPlay" :disabled="multiple" @click="handleBatchEnable" v-hasPermi="['crypto:monitor:edit']">批量启用</el-button>
-              </el-col>
-              <el-col :span="1.5">
-                <el-button type="info" plain icon="VideoPause" :disabled="multiple" @click="handleBatchDisable" v-hasPermi="['crypto:monitor:edit']">批量停用</el-button>
-              </el-col>
+
               <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
             </el-row>
 
@@ -60,11 +56,11 @@
               <el-table-column type="selection" width="50" align="center" />
               
               <!-- 代币信息 -->
-              <el-table-column label="代币信息" align="left" width="200" v-if="columns[0].visible">
+              <el-table-column label="代币信息" align="left" width="180" v-if="columns[0].visible">
                 <template #default="scope">
                   <div class="token-info">
-                    <div class="token-main">
-                      <span class="token-symbol">{{ scope.row.tokenSymbol || 'N/A' }}</span>
+                    <div class="token-name">
+                      {{ scope.row.tokenName || '未知代币' }}
                     </div>
                   </div>
                 </template>
@@ -73,8 +69,8 @@
               <!-- 监控模式 -->
               <el-table-column label="监控模式" align="center" width="120" v-if="columns[1].visible">
                 <template #default="scope">
-                  <el-tag :type="scope.row.alertMode === 'timer' ? 'primary' : 'success'">
-                    {{ scope.row.alertMode === 'timer' ? '定时提醒' : '条件触发' }}
+                  <el-tag :type="getAlertModeType(scope.row.alertMode)">
+                    {{ getAlertModeText(scope.row.alertMode) }}
                   </el-tag>
                 </template>
               </el-table-column>
@@ -85,9 +81,13 @@
                   <div v-if="scope.row.alertMode === 'timer'">
                     <span class="condition-text">每 {{ scope.row.timerInterval }} 分钟</span>
                   </div>
-                  <div v-else class="condition-detail">
+                  <div v-else-if="scope.row.alertMode === 'condition'" class="condition-detail">
                     <div class="condition-type">{{ getConditionTypeText(scope.row.conditionType) }}</div>
                     <div class="condition-value">{{ formatConditionValue(scope.row.conditionValue, scope.row.conditionType) }}</div>
+                  </div>
+                  <div v-else-if="scope.row.alertMode === 'event'" class="event-detail">
+                    <div class="event-type">{{ getEventTypeText(scope.row.eventType) }}</div>
+                    <div class="event-config">{{ formatEventConfig(scope.row.eventConfig, scope.row.eventType) }}</div>
                   </div>
                 </template>
               </el-table-column>
@@ -147,8 +147,15 @@
                 </template>
               </el-table-column>
 
+              <!-- 创建者 -->
+              <el-table-column label="创建者" align="center" width="100" v-if="columns[7].visible">
+                <template #default="scope">
+                  {{ scope.row.createBy || '-' }}
+                </template>
+              </el-table-column>
+
               <!-- 创建时间 -->
-              <el-table-column label="创建时间" align="center" width="140" v-if="columns[7].visible">
+              <el-table-column label="创建时间" align="center" width="140" v-if="columns[8].visible">
                 <template #default="scope">
                   {{ formatTime(scope.row.createTime) }}
                 </template>
@@ -198,34 +205,13 @@
           </el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12">
-            <el-form-item label="代币符号" prop="tokenSymbol">
-              <el-input v-model="form.tokenSymbol" placeholder="如：SOL" maxlength="50" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="代币名称" prop="tokenName">
-              <el-input v-model="form.tokenName" placeholder="如：Solana" maxlength="100" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item label="监控模式" prop="alertMode">
               <el-radio-group v-model="form.alertMode">
                 <el-radio value="timer">定时提醒</el-radio>
-                <el-radio value="condition">条件触发</el-radio>
+                <el-radio value="condition">价格触发</el-radio>
+                <el-radio value="event">事件监控</el-radio>
               </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="链类型" prop="chainType">
-              <el-select v-model="form.chainType" placeholder="请选择链类型">
-                <el-option label="SOL" value="SOL"></el-option>
-                <el-option label="ETH" value="ETH"></el-option>
-                <el-option label="BSC" value="BSC"></el-option>
-                <el-option label="BASE" value="BASE"></el-option>
-              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -246,7 +232,7 @@
           </el-col>
         </el-row>
 
-        <!-- 条件触发配置 -->
+        <!-- 价格触发配置 -->
         <el-row v-if="form.alertMode === 'condition'" :gutter="16">
           <el-col :span="12">
             <el-form-item label="触发条件" prop="conditionType">
@@ -260,17 +246,121 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="阈值" prop="conditionValue">
+              <!-- 市值条件使用数字+单位选择器 -->
+              <div v-if="form.conditionType === 'marketCapBelow'" style="display: flex; gap: 8px;">
+                <el-input-number 
+                  v-model="marketCapValue" 
+                  :min="0" 
+                  :precision="2"
+                  placeholder="请输入数值" 
+                  style="flex: 1;"
+                  @change="updateMarketCapConditionValue"
+                />
+                <el-select 
+                  v-model="marketCapUnit" 
+                  placeholder="单位" 
+                  style="width: 80px;"
+                  @change="updateMarketCapConditionValue"
+                >
+                  <el-option label="K" value="K" />
+                  <el-option label="M" value="M" />
+                  <el-option label="B" value="B" />
+                </el-select>
+              </div>
+              <!-- 其他条件使用普通数字输入框 -->
               <el-input-number 
+                v-else
                 v-model="form.conditionValue" 
                 :min="0" 
                 :precision="getValuePrecision()"
                 placeholder="请输入阈值"
                 style="width: 100%"
               />
-              <div class="form-tip">{{ getConditionTip() }}</div>
+              <div class="form-tip" :class="{ 'tip-red': shouldShowRedTip() }">{{ getConditionTip() }}</div>
             </el-form-item>
           </el-col>
         </el-row>
+
+        <!-- 事件监控配置 -->
+        <el-row v-if="form.alertMode === 'event'" :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="事件类型" prop="eventType">
+              <el-select v-model="form.eventType" placeholder="请选择事件类型" @change="handleEventTypeChange">
+                <el-option label="大额交易监控" value="largeTransaction"></el-option>
+                <el-option label="持仓异动监控" value="holdingChange"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <!-- 大额交易监控配置 -->
+        <div v-if="form.alertMode === 'event' && form.eventType === 'largeTransaction'">
+          <el-row :gutter="16">
+            <el-col :span="12">
+              <el-form-item label="金额阈值" prop="eventConfig.amountThreshold">
+                <el-input-number 
+                  v-model="form.eventConfig.amountThreshold" 
+                  :min="0" 
+                  :precision="2"
+                  placeholder="请输入金额阈值"
+                  style="width: 100%"
+                />
+                <div class="form-tip">单位：SOL，触发通知的最小交易金额</div>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="交易类型" prop="eventConfig.transactionType">
+                <el-select v-model="form.eventConfig.transactionType" placeholder="请选择交易类型">
+                  <el-option label="买入" value="buy"></el-option>
+                  <el-option label="卖出" value="sell"></el-option>
+                  <el-option label="买入和卖出" value="both"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
+
+        <!-- 持仓异动监控配置 -->
+        <div v-if="form.alertMode === 'event' && form.eventType === 'holdingChange'">
+          <el-row :gutter="16">
+            <el-col :span="12">
+              <el-form-item label="变化阈值" prop="eventConfig.changeThreshold">
+                <el-input-number 
+                  v-model="form.eventConfig.changeThreshold" 
+                  :min="0" 
+                  :max="100"
+                  :precision="2"
+                  placeholder="请输入变化阈值"
+                  style="width: 100%"
+                />
+                <div class="form-tip">单位：%，前10大持仓变化超过此百分比时触发</div>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="异动类型" prop="eventConfig.changeType">
+                <el-select v-model="form.eventConfig.changeType" placeholder="请选择异动类型">
+                  <el-option label="增加" value="increase"></el-option>
+                  <el-option label="减少" value="decrease"></el-option>
+                  <el-option label="双向" value="both"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="16">
+            <el-col :span="12">
+              <el-form-item label="检查间隔" prop="eventConfig.checkInterval">
+                <el-input-number 
+                  v-model="form.eventConfig.checkInterval" 
+                  :min="5" 
+                  :max="1440"
+                  placeholder="请输入检查间隔"
+                  style="width: 100%"
+                />
+                <div class="form-tip">单位：分钟，检查持仓变化的间隔</div>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
 
         <el-row :gutter="16">
           <el-col :span="24">
@@ -287,6 +377,7 @@
           <el-col :span="12">
             <el-form-item label="微信名称" prop="wechatName">
               <el-input v-model="form.wechatName" placeholder="请输入微信名称" maxlength="100" />
+              <div class="form-tip">支持发送给个人或群聊（群聊请填写群名称）</div>
             </el-form-item>
           </el-col>
         </el-row>
@@ -295,6 +386,7 @@
           <el-col :span="12">
             <el-form-item label="Telegram名称" prop="telegramName">
               <el-input v-model="form.telegramName" placeholder="请输入Telegram用户名" maxlength="100" />
+              <div class="form-tip">支持发送给个人或群组（群组请填写群组名称）</div>
             </el-form-item>
           </el-col>
         </el-row>
@@ -309,7 +401,7 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <el-button type="primary" :loading="submitLoading" @click="submitForm">确 定</el-button>
           <el-button @click="cancel">取 消</el-button>
         </div>
       </template>
@@ -321,26 +413,31 @@
         <el-descriptions :column="2" border>
           <el-descriptions-item label="代币信息" :span="2">
             <div class="token-detail">
-              <span class="token-symbol">{{ currentMonitor.tokenSymbol || 'N/A' }}</span>
-              <span class="token-name">{{ currentMonitor.tokenName || '' }}</span>
+              <div class="token-name">{{ currentMonitor.tokenName || '未知代币' }}</div>
               <div class="token-address">{{ currentMonitor.coinAddress }}</div>
             </div>
           </el-descriptions-item>
           <el-descriptions-item label="监控模式">
-            <el-tag :type="currentMonitor.alertMode === 'timer' ? 'primary' : 'success'">
-              {{ currentMonitor.alertMode === 'timer' ? '定时提醒' : '条件触发' }}
+            <el-tag :type="getAlertModeType(currentMonitor.alertMode)">
+              {{ getAlertModeText(currentMonitor.alertMode) }}
             </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="链类型">
-            <el-tag>{{ currentMonitor.chainType || 'SOL' }}</el-tag>
+            <el-tag :type="getChainTagType(currentMonitor.coinAddress)">
+              {{ getChainType(currentMonitor.coinAddress) }}
+            </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="监控条件" :span="2">
             <div v-if="currentMonitor.alertMode === 'timer'">
               每 {{ currentMonitor.timerInterval }} 分钟提醒一次
             </div>
-            <div v-else>
-              {{ getConditionTypeText(currentMonitor.conditionType) }}：
-              {{ formatConditionValue(currentMonitor.conditionValue, currentMonitor.conditionType) }}
+            <div v-else-if="currentMonitor.alertMode === 'condition'" class="condition-detail">
+              <div class="condition-type">{{ getConditionTypeText(currentMonitor.conditionType) }}</div>
+              <div class="condition-value">{{ formatConditionValue(currentMonitor.conditionValue, currentMonitor.conditionType) }}</div>
+            </div>
+            <div v-else-if="currentMonitor.alertMode === 'event'" class="event-detail">
+              <div class="event-type">{{ getEventTypeText(currentMonitor.eventType) }}</div>
+              <div class="event-config">{{ formatEventConfig(currentMonitor.eventConfig, currentMonitor.eventType) }}</div>
             </div>
           </el-descriptions-item>
           <el-descriptions-item label="通知方式">
@@ -400,8 +497,6 @@ import {
   updateCryptoMonitorConfig, 
   delCryptoMonitorConfig,
   changeCryptoMonitorStatus,
-  batchEnableCryptoMonitor,
-  batchDisableCryptoMonitor,
   testCryptoMonitorNotify
 } from "@/api/crypto/monitor"
 const { proxy } = getCurrentInstance()
@@ -418,6 +513,13 @@ const total = ref(0)
 const title = ref("")
 const currentMonitor = ref({})
 
+// 市值输入相关
+const marketCapValue = ref(null)
+const marketCapUnit = ref('M')
+
+// 表单提交loading状态
+const submitLoading = ref(false)
+
 // 列显隐信息
 const columns = ref([
   { key: 0, label: `代币信息`, visible: true },
@@ -427,7 +529,8 @@ const columns = ref([
   { key: 4, label: `通知对象`, visible: true },
   { key: 5, label: `最后通知`, visible: true },
   { key: 6, label: `状态`, visible: true },
-  { key: 7, label: `创建时间`, visible: true }
+  { key: 7, label: `创建者`, visible: true },
+  { key: 8, label: `创建时间`, visible: true }
 ])
 
 const data = reactive({
@@ -436,7 +539,6 @@ const data = reactive({
     pageNum: 1,
     pageSize: 10,
     coinAddress: undefined,
-    tokenSymbol: undefined,
     alertMode: undefined,
     notifyMethods: undefined,
     status: undefined
@@ -474,6 +576,61 @@ const data = reactive({
       { required: true, message: "请输入阈值", trigger: "blur", validator: (rule, value, callback) => {
         if (form.alertMode === 'condition' && (!value || value <= 0)) {
           callback(new Error('阈值必须大于0'))
+        } else {
+          callback()
+        }
+      }}
+    ],
+    eventType: [
+      { required: true, message: "请选择事件类型", trigger: "change", validator: (rule, value, callback) => {
+        if (form.alertMode === 'event' && !value) {
+          callback(new Error('请选择事件类型'))
+        } else {
+          callback()
+        }
+      }}
+    ],
+    'eventConfig.amountThreshold': [
+      { required: true, message: "请输入金额阈值", trigger: "blur", validator: (rule, value, callback) => {
+        if (form.alertMode === 'event' && form.eventType === 'largeTransaction' && (!value || value <= 0)) {
+          callback(new Error('金额阈值必须大于0'))
+        } else {
+          callback()
+        }
+      }}
+    ],
+    'eventConfig.transactionType': [
+      { required: true, message: "请选择交易类型", trigger: "change", validator: (rule, value, callback) => {
+        if (form.alertMode === 'event' && form.eventType === 'largeTransaction' && !value) {
+          callback(new Error('请选择交易类型'))
+        } else {
+          callback()
+        }
+      }}
+    ],
+
+    'eventConfig.changeThreshold': [
+      { required: true, message: "请输入变化阈值", trigger: "blur", validator: (rule, value, callback) => {
+        if (form.alertMode === 'event' && form.eventType === 'holdingChange' && (!value || value <= 0)) {
+          callback(new Error('变化阈值必须大于0'))
+        } else {
+          callback()
+        }
+      }}
+    ],
+    'eventConfig.changeType': [
+      { required: true, message: "请选择异动类型", trigger: "change", validator: (rule, value, callback) => {
+        if (form.alertMode === 'event' && form.eventType === 'holdingChange' && !value) {
+          callback(new Error('请选择异动类型'))
+        } else {
+          callback()
+        }
+      }}
+    ],
+    'eventConfig.checkInterval': [
+      { required: true, message: "请输入检查间隔", trigger: "blur", validator: (rule, value, callback) => {
+        if (form.alertMode === 'event' && form.eventType === 'holdingChange' && (!value || value < 5)) {
+          callback(new Error('检查间隔必须大于等于5分钟'))
         } else {
           callback()
         }
@@ -543,6 +700,30 @@ function handleUpdate(row) {
     } else {
       form.value.notifyMethodsArray = []
     }
+    // 处理事件配置
+    if (form.value.alertMode === 'event' && form.value.eventConfig) {
+      if (typeof form.value.eventConfig === 'string') {
+        try {
+          form.value.eventConfig = JSON.parse(form.value.eventConfig)
+        } catch (e) {
+          console.error('解析事件配置失败:', e)
+          form.value.eventConfig = {}
+        }
+      }
+    }
+    // 处理市值条件值解析
+    if (form.value.alertMode === 'condition' && form.value.conditionType === 'marketCapBelow' && form.value.conditionValue) {
+      parseMarketCapValue(form.value.conditionValue)
+    }
+    if (!form.value.eventConfig) {
+      form.value.eventConfig = {
+        amountThreshold: 20,
+        transactionType: 'both',
+        changeThreshold: null,
+        changeType: 'both',
+        checkInterval: 30
+      }
+    }
     open.value = true
     title.value = "修改监控配置"
   })
@@ -556,8 +737,8 @@ function handleDetail(row) {
 
 /** 测试通知 */
 function handleTestNotify(row) {
-  const tokenName = row.tokenSymbol || row.tokenName || row.coinAddress?.substring(0, 8)
-  proxy.$modal.confirm(`确认要为"${tokenName}"发送测试通知吗？`).then(() => {
+  const tokenDisplay = row.tokenName || formatAddress(row.coinAddress)
+  proxy.$modal.confirm(`确认要为代币"${tokenDisplay}"发送测试通知吗？`).then(() => {
     return testCryptoMonitorNotify(row.id)
   }).then(() => {
     proxy.$modal.msgSuccess("测试通知发送成功")
@@ -570,21 +751,60 @@ function handleTestNotify(row) {
 function submitForm() {
   proxy.$refs["monitorRef"].validate(valid => {
     if (valid) {
+      submitLoading.value = true
+      
       // 处理通知方式
       form.value.notifyMethods = form.value.notifyMethodsArray.join(',')
       
-      if (form.value.id != null) {
-        updateCryptoMonitorConfig(form.value).then(response => {
-          proxy.$modal.msgSuccess("修改成功")
-          open.value = false
-          getList()
-        })
+      // 处理事件配置 - 如果是事件监控，将eventConfig转换为JSON字符串
+      if (form.value.alertMode === 'event' && form.value.eventConfig) {
+        // 创建一个拷贝以避免修改原始对象
+        const submitData = { ...form.value }
+        submitData.eventConfig = JSON.stringify(form.value.eventConfig)
+        
+        if (submitData.id != null) {
+          updateCryptoMonitorConfig(submitData).then(response => {
+            proxy.$modal.msgSuccess("修改成功")
+            open.value = false
+            getList()
+          }).catch(() => {
+            // 请求失败时也要关闭loading
+          }).finally(() => {
+            submitLoading.value = false
+          })
+        } else {
+          addCryptoMonitorConfig(submitData).then(response => {
+            proxy.$modal.msgSuccess("新增成功")
+            open.value = false
+            getList()
+          }).catch(() => {
+            // 请求失败时也要关闭loading
+          }).finally(() => {
+            submitLoading.value = false
+          })
+        }
       } else {
-        addCryptoMonitorConfig(form.value).then(response => {
-          proxy.$modal.msgSuccess("新增成功")
-          open.value = false
-          getList()
-        })
+        if (form.value.id != null) {
+          updateCryptoMonitorConfig(form.value).then(response => {
+            proxy.$modal.msgSuccess("修改成功")
+            open.value = false
+            getList()
+          }).catch(() => {
+            // 请求失败时也要关闭loading
+          }).finally(() => {
+            submitLoading.value = false
+          })
+        } else {
+          addCryptoMonitorConfig(form.value).then(response => {
+            proxy.$modal.msgSuccess("新增成功")
+            open.value = false
+            getList()
+          }).catch(() => {
+            // 请求失败时也要关闭loading
+          }).finally(() => {
+            submitLoading.value = false
+          })
+        }
       }
     }
   })
@@ -601,49 +821,7 @@ function handleDelete(row) {
   }).catch(() => {})
 }
 
-/** 批量启用 */
-function handleBatchEnable() {
-  if (ids.value.length === 0) {
-    proxy.$modal.msgError("请选择要启用的监控配置")
-    return
-  }
-  proxy.$modal.confirm(`确认要启用选中的 ${ids.value.length} 个监控配置吗？`).then(() => {
-    return batchEnableCryptoMonitor(ids.value)
-  }).then(() => {
-    proxy.$modal.msgSuccess("批量启用成功")
-    // 清空选择
-    ids.value = []
-    single.value = true
-    multiple.value = true
-    // 清空表格选择状态
-    proxy.$refs.monitorTable?.clearSelection()
-    getList()
-  }).catch(() => {
-    proxy.$modal.msgError("批量启用失败，请重试")
-  })
-}
 
-/** 批量停用 */
-function handleBatchDisable() {
-  if (ids.value.length === 0) {
-    proxy.$modal.msgError("请选择要停用的监控配置")
-    return
-  }
-  proxy.$modal.confirm(`确认要停用选中的 ${ids.value.length} 个监控配置吗？`).then(() => {
-    return batchDisableCryptoMonitor(ids.value)
-  }).then(() => {
-    proxy.$modal.msgSuccess("批量停用成功")
-    // 清空选择
-    ids.value = []
-    single.value = true
-    multiple.value = true
-    // 清空表格选择状态
-    proxy.$refs.monitorTable?.clearSelection()
-    getList()
-  }).catch(() => {
-    proxy.$modal.msgError("批量停用失败，请重试")
-  })
-}
 
 /** 状态修改 */
 function handleStatusChange(row) {
@@ -672,21 +850,35 @@ function cancel() {
 
 /** 表单重置 */
 function reset() {
+  // 重置市值输入
+  marketCapValue.value = null
+  marketCapUnit.value = 'M'
+  // 重置提交loading状态
+  submitLoading.value = false
+  
   form.value = {
     id: null,
     coinAddress: null,
-    tokenSymbol: null,
     tokenName: null,
     alertMode: 'timer',
     timerInterval: 15,
     conditionType: null,
     conditionValue: null,
+    eventType: null,
+    eventConfig: {
+      // 大额交易监控配置
+      amountThreshold: 20,
+      transactionType: 'both',
+      // 持仓异动监控配置
+      changeThreshold: null,
+      changeType: 'both',
+      checkInterval: 30
+    },
     notifyMethods: null,
     notifyMethodsArray: [],
     wechatName: null,
     telegramName: null,
     remark: null,
-    chainType: 'SOL',
     status: '1'
   }
   proxy.resetForm("monitorRef")
@@ -696,6 +888,34 @@ function reset() {
 function formatAddress(address) {
   if (!address) return ''
   return address.length > 16 ? `${address.substring(0, 8)}...${address.substring(address.length - 8)}` : address
+}
+
+/** 获取链类型 */
+function getChainType(address) {
+  if (!address) return 'UNKNOWN'
+  
+  // ETH/BSC/BASE 地址格式: 0x + 40位十六进制
+  if (address.startsWith('0x') && address.length === 42) {
+    // 这里可以根据实际需求进一步区分ETH/BSC/BASE
+    return 'EVM'
+  }
+  // SOL 地址格式: 32-44位 base58编码
+  else if (address.length >= 32 && address.length <= 44 && !address.startsWith('0x')) {
+    return 'SOL'
+  }
+  
+  return 'UNKNOWN'
+}
+
+/** 获取链标签类型 */
+function getChainTagType(address) {
+  const chainType = getChainType(address)
+  const types = {
+    'SOL': 'primary',
+    'EVM': 'success',
+    'UNKNOWN': 'warning'
+  }
+  return types[chainType] || 'info'
 }
 
 /** 格式化时间 */
@@ -724,12 +944,38 @@ function getConditionTypeText(type) {
 /** 格式化条件值 */
 function formatConditionValue(value, type) {
   if (!value) return ''
+  
   if (type === 'changeExceeds') {
+    // 涨跌幅超过 - 百分比单位
     return `${value}%`
   } else if (type === 'marketCapBelow') {
-    return `$${value.toLocaleString()}`
+    // 市值低于 - K/M/B单位
+    return formatMarketCap(value)
   } else {
-    return `$${value}`
+    // 价格高于/低于 - 美元单位，支持小数
+    return formatPrice(value)
+  }
+}
+
+/** 格式化价格 */
+function formatPrice(value) {
+  if (value >= 1) {
+    return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  } else {
+    return `$${value.toFixed(6)}`
+  }
+}
+
+/** 格式化市值 */
+function formatMarketCap(value) {
+  if (value >= 1000000000) {
+    return `$${(value / 1000000000).toFixed(1)}B`
+  } else if (value >= 1000000) {
+    return `$${(value / 1000000).toFixed(1)}M`
+  } else if (value >= 1000) {
+    return `$${(value / 1000).toFixed(1)}K`
+  } else {
+    return `$${value.toLocaleString()}`
   }
 }
 
@@ -747,12 +993,135 @@ function getValuePrecision() {
 /** 获取条件提示 */
 function getConditionTip() {
   const tips = {
-    'priceAbove': '当价格高于此值时触发',
-    'priceBelow': '当价格低于此值时触发',
-    'marketCapBelow': '当市值低于此值时触发',
-    'changeExceeds': '当涨跌幅超过此百分比时触发'
+    'priceAbove': '单位：美元(USD)，当价格高于此值时触发通知',
+    'priceBelow': '单位：美元(USD)，当价格低于此值时触发通知',
+    'marketCapBelow': '单位：K千/M百万/B十亿，当市值等于此值时触发通知',
+    'changeExceeds': '单位：百分比(%)，当涨跌幅超过此值时触发通知'
   }
   return tips[form.value.conditionType] || ''
+}
+
+/** 是否显示红色提示 */
+function shouldShowRedTip() {
+  return ['priceAbove', 'priceBelow', 'marketCapBelow', 'changeExceeds'].includes(form.value.conditionType)
+}
+
+/** 更新市值条件值 */
+function updateMarketCapConditionValue() {
+  if (!marketCapValue.value || !marketCapUnit.value) {
+    form.value.conditionValue = null
+    return
+  }
+  
+  const multipliers = {
+    'K': 1000,
+    'M': 1000000,
+    'B': 1000000000
+  }
+  
+  form.value.conditionValue = marketCapValue.value * multipliers[marketCapUnit.value]
+}
+
+/** 从条件值解析市值输入 */
+function parseMarketCapValue(value) {
+  if (!value) {
+    marketCapValue.value = null
+    marketCapUnit.value = 'M'
+    return
+  }
+  
+  if (value >= 1000000000) {
+    marketCapValue.value = Number((value / 1000000000).toFixed(2))
+    marketCapUnit.value = 'B'
+  } else if (value >= 1000000) {
+    marketCapValue.value = Number((value / 1000000).toFixed(2))
+    marketCapUnit.value = 'M'
+  } else if (value >= 1000) {
+    marketCapValue.value = Number((value / 1000).toFixed(2))
+    marketCapUnit.value = 'K'
+  } else {
+    marketCapValue.value = value
+    marketCapUnit.value = 'K'
+  }
+}
+
+/** 获取监控模式类型 */
+function getAlertModeType(mode) {
+  const types = {
+    'timer': 'primary',
+    'condition': 'success',
+    'event': 'warning'
+  }
+  return types[mode] || 'info'
+}
+
+/** 获取监控模式文本 */
+function getAlertModeText(mode) {
+  const texts = {
+    'timer': '定时提醒',
+    'condition': '价格触发',
+    'event': '事件监控'
+  }
+  return texts[mode] || mode
+}
+
+/** 获取事件类型文本 */
+function getEventTypeText(type) {
+  const texts = {
+    'largeTransaction': '大额交易监控',
+    'holdingChange': '持仓异动监控'
+  }
+  return texts[type] || type
+}
+
+/** 格式化事件配置 */
+function formatEventConfig(config, type) {
+  if (!config) return ''
+  
+  // 如果config是字符串，尝试解析为JSON
+  if (typeof config === 'string') {
+    try {
+      config = JSON.parse(config)
+    } catch (e) {
+      return '配置解析失败'
+    }
+  }
+  
+  if (type === 'largeTransaction') {
+    const transactionTypeText = {
+      'buy': '买入',
+      'sell': '卖出', 
+      'both': '买入和卖出'
+    }[config.transactionType] || config.transactionType
+    
+    return `≥${config.amountThreshold} SOL (${transactionTypeText})`
+  } else if (type === 'holdingChange') {
+    const changeTypeText = {
+      'increase': '增加',
+      'decrease': '减少',
+      'both': '双向'
+    }[config.changeType] || config.changeType
+    
+    return `前10大持仓 ${changeTypeText} ≥${config.changeThreshold}% (每${config.checkInterval}分钟)`
+  }
+  return ''
+}
+
+/** 处理事件类型变化 */
+function handleEventTypeChange() {
+  // 重置事件配置
+  if (form.value.eventType === 'largeTransaction') {
+    form.value.eventConfig = {
+      amountThreshold: 20,
+      transactionType: 'both'
+    }
+  } else if (form.value.eventType === 'holdingChange') {
+    form.value.eventConfig = {
+      changeThreshold: 10,
+      changeType: 'both',
+      checkInterval: 30
+    }
+  }
 }
 
 onMounted(() => {
@@ -765,30 +1134,23 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-}
-
-.token-main {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.token-symbol {
-  font-weight: bold;
-  font-size: 14px;
-  color: #409EFF;
+  gap: 6px;
 }
 
 .token-name {
-  font-size: 12px;
-  color: #666;
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
 }
 
 .token-address {
   font-size: 11px;
   color: #999;
   font-family: monospace;
+}
+
+.chain-badge {
+  margin-top: 2px;
 }
 
 .condition-detail {
@@ -839,20 +1201,83 @@ onMounted(() => {
   margin-top: 4px;
 }
 
+.form-tip.tip-red {
+  color: #f56c6c;
+  font-weight: 500;
+}
+
 .monitor-detail .token-detail {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+}
+
+.monitor-detail .token-detail .token-name {
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
 }
 
 .monitor-detail .token-detail .token-address {
   font-family: monospace;
   word-break: break-all;
   font-size: 12px;
-  color: #666;
+  color: #999;
 }
 
 .text-gray-400 {
   color: #9CA3AF;
+}
+
+.event-detail {
+  text-align: center;
+}
+
+.event-type {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 2px;
+  font-weight: bold;
+}
+
+.event-config {
+  font-size: 11px;
+  color: #E6A23C;
+  line-height: 1.3;
+  word-break: break-all;
+}
+
+/* 事件监控表单样式 */
+.el-form-item .form-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+  line-height: 1.2;
+}
+
+/* 事件监控配置区域样式 */
+.el-form .el-row {
+  margin-bottom: 16px;
+}
+
+/* 大额交易监控特殊样式 */
+.event-detail .event-config {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 持仓异动监控样式 */
+.event-detail[data-event-type="holdingChange"] .event-config {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .event-config {
+    font-size: 10px;
+  }
 }
 </style>
