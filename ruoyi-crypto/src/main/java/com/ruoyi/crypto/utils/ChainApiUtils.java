@@ -776,7 +776,9 @@ public class ChainApiUtils {
         vo.setSymbol(baseToken.getStr("symbol"));
         vo.setName(baseToken.getStr("name"));
         vo.setCreateTime(obj.getLong("pairCreatedAt"));
-        vo.setLiquidity(liquidity.getDouble("usd"));
+        if(!JSONUtil.isNull(liquidity)){
+            vo.setLiquidity(liquidity.getDouble("usd"));
+        }
         vo.setPrice(obj.getDouble("priceUsd"));
         pairInfo.setExchange(obj.getStr("dexId"));
 
@@ -811,29 +813,30 @@ public class ChainApiUtils {
         vo.setRealtimeData(cryptoRealtimeData);
 
         // Social
-        // vo.setSocialLinks(...);
-        vo.setLogoUrl(info.getStr("imageUrl"));
         List<CryptoSocialLink> list = new ArrayList<>();
-        JSONArray websites = info.getJSONArray("websites");
-        for (Object website : websites) {
-            CryptoSocialLink cryptoSocialLink = new CryptoSocialLink();
-            JSONObject jsonObject = JSONUtil.parseObj(website);
-            String type = jsonObject.getStr("type");
-            String url = jsonObject.getStr("url");
-            cryptoSocialLink.setUrl(url);
-            cryptoSocialLink.setType(type);
-            list.add(cryptoSocialLink);
-        }
+        if(!JSONUtil.isNull(info)){
+            vo.setLogoUrl(info.getStr("imageUrl"));
+            JSONArray websites = info.getJSONArray("websites");
+            for (Object website : websites) {
+                CryptoSocialLink cryptoSocialLink = new CryptoSocialLink();
+                JSONObject jsonObject = JSONUtil.parseObj(website);
+                String type = jsonObject.getStr("type");
+                String url = jsonObject.getStr("url");
+                cryptoSocialLink.setUrl(url);
+                cryptoSocialLink.setType(type);
+                list.add(cryptoSocialLink);
+            }
 
-        JSONArray socials = info.getJSONArray("socials");
-        for (Object social : socials) {
-            CryptoSocialLink cryptoSocialLink = new CryptoSocialLink();
-            JSONObject jsonObject = JSONUtil.parseObj(social);
-            String type = jsonObject.getStr("type");
-            String url = jsonObject.getStr("url");
-            cryptoSocialLink.setUrl(url);
-            cryptoSocialLink.setType(type);
-            list.add(cryptoSocialLink);
+            JSONArray socials = info.getJSONArray("socials");
+            for (Object social : socials) {
+                CryptoSocialLink cryptoSocialLink = new CryptoSocialLink();
+                JSONObject jsonObject = JSONUtil.parseObj(social);
+                String type = jsonObject.getStr("type");
+                String url = jsonObject.getStr("url");
+                cryptoSocialLink.setUrl(url);
+                cryptoSocialLink.setType(type);
+                list.add(cryptoSocialLink);
+            }
         }
         vo.setSocialLinks(list);
         // 官网、白皮书等字段
