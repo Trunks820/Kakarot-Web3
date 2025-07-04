@@ -384,9 +384,9 @@
 
         <el-row v-if="form.notifyMethodsArray.includes('telegram')" :gutter="16">
           <el-col :span="12">
-            <el-form-item label="Telegram名称" prop="telegramName">
-              <el-input v-model="form.telegramName" placeholder="请输入Telegram用户名" maxlength="100" />
-              <div class="form-tip">支持发送给个人或群组（群组请填写群组名称）</div>
+            <el-form-item label="Telegram用户或群聊ID" prop="telegramName">
+              <el-input v-model="form.telegramName" placeholder="请输入Telegram用户ID或群聊ID（纯数字）" maxlength="100" />
+              <div class="form-tip">支持发送给个人或群聊，需要填写数字ID而非用户名</div>
             </el-form-item>
           </el-col>
         </el-row>
@@ -646,9 +646,9 @@ const data = reactive({
       }}
     ],
     telegramName: [
-      { required: true, message: "请输入Telegram名称", trigger: "blur", validator: (rule, value, callback) => {
+      { required: true, message: "请输入Telegram用户或群聊ID", trigger: "blur", validator: (rule, value, callback) => {
         if (form.notifyMethodsArray && form.notifyMethodsArray.includes('telegram') && !value) {
-          callback(new Error('请输入Telegram名称'))
+          callback(new Error('请输入Telegram用户或群聊ID'))
         } else {
           callback()
         }

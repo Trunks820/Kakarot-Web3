@@ -104,16 +104,16 @@ CREATE TABLE crypto_group_statistics (
 DROP TABLE IF EXISTS crypto_monitor_config;
 CREATE TABLE crypto_monitor_config (
                                        id                     BIGINT        NOT NULL AUTO_INCREMENT COMMENT '主键',
-                                       coin_address           VARCHAR(255)  NOT NULL                COMMENT '代币地址',
-                                       token_symbol           VARCHAR(50)   DEFAULT ''              COMMENT '代币符号',
-                                       token_name             VARCHAR(100)  DEFAULT ''              COMMENT '代币名称',
-                                       alert_mode             VARCHAR(20)   NOT NULL                COMMENT '提醒模式(timer:定时提醒, condition:条件触发)',
+                                       coin_address           VARCHAR(255)  NOT NULL                COMMENT '代币地址(SOL/EVM通用,通过地址格式自动识别链类型)',
+                                       token_name             VARCHAR(100)  DEFAULT ''              COMMENT '代币名称(保存时通过API查询获取,相对稳定)',
+                                       alert_mode             VARCHAR(20)   NOT NULL                COMMENT '提醒模式(timer:定时提醒, condition:价格触发, event:事件监控)',
+                                       event_type             VARCHAR(30)   DEFAULT NULL            COMMENT '事件类型(largeTransaction:大额交易监控, holdingChange:持仓异动监控)',
                                        timer_interval         INT           DEFAULT NULL            COMMENT '定时提醒间隔(分钟)',
                                        condition_type         VARCHAR(30)   DEFAULT NULL            COMMENT '条件类型(priceAbove:价格高于, priceBelow:价格低于, marketCapBelow:市值低于, changeExceeds:涨跌幅超过)',
-                                       condition_value        DECIMAL(30,8) DEFAULT NULL            COMMENT '条件阈值',
+                                       condition_value        DECIMAL(30,8) DEFAULT NULL            COMMENT '条件阈值(价格单位USD,涨跌幅为百分比,市值已转换为实际数值)',
                                        notify_methods         VARCHAR(100)  NOT NULL                COMMENT '通知方式(wechat,telegram)',
-                                       wechat_name            VARCHAR(100)  DEFAULT ''              COMMENT '微信名称',
-                                       telegram_name          VARCHAR(100)  DEFAULT ''              COMMENT 'Telegram名称',
+                                       wechat_name            VARCHAR(100)  DEFAULT ''              COMMENT '微信名称(支持个人和群聊)',
+                                       telegram_name          VARCHAR(100)  DEFAULT ''              COMMENT 'Telegram名称(支持个人和群组)',
                                        remark                 VARCHAR(500)  DEFAULT ''              COMMENT '备注',
                                        last_notification_time DATETIME                              COMMENT '上次通知时间',
                                        status                 CHAR(1)       DEFAULT '1'             COMMENT '状态(0:停用, 1:启用)',
@@ -122,11 +122,11 @@ CREATE TABLE crypto_monitor_config (
                                        create_time            DATETIME                              COMMENT '创建时间',
                                        update_by              VARCHAR(64)   DEFAULT ''              COMMENT '更新者',
                                        update_time            DATETIME                              COMMENT '更新时间',
-                                       chain_type             VARCHAR(20)   DEFAULT 'SOL'           COMMENT '链类型',
                                        PRIMARY KEY (id),
                                        INDEX idx_coin_address (coin_address),
                                        INDEX idx_create_by (create_by),
                                        INDEX idx_alert_mode (alert_mode),
+                                       INDEX idx_event_type (event_type),
                                        INDEX idx_status (status)
 ) ENGINE=InnoDB AUTO_INCREMENT=200 COMMENT='监控配置表';
 
@@ -242,16 +242,18 @@ VALUES
 
 -- 5. 插入监控配置
 INSERT INTO crypto_monitor_config
-(coin_address, token_symbol, token_name, alert_mode, timer_interval, 
+(coin_address, token_name, alert_mode, event_type, timer_interval, 
 condition_type, condition_value, notify_methods, wechat_name, telegram_name, remark,
-status, last_notification_time, create_by, create_time, chain_type)
+status, last_notification_time, create_by, create_time)
 VALUES
-('EsDZUf7cDUU7FSPjePkksaJ8TzvC9QY5YRqeuiy5pump', 'Mitsuki', 'Doge\'s Original Name', 'timer', 15, 
-NULL, NULL, 'telegram', '', 'user1001', '定时监控Mitsuki代币', '1', DATE_SUB(NOW(), INTERVAL 1 HOUR), 'admin', NOW(), 'SOL'),
-('So11111111111111111111111111111111111111112', 'SOL', 'Solana', 'condition', NULL, 
-'priceAbove', 120.00000000, 'wechat,telegram', '微信用户1002', 'tg_user1002', 'SOL价格突破120时预警', '1', DATE_SUB(NOW(), INTERVAL 2 HOUR), 'admin', NOW(), 'SOL'),
-('EsDZUf7cDUU7FSPjePkksaJ8TzvC9QY5YRqeuiy5pump', 'Mitsuki', 'Doge\'s Original Name', 'condition', NULL, 
-'changeExceeds', 10.00000000, 'telegram', '', 'user1003', 'Mitsuki涨跌幅超过10%预警', '1', NULL, 'admin', NOW(), 'SOL');
+('EsDZUf7cDUU7FSPjePkksaJ8TzvC9QY5YRqeuiy5pump', 'Doge\'s Original Name', 'timer', NULL, 15, 
+NULL, NULL, 'telegram', '', 'user1001', '定时监控Mitsuki代币', '1', DATE_SUB(NOW(), INTERVAL 1 HOUR), 'admin', NOW()),
+('So11111111111111111111111111111111111111112', 'Solana', 'condition', NULL, NULL, 
+'priceAbove', 120.00000000, 'wechat,telegram', '微信用户1002', 'tg_user1002', 'SOL价格突破120时预警', '1', DATE_SUB(NOW(), INTERVAL 2 HOUR), 'admin', NOW()),
+('EsDZUf7cDUU7FSPjePkksaJ8TzvC9QY5YRqeuiy5pump', 'Doge\'s Original Name', 'condition', NULL, NULL, 
+'changeExceeds', 10.00000000, 'telegram', '', 'user1003', 'Mitsuki涨跌幅超过10%预警', '1', NULL, 'admin', NOW()),
+('EsDZUf7cDUU7FSPjePkksaJ8TzvC9QY5YRqeuiy5pump', 'Doge\'s Original Name', 'event', 'largeTransaction', NULL, 
+NULL, 50000.00000000, 'wechat,telegram', '微信用户1004', 'tg_user1004', '大额交易监控(≥5万美元)', '1', NULL, 'admin', NOW());
 
 -- 6. 插入机器人群组
 INSERT INTO crypto_bot_group

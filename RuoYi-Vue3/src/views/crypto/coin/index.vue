@@ -692,16 +692,14 @@
         <!-- Telegram配置 -->
         <el-form-item 
           v-if="monitorForm.notifyMethods.includes('telegram')"
-          label="Telegram名称" 
+          label="Telegram用户或群聊ID" 
           prop="telegramName"
         >
           <el-input 
             v-model="monitorForm.telegramName" 
-            placeholder="请输入Telegram用户名"
+            placeholder="请输入Telegram用户ID或群聊ID（纯数字）"
             clearable
-          >
-            <template #prefix>@</template>
-          </el-input>
+          />
         </el-form-item>
 
         <!-- 备注 -->
@@ -794,7 +792,7 @@ const monitorRules = reactive({
     { required: true, message: '请输入微信名称', trigger: 'blur', validator: validateWechatName }
   ],
   telegramName: [
-    { required: true, message: '请输入Telegram名称', trigger: 'blur', validator: validateTelegramName }
+    { required: true, message: '请输入Telegram用户或群聊ID', trigger: 'blur', validator: validateTelegramName }
   ]
 })
 
@@ -837,7 +835,7 @@ function validateWechatName(rule, value, callback) {
 
 function validateTelegramName(rule, value, callback) {
   if (monitorForm.notifyMethods.includes('telegram') && !value) {
-    callback(new Error('请输入Telegram名称'))
+    callback(new Error('请输入Telegram用户或群聊ID'))
   } else {
     callback()
   }
