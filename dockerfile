@@ -22,7 +22,7 @@ COPY . .
 COPY --from=frontend-builder /app/frontend/dist ./ruoyi-admin/src/main/resources/static/
 
 # Maven构建Java项目
-# RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests
 
 # =================
 # 第二阶段运行镜像
