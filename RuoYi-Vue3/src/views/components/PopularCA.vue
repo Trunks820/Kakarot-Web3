@@ -91,13 +91,51 @@ const formatAddress = (address) => {
   return `${address.slice(0, 10)}...${address.slice(-8)}`
 }
 
-// 复制到剪贴板
+// 复制到剪贴板 - 兼容HTTPS和HTTP环境
 const copyToClipboard = (text) => {
-  navigator.clipboard.writeText(text).then(() => {
-    ElMessage.success('地址已复制到剪贴板')
-  }).catch(() => {
+  // 尝试使用现代API (仅HTTPS/localhost)
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      ElMessage.success('地址已复制到剪贴板')
+    }).catch(() => {
+      fallbackCopyTextToClipboard(text)
+    })
+  } else {
+    // 回退到传统方案
+    fallbackCopyTextToClipboard(text)
+  }
+}
+
+// 兼容性复制方案
+const fallbackCopyTextToClipboard = (text) => {
+  const textArea = document.createElement('textarea')
+  textArea.value = text
+  
+  // 避免滚动到底部
+  textArea.style.top = '0'
+  textArea.style.left = '0'
+  textArea.style.position = 'fixed'
+  textArea.style.opacity = '0'
+  textArea.style.pointerEvents = 'none'
+  textArea.style.zIndex = '-1'
+  
+  document.body.appendChild(textArea)
+  textArea.focus()
+  textArea.select()
+  
+  try {
+    const successful = document.execCommand('copy')
+    if (successful) {
+      ElMessage.success('地址已复制到剪贴板')
+    } else {
+      ElMessage.error('复制失败，请手动复制')
+    }
+  } catch (err) {
+    console.error('复制失败:', err)
     ElMessage.error('复制失败，请手动复制')
-  })
+  }
+  
+  document.body.removeChild(textArea)
 }
 
 // 获取排名样式

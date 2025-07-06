@@ -5,6 +5,7 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.crypto.domain.CryptoMonitorConfig;
+import com.ruoyi.crypto.domain.vo.CryptoApiResultVo;
 import com.ruoyi.crypto.mapper.CryptoMonitorConfigMapper;
 import com.ruoyi.crypto.service.CryptoMonitorService;
 import com.ruoyi.crypto.utils.ChainApiUtils;
@@ -58,8 +59,30 @@ public class CryptoMonitorServiceImpl implements CryptoMonitorService {
         String coinAddress = cryptoMonitorConfig.getCoinAddress();
         AjaxResult dexPairInfo = chainApiUtils.getDexPairInfo(coinAddress);
         if(dexPairInfo.isSuccess()){
-            JSONObject jsonObject = JSONUtil.parseObj(dexPairInfo.get("data"));
-            cryptoMonitorConfig.setTokenName(jsonObject.getStr("symbol"));
+            // 修复：正确处理返回的数据结构
+            Object data = dexPairInfo.get("data");
+            if (data instanceof CryptoApiResultVo) {
+                CryptoApiResultVo vo = (CryptoApiResultVo) data;
+                // 优先使用name（代币名称），如果为空则使用symbol（代币符号）
+                String tokenName = vo.getName();
+                if (tokenName == null || tokenName.trim().isEmpty()) {
+                    tokenName = vo.getSymbol();
+                }
+                cryptoMonitorConfig.setTokenName(tokenName);
+            } else if (data != null) {
+                // 兜底：如果数据是其他格式，尝试JSON解析
+                try {
+                    JSONObject jsonObject = JSONUtil.parseObj(data.toString());
+                    String tokenName = jsonObject.getStr("name");
+                    if (tokenName == null || tokenName.trim().isEmpty()) {
+                        tokenName = jsonObject.getStr("symbol");
+                    }
+                    cryptoMonitorConfig.setTokenName(tokenName);
+                } catch (Exception e) {
+                    // 如果解析失败，记录日志但不影响保存
+                    System.err.println("Failed to parse token info: " + e.getMessage());
+                }
+            }
         }
         // 默认状态为启用
         if (cryptoMonitorConfig.getStatus() == null) {
@@ -106,7 +129,6 @@ public class CryptoMonitorServiceImpl implements CryptoMonitorService {
      * 根据代币地址检查是否已被监控
      * 
      * @param coinAddress 代币地址
-     * @param userId 用户ID
      * @return 是否已被监控
      */
     @Override
