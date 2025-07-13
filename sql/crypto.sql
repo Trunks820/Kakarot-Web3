@@ -159,6 +159,7 @@ CREATE TABLE crypto_wallet (
     wallet_name       VARCHAR(100) DEFAULT NULL            COMMENT '钱包备注',
     last_active_time  DATETIME                             COMMENT '最后活跃时间',
     monitor_state     TINYINT(1)   DEFAULT 1               COMMENT '监控状态(0:禁用,1:启用)',
+    operation_type    VARCHAR(100) DEFAULT NULL            COMMENT '操作类型备注',
     del_flag          CHAR(1)      DEFAULT '0'             COMMENT '删除标志（0代表存在 2代表删除）',
     create_by         VARCHAR(64)  DEFAULT ''              COMMENT '创建者',
     create_time       DATETIME                             COMMENT '创建时间',

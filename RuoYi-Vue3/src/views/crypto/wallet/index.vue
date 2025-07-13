@@ -18,6 +18,9 @@
                   <el-option label="未监控" value="0"></el-option>
                 </el-select>
               </el-form-item>
+              <el-form-item label="操作类型" prop="operationType">
+                <el-input v-model="queryParams.operationType" placeholder="请输入操作类型" clearable style="width: 240px" @keyup.enter="handleQuery" />
+              </el-form-item>
               <el-form-item>
                 <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
                 <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -57,6 +60,7 @@
                   <el-tag :type="getChainTypeColor(scope.row.chainType)">{{ scope.row.chainType }}</el-tag>
                 </template>
               </el-table-column>
+              <el-table-column label="操作类型" align="center" key="operationType" prop="operationType" v-if="columns[3].visible" width="120" :show-overflow-tooltip="true" />
               <el-table-column label="监控状态" align="center" key="monitorState" v-if="columns[4].visible" width="100">
                 <template #default="scope">
                   <el-switch
@@ -125,11 +129,9 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="24">
-            <el-form-item label="备注">
-              <el-input v-model="form.remark" type="textarea" placeholder="请输入备注信息"></el-input>
+          <el-col :span="12">
+            <el-form-item label="操作类型" prop="operationType">
+              <el-input v-model="form.operationType" placeholder="请输入操作类型备注" maxlength="100" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -293,6 +295,7 @@ const columns = ref([
   { key: 0, label: `钱包地址`, visible: true },
   { key: 1, label: `钱包备注`, visible: true },
   { key: 2, label: `链类型`, visible: true },
+  { key: 3, label: `操作类型`, visible: true },
   { key: 4, label: `监控状态`, visible: true },
   { key: 5, label: `最后活跃时间`, visible: true },
   { key: 6, label: `创建时间`, visible: true }
@@ -306,6 +309,7 @@ const data = reactive({
     walletAddress: undefined,
     walletName: undefined,
     chainType: undefined,
+    operationType: undefined,
     monitorState: undefined
   },
   rules: {
@@ -333,6 +337,8 @@ function getChainTypeColor(chainType) {
   }
   return colorMap[chainType] || 'default'
 }
+
+
 
 /** 查询钱包列表 */
 function getList() {
@@ -489,8 +495,8 @@ function reset() {
     walletAddress: undefined,
     walletName: undefined,
     chainType: "SOL",
-    monitorState: 1, // 默认启用监控
-    remark: undefined
+    operationType: undefined, // 操作类型备注
+    monitorState: 0 // 默认不启用监控
   }
   proxy.resetForm("walletRef")
 }

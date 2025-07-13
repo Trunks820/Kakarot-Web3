@@ -10,6 +10,7 @@
         <result property="walletName"      column="wallet_name"></result>
         <result property="lastActiveTime"     column="last_active_time"></result>
         <result property="monitorState"   column="monitor_state"></result>
+        <result property="operationType"   column="operation_type"></result>
         <result property="chainType"   column="chain_type"></result>
         <result property="delFlag"     column="del_flag"    />
         <result property="createBy"    column="create_by"   />
@@ -19,7 +20,7 @@
     </resultMap>
 
     <sql id="selectWalletVo">
-        select id, wallet_address, wallet_name, last_active_time, monitor_state, chain_type,
+        select id, wallet_address, wallet_name, last_active_time, monitor_state, operation_type, chain_type,
                del_flag, create_by, create_time, update_by, update_time
     </sql>
 
@@ -29,6 +30,7 @@
             cw.wallet_address,
             cw.wallet_name,
             cw.monitor_state,
+            cw.operation_type,
             cw.chain_type,
             cw.del_flag,
             cw.create_by,
@@ -78,6 +80,9 @@
                 AND (cw.wallet_name like concat('%', #{walletName}, '%'))
 
             </if>
+            <if test="operationType != null and operationType != ''">
+                AND (cw.operation_type like concat('%', #{operationType}, '%'))
+            </if>
             <if test="monitorState != null and monitorState != ''">
                 AND cw.monitor_state = #{monitorState}
             </if>
@@ -99,6 +104,7 @@
             <if test="walletAddress != null and walletAddress != ''">wallet_address,</if>
             <if test="walletName != null and walletName != ''">wallet_name,</if>
             <if test="monitorState != null">monitor_state,</if>
+            <if test="operationType != null and operationType != ''">operation_type,</if>
             <if test="chainType != null and chainType != ''">chain_type,</if>
             <if test="createBy != null and createBy != ''">create_by,</if>
             create_time
@@ -109,6 +115,7 @@
             <if test="walletAddress != null and walletAddress != ''">#{walletAddress},</if>
             <if test="walletName != null and walletName != ''">#{walletName},</if>
             <if test="monitorState != null">#{monitorState},</if>
+            <if test="operationType != null and operationType != ''">#{operationType},</if>
             <if test="chainType != null and chainType != ''">#{chainType},</if>
             <if test="createBy != null and createBy != ''">#{createBy},</if>
             NOW()
@@ -125,6 +132,9 @@
             </if>
             <if test="monitorState != null">
                 monitor_state = #{monitorState},
+            </if>
+            <if test="operationType != null and operationType != ''">
+                operation_type = #{operationType},
             </if>
             <if test="chainType != null and chainType != ''">
                 chain_type = #{chainType},

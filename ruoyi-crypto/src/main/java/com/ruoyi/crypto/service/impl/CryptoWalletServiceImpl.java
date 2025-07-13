@@ -59,7 +59,10 @@ public class CryptoWalletServiceImpl implements CryptoWalletService {
             }
             wallet.setCreateBy(operName);
             wallet.setDelFlag("0");
-            wallet.setMonitorState(1); // 导入的钱包默认设置为关注
+            // 如果Excel中没有指定监控状态，默认设置为不启用
+            if (wallet.getMonitorState() == null) {
+                wallet.setMonitorState(0);
+            }
             cryptoWalletMapper.insertCryptoWallet(wallet);
             success++;
         }

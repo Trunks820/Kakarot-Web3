@@ -38,6 +38,11 @@ public class CryptoWallet extends BaseEntity {
     @ApiModelProperty("监控状态")
     private Integer monitorState;
 
+    /** 操作类型备注 */
+    @Excel(name = "操作类型")
+    @ApiModelProperty("操作类型备注")
+    private String operationType;
+
     @Excel(name = "链类型")
     @ApiModelProperty("链类型")
     private String chainType;
