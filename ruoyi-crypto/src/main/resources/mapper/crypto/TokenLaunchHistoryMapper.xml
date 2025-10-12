@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.TokenLaunchHistoryMapper">
+
+    <resultMap type="TokenLaunchHistory" id="TokenLaunchHistoryResult">
+        <id     property="id"                column="id"                    />
+        <result property="ca"                column="ca"                    />
+        <result property="tokenName"         column="token_name"            />
+        <result property="tokenSymbol"       column="token_symbol"          />
+        <result property="twitterUrl"        column="twitter_url"           />
+        <result property="source"            column="source"                />
+        <result property="launchTime"        column="launch_time"           />
+        <result property="highestMarketCap"  column="highest_market_cap"    />
+        <result property="tgMsgId"           column="tg_msg_id"             />
+        <result property="createdAt"         column="created_at"            />
+    </resultMap>
+
+    <sql id="selectTokenVo">
+        SELECT id, ca, token_name, token_symbol, twitter_url, source,
+               launch_time, highest_market_cap, tg_msg_id, created_at,
+               del_flag, create_by, create_time, update_by, update_time
+        FROM token_launch_history
+    </sql>
+
+    <!-- 查询Token列表 -->
+    <select id="selectTokenList" parameterType="TokenLaunchHistory" resultMap="TokenLaunchHistoryResult">
+        SELECT t.id, t.ca, t.token_name, t.token_symbol, t.twitter_url, t.source,
+               t.launch_time, t.highest_market_cap, t.tg_msg_id, t.created_at,
+               t.del_flag, t.create_by, t.create_time, t.update_by, t.update_time
+        FROM token_launch_history t
+        LEFT JOIN twitter_account_manage ta ON t.twitter_url = ta.twitter_url
+        <where>
+            <if test="source != null and source != '' and source != 'all'">
+                AND t.source = #{source}
+            </if>
+            <if test="params.beginTime != null and params.beginTime != ''">
+                AND t.launch_time &gt;= #{params.beginTime}
+            </if>
+            <if test="params.endTime != null and params.endTime != ''">
+                AND t.launch_time &lt;= #{params.endTime}
+            </if>
+            <if test="params.keyword != null and params.keyword != ''">
+                AND (
+                t.token_name LIKE concat('%', #{params.keyword}, '%')
+                OR t.token_symbol LIKE concat('%', #{params.keyword}, '%')
+                OR t.ca LIKE concat('%', #{params.keyword}, '%')
+                )
+            </if>
+            <if test="params.hasTwitter != null and params.hasTwitter != ''">
+                <choose>
+                    <!-- 推特主页：不包含/status/、/communities/、/search -->
+                    <when test='params.hasTwitter == "profile"'>
+                        AND t.twitter_url IS NOT NULL 
+                        AND t.twitter_url != ''
+                        AND t.twitter_url NOT LIKE '%/status/%'
+                        AND t.twitter_url NOT LIKE '%/communities/%'
+                        AND t.twitter_url NOT LIKE '%/search%'
+                    </when>
+                    <!-- 推文：包含/status/ -->
+                    <when test='params.hasTwitter == "tweet"'>
+                        AND t.twitter_url LIKE '%/status/%'
+                    </when>
+                    <!-- 社区：包含/communities/ -->
+                    <when test='params.hasTwitter == "community"'>
+                        AND t.twitter_url LIKE '%/communities/%'
+                    </when>
+                    <!-- 无推特 -->
+                    <when test='params.hasTwitter == "none"'>
+                        AND (t.twitter_url IS NULL OR t.twitter_url = '')
+                    </when>
+                </choose>
+            </if>
+            <if test="params.minMarketCap != null and params.minMarketCap != ''">
+                AND t.highest_market_cap &gt;= #{params.minMarketCap}
+            </if>
+            <if test="params.isFollowing != null and params.isFollowing != ''">
+                <choose>
+                    <!-- 已关注 -->
+                    <when test='params.isFollowing == "1"'>
+                        AND ta.is_following = 1
+                    </when>
+                    <!-- 未关注 -->
+                    <when test='params.isFollowing == "0"'>
+                        AND (ta.is_following = 0 OR ta.is_following IS NULL)
+                    </when>
+                </choose>
+            </if>
+        </where>
+        ORDER BY t.launch_time DESC
+    </select>
+
+    <!-- 查询Token详情 -->
+    <select id="selectTokenByCa" parameterType="String" resultMap="TokenLaunchHistoryResult">
+        <include refid="selectTokenVo"/>
+        WHERE ca = #{ca}
+    </select>
+
+    <!-- 查询统计数据 -->
+    <select id="selectTokenStats" resultType="map">
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN source = 'pump' THEN 1 ELSE 0 END) as pumpCount,
+            SUM(CASE WHEN source = 'bonk' THEN 1 ELSE 0 END) as bonkCount,
+            SUM(CASE WHEN DATE(launch_time) = CURDATE() THEN 1 ELSE 0 END) as todayCount
+        FROM token_launch_history
+    </select>
+
+</mapper>

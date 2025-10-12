@@ -40,7 +40,7 @@ public class CryptoWallet extends BaseEntity {
 
     /** 操作类型备注 */
     @Excel(name = "操作类型")
-    @ApiModelProperty("操作类型备注")
+    @ApiModelProperty("操作类型")
     private String operationType;
 
     @Excel(name = "链类型")

@@ -11,6 +11,12 @@ export default {
   },
   children: [
     {
+      path: 'tokenMonitor',
+      component: () => import('@/views/crypto/tokenMonitor/index'),
+      name: 'TokenMonitor',
+      meta: { title: '代币监控', icon: 'data-analysis' }
+    },
+    {
       path: 'caRecord',
       component: () => import('@/views/crypto/caRecord/index'),
       name: 'CryptoCaRecord',

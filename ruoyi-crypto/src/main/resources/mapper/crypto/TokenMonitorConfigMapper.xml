@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.TokenMonitorConfigMapper">
+
+    <resultMap type="TokenMonitorConfig" id="TokenMonitorConfigResult">
+        <id     property="id"                       column="id"                         />
+        <result property="ca"                       column="ca"                         />
+        <result property="tokenName"                column="token_name"                 />
+        <result property="tokenSymbol"              column="token_symbol"               />
+        <result property="alertMode"                column="alert_mode"                 />
+        <result property="timerInterval"            column="timer_interval"             />
+        <result property="conditionType"            column="condition_type"             />
+        <result property="conditionValue"           column="condition_value"            />
+        <result property="eventType"                column="event_type"                 />
+        <result property="eventConfig"              column="event_config"               />
+        <result property="notifyMethods"            column="notify_methods"             />
+        <result property="telegramName"             column="telegram_name"              />
+        <result property="wechatName"               column="wechat_name"                />
+        <result property="status"                   column="status"                     />
+        <result property="lastNotificationTime"     column="last_notification_time"     />
+        <result property="notificationCount"        column="notification_count"         />
+    </resultMap>
+
+    <sql id="selectMonitorConfigVo">
+        SELECT id, ca, token_name, token_symbol, alert_mode, timer_interval,
+               condition_type, condition_value, event_type, event_config,
+               notify_methods, telegram_name, wechat_name, status,
+               last_notification_time, notification_count,
+               del_flag, create_by, create_time, update_by, update_time, remark
+        FROM token_monitor_config
+    </sql>
+
+    <!-- 查询监控配置列表 -->
+    <select id="selectMonitorConfigList" parameterType="TokenMonitorConfig" resultMap="TokenMonitorConfigResult">
+        <include refid="selectMonitorConfigVo"/>
+        <where>
+            del_flag = '0'
+            <if test="ca != null and ca != ''">
+                AND ca = #{ca}
+            </if>
+            <if test="tokenName != null and tokenName != ''">
+                AND token_name LIKE concat('%', #{tokenName}, '%')
+            </if>
+            <if test="alertMode != null and alertMode != ''">
+                AND alert_mode = #{alertMode}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 查询监控配置详情 -->
+    <select id="selectMonitorConfigById" parameterType="Long" resultMap="TokenMonitorConfigResult">
+        <include refid="selectMonitorConfigVo"/>
+        WHERE id = #{id} AND del_flag = '0'
+    </select>
+
+    <!-- 根据CA查询监控配置列表 -->
+    <select id="selectMonitorConfigByCa" parameterType="String" resultMap="TokenMonitorConfigResult">
+        <include refid="selectMonitorConfigVo"/>
+        WHERE ca = #{ca} AND del_flag = '0'
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 新增监控配置 -->
+    <insert id="insertMonitorConfig" parameterType="TokenMonitorConfig" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO token_monitor_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="ca != null and ca != ''">ca,</if>
+            <if test="tokenName != null">token_name,</if>
+            <if test="tokenSymbol != null">token_symbol,</if>
+            <if test="alertMode != null and alertMode != ''">alert_mode,</if>
+            <if test="timerInterval != null">timer_interval,</if>
+            <if test="conditionType != null">condition_type,</if>
+            <if test="conditionValue != null">condition_value,</if>
+            <if test="eventType != null">event_type,</if>
+            <if test="eventConfig != null">event_config,</if>
+            <if test="notifyMethods != null">notify_methods,</if>
+            <if test="telegramName != null">telegram_name,</if>
+            <if test="wechatName != null">wechat_name,</if>
+            <if test="status != null">status,</if>
+            <if test="lastNotificationTime != null">last_notification_time,</if>
+            <if test="notificationCount != null">notification_count,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="remark != null">remark,</if>
+            create_time,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="ca != null and ca != ''">#{ca},</if>
+            <if test="tokenName != null">#{tokenName},</if>
+            <if test="tokenSymbol != null">#{tokenSymbol},</if>
+            <if test="alertMode != null and alertMode != ''">#{alertMode},</if>
+            <if test="timerInterval != null">#{timerInterval},</if>
+            <if test="conditionType != null">#{conditionType},</if>
+            <if test="conditionValue != null">#{conditionValue},</if>
+            <if test="eventType != null">#{eventType},</if>
+            <if test="eventConfig != null">#{eventConfig},</if>
+            <if test="notifyMethods != null">#{notifyMethods},</if>
+            <if test="telegramName != null">#{telegramName},</if>
+            <if test="wechatName != null">#{wechatName},</if>
+            <if test="status != null">#{status},</if>
+            <if test="lastNotificationTime != null">#{lastNotificationTime},</if>
+            <if test="notificationCount != null">#{notificationCount},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="remark != null">#{remark},</if>
+            sysdate(),
+        </trim>
+    </insert>
+
+    <!-- 修改监控配置 -->
+    <update id="updateMonitorConfig" parameterType="TokenMonitorConfig">
+        UPDATE token_monitor_config
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="tokenName != null">token_name = #{tokenName},</if>
+            <if test="tokenSymbol != null">token_symbol = #{tokenSymbol},</if>
+            <if test="alertMode != null">alert_mode = #{alertMode},</if>
+            <if test="timerInterval != null">timer_interval = #{timerInterval},</if>
+            <if test="conditionType != null">condition_type = #{conditionType},</if>
+            <if test="conditionValue != null">condition_value = #{conditionValue},</if>
+            <if test="eventType != null">event_type = #{eventType},</if>
+            <if test="eventConfig != null">event_config = #{eventConfig},</if>
+            <if test="notifyMethods != null">notify_methods = #{notifyMethods},</if>
+            <if test="telegramName != null">telegram_name = #{telegramName},</if>
+            <if test="wechatName != null">wechat_name = #{wechatName},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="lastNotificationTime != null">last_notification_time = #{lastNotificationTime},</if>
+            <if test="notificationCount != null">notification_count = #{notificationCount},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = sysdate()
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除监控配置 -->
+    <update id="deleteMonitorConfigById" parameterType="Long">
+        UPDATE token_monitor_config SET del_flag = '2' WHERE id = #{id}
+    </update>
+
+    <!-- 批量删除监控配置 -->
+    <update id="deleteMonitorConfigByIds" parameterType="Long">
+        UPDATE token_monitor_config SET del_flag = '2' WHERE id IN
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 更新监控状态 -->
+    <update id="updateMonitorStatus">
+        UPDATE token_monitor_config
+        SET status = #{status},
+            update_time = sysdate()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 批量更新监控状态 -->
+    <update id="batchUpdateMonitorStatus">
+        UPDATE token_monitor_config
+        SET status = #{status},
+            update_time = sysdate()
+        WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 统计某个CA的监控配置数量 -->
+    <select id="countByCa" parameterType="String" resultType="int">
+        SELECT COUNT(*) FROM token_monitor_config
+        WHERE ca = #{ca} AND del_flag = '0'
+    </select>
+
+</mapper>
+

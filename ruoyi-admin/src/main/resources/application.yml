@@ -45,6 +45,20 @@ user:
     # 密码锁定时间（默认10分钟）
     lockTime: 10
 
+# Twitter API配置
+twitter:
+  api:
+    # API基础URL
+    baseUrl: https://alpha.apidance.pro/api/v1
+    # 关注接口路径
+    followUrl: /user/follow
+    # 取消关注接口路径
+    unfollowUrl: /user/unfollow
+    # 授权Token（请替换成你自己的）
+    authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJXYWxsZXRBZGRyZXNzIjoiMHhCRWIwOTVjQWVGNjQ0QzcxMGQ2RmYxOThiNmU1NEQ2RGQxMmVCRGFiIiwiUmVhZE9ubHkiOmZhbHNlLCJNYXhGb2xsb3ciOjAsIk1heFdvcmRzIjowLCJNYXhFeHBvcnQiOjAsImV4cCI6NzgwNzQ4NDk4NywiaWF0IjoxNzU5NDg0OTg3fQ.xOGZ0N5u256FHtf6_PvkTNwTfW2VzkgPvSyiGzRkek0
+    # Cookie（请替换成你自己的）
+    cookie: _ga=GA1.1.172384999.1759240988; _gcl_au=1.1.1451711674.1759241004; _ga_X4GFCYMMQN=GS2.1.s1759241004$o1$g1$t1759242608$j60$l0$h1437531695; _ga_4BTKKV3SLZ=GS2.1.s1759484765$o2$g0$t1759484868$j60$l0$h0
+
 # Spring配置
 spring:
   # 资源信息
@@ -80,13 +94,22 @@ spring:
     lettuce:
       pool:
         # 连接池中的最小空闲连接
-        min-idle: 0
+        min-idle: 5
         # 连接池中的最大空闲连接
-        max-idle: 8
+        max-idle: 20
         # 连接池的最大数据库连接数
-        max-active: 8
+        max-active: 50
         # #连接池最大阻塞等待时间（使用负值表示没有限制）
-        max-wait: -1ms
+        max-wait: 10s
+      # 关闭超时时间
+      shutdown-timeout: 100ms
+      # 集群配置
+      cluster:
+        refresh:
+          # 支持集群拓扑动态感应刷新
+          adaptive: true
+          # 集群拓扑刷新周期
+          period: 30s
 
 # token配置
 token:

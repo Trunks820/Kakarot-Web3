@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.TwitterAccountManageMapper">
+
+    <resultMap type="TwitterAccountManage" id="TwitterAccountManageResult">
+        <id     property="id"                   column="id"                     />
+        <result property="twitterUrl"           column="twitter_url"            />
+        <result property="twitterUsername"      column="twitter_username"       />
+        <result property="twitterType"          column="twitter_type"           />
+        <result property="isFollowing"          column="is_following"           />
+        <result property="followTime"           column="follow_time"            />
+        <result property="unfollowTime"         column="unfollow_time"          />
+        <result property="enableFollowPush"     column="enable_follow_push"     />
+        <result property="enableTweetPush"      column="enable_tweet_push"      />
+        <result property="enableRetweetPush"    column="enable_retweet_push"    />
+        <result property="enableReplyPush"      column="enable_reply_push"      />
+        <result property="enableAvatarPush"     column="enable_avatar_push"     />
+        <result property="notifyMethods"        column="notify_methods"         />
+        <result property="pushStatus"           column="push_status"            />
+        <result property="relatedTokenCount"    column="related_token_count"    />
+        <result property="followCount"          column="follow_count"           />
+        <result property="lastCheckTime"        column="last_check_time"        />
+    </resultMap>
+
+    <sql id="selectTwitterAccountVo">
+        SELECT id, twitter_url, twitter_username, twitter_type, is_following, 
+               follow_time, unfollow_time, enable_follow_push, enable_tweet_push,
+               enable_retweet_push, enable_reply_push, enable_avatar_push,
+               notify_methods, push_status, related_token_count, follow_count, last_check_time,
+               del_flag, create_by, create_time, update_by, update_time, remark
+        FROM twitter_account_manage
+    </sql>
+
+    <!-- 查询Twitter账号列表 -->
+    <select id="selectTwitterAccountList" parameterType="TwitterAccountManage" resultMap="TwitterAccountManageResult">
+        <include refid="selectTwitterAccountVo"/>
+        <where>
+            del_flag = '0'
+            <if test="twitterUrl != null and twitterUrl != ''">
+                AND twitter_url = #{twitterUrl}
+            </if>
+            <if test="twitterUsername != null and twitterUsername != ''">
+                AND twitter_username LIKE concat('%', #{twitterUsername}, '%')
+            </if>
+            <if test="twitterType != null and twitterType != ''">
+                AND twitter_type = #{twitterType}
+            </if>
+            <if test="isFollowing != null">
+                AND is_following = #{isFollowing}
+            </if>
+            <if test="pushStatus != null and pushStatus != ''">
+                AND push_status = #{pushStatus}
+            </if>
+        </where>
+        ORDER BY follow_time DESC
+    </select>
+
+    <!-- 根据Twitter链接查询 -->
+    <select id="selectByTwitterUrl" parameterType="String" resultMap="TwitterAccountManageResult">
+        <include refid="selectTwitterAccountVo"/>
+        WHERE twitter_url = #{twitterUrl} AND del_flag = '0'
+    </select>
+
+    <!-- 批量查询Twitter账号 -->
+    <select id="selectByTwitterUrls" resultMap="TwitterAccountManageResult">
+        <include refid="selectTwitterAccountVo"/>
+        WHERE twitter_url IN
+        <foreach collection="twitterUrls" item="url" open="(" separator="," close=")">
+            #{url}
+        </foreach>
+        AND del_flag = '0'
+    </select>
+
+    <!-- 新增Twitter账号 -->
+    <insert id="insertTwitterAccount" parameterType="TwitterAccountManage" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO twitter_account_manage
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="twitterUrl != null and twitterUrl != ''">twitter_url,</if>
+            <if test="twitterUsername != null">twitter_username,</if>
+            <if test="twitterType != null">twitter_type,</if>
+            <if test="isFollowing != null">is_following,</if>
+            <if test="followTime != null">follow_time,</if>
+            <if test="unfollowTime != null">unfollow_time,</if>
+            <if test="enableFollowPush != null">enable_follow_push,</if>
+            <if test="enableTweetPush != null">enable_tweet_push,</if>
+            <if test="enableRetweetPush != null">enable_retweet_push,</if>
+            <if test="enableReplyPush != null">enable_reply_push,</if>
+            <if test="enableAvatarPush != null">enable_avatar_push,</if>
+            <if test="notifyMethods != null">notify_methods,</if>
+            <if test="pushStatus != null">push_status,</if>
+            <if test="relatedTokenCount != null">related_token_count,</if>
+            <if test="followCount != null">follow_count,</if>
+            <if test="lastCheckTime != null">last_check_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="twitterUrl != null and twitterUrl != ''">#{twitterUrl},</if>
+            <if test="twitterUsername != null">#{twitterUsername},</if>
+            <if test="twitterType != null">#{twitterType},</if>
+            <if test="isFollowing != null">#{isFollowing},</if>
+            <if test="followTime != null">#{followTime},</if>
+            <if test="unfollowTime != null">#{unfollowTime},</if>
+            <if test="enableFollowPush != null">#{enableFollowPush},</if>
+            <if test="enableTweetPush != null">#{enableTweetPush},</if>
+            <if test="enableRetweetPush != null">#{enableRetweetPush},</if>
+            <if test="enableReplyPush != null">#{enableReplyPush},</if>
+            <if test="enableAvatarPush != null">#{enableAvatarPush},</if>
+            <if test="notifyMethods != null">#{notifyMethods},</if>
+            <if test="pushStatus != null">#{pushStatus},</if>
+            <if test="relatedTokenCount != null">#{relatedTokenCount},</if>
+            <if test="followCount != null">#{followCount},</if>
+            <if test="lastCheckTime != null">#{lastCheckTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate(),
+        </trim>
+    </insert>
+
+    <!-- 修改Twitter账号 -->
+    <update id="updateTwitterAccount" parameterType="TwitterAccountManage">
+        UPDATE twitter_account_manage
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="twitterUsername != null">twitter_username = #{twitterUsername},</if>
+            <if test="twitterType != null">twitter_type = #{twitterType},</if>
+            <if test="isFollowing != null">is_following = #{isFollowing},</if>
+            <if test="followTime != null">follow_time = #{followTime},</if>
+            <if test="unfollowTime != null">unfollow_time = #{unfollowTime},</if>
+            <if test="enableFollowPush != null">enable_follow_push = #{enableFollowPush},</if>
+            <if test="enableTweetPush != null">enable_tweet_push = #{enableTweetPush},</if>
+            <if test="enableRetweetPush != null">enable_retweet_push = #{enableRetweetPush},</if>
+            <if test="enableReplyPush != null">enable_reply_push = #{enableReplyPush},</if>
+            <if test="enableAvatarPush != null">enable_avatar_push = #{enableAvatarPush},</if>
+            <if test="notifyMethods != null">notify_methods = #{notifyMethods},</if>
+            <if test="pushStatus != null">push_status = #{pushStatus},</if>
+            <if test="relatedTokenCount != null">related_token_count = #{relatedTokenCount},</if>
+            <if test="followCount != null">follow_count = #{followCount},</if>
+            <if test="lastCheckTime != null">last_check_time = #{lastCheckTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </trim>
+        WHERE twitter_url = #{twitterUrl}
+    </update>
+
+    <!-- 更新关注状态（关注） -->
+    <update id="updateFollowStatus">
+        UPDATE twitter_account_manage
+        SET is_following = 1,
+            follow_time = NOW(),
+            follow_count = follow_count + 1,
+            last_check_time = NOW(),
+            update_time = NOW()
+        WHERE twitter_url = #{twitterUrl}
+    </update>
+
+    <!-- 更新关注状态（取消关注） -->
+    <update id="updateUnfollowStatus">
+        UPDATE twitter_account_manage
+        SET is_following = 0,
+            unfollow_time = NOW(),
+            last_check_time = NOW(),
+            update_time = NOW()
+        WHERE twitter_url = #{twitterUrl}
+    </update>
+
+    <!-- 更新推送配置 -->
+    <update id="updatePushConfig" parameterType="TwitterAccountManage">
+        UPDATE twitter_account_manage
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="enableFollowPush != null">enable_follow_push = #{enableFollowPush},</if>
+            <if test="enableTweetPush != null">enable_tweet_push = #{enableTweetPush},</if>
+            <if test="enableRetweetPush != null">enable_retweet_push = #{enableRetweetPush},</if>
+            <if test="enableReplyPush != null">enable_reply_push = #{enableReplyPush},</if>
+            <if test="enableAvatarPush != null">enable_avatar_push = #{enableAvatarPush},</if>
+            <if test="notifyMethods != null">notify_methods = #{notifyMethods},</if>
+            <if test="pushStatus != null">push_status = #{pushStatus},</if>
+            update_time = sysdate()
+        </trim>
+        WHERE twitter_url = #{twitterUrl}
+    </update>
+
+</mapper>
+

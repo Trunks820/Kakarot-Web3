@@ -2,7 +2,7 @@
 
 ## 项目简介
 
-这是一个基于若依框架开发的功能完整的加密货币监控系统，集成了微信和Telegram机器人，提供实时价格监控、查询统计、排行榜等功能。系统采用Java + Python双端架构，确保高性能和灵活性。
+这是一个基于若依框架开发的功能完整的加密货币监控系统，集成了微信和Telegram机器人，提供实时价格监控、查询统计、排行榜等功能。系统采用Java + Python双端架构，确保高性能和灵活性。Java端负责管理界面和控制功能，Python端负责机器人服务和数据采集。
 
 ## 系统架构
 
@@ -12,11 +12,13 @@
     - 身份认证服务
     - 监控配置管理
     - RESTful API服务
+    - 机器人控制接口
 
-- **Python服务集群**
+- **Python服务集群** (独立部署)
     - 价格/市值监控服务
     - 微信机器人
     - Telegram机器人
+    - OKX信号监控服务
     - 数据分析服务
 
 ### 数据存储
@@ -57,16 +59,33 @@
 - 微信个人通知
 - Telegram通知
 
+### 7. OKX信号监控
+- 聪明钱信号展示
+- 信号历史记录查询
+- 信号有效性统计分析
+
+### 8. 钱包监控系统
+- 钱包交易跟踪
+- 大额交易预警
+- 钱包活跃度分析
+- 热度分析系统
+
+### 9. 机器人控制
+- TG机器人状态监控
+- 机器人命令配置
+- 推送消息管理
+- 机器人响应控制
+
 ## 技术栈
 
 ### Java端
 - Spring Boot
 - Spring Security
-- Spring Data JPA
-- Thymeleaf/Vue.js
+- MyBatis
 - MySQL
+- Redis
 
-### Python端
+### Python端 (独立部署)
 - FastAPI/Flask
 - APScheduler
 - WeChatpy
@@ -74,9 +93,10 @@
 - requests/ccxt
 
 ### 前端
-- Bootstrap
-- Vue.js/React (可选)
-- Charts.js
+- Vue 3
+- Element Plus
+- ECharts
+- Vite
 
 ### 运维
 - Docker
@@ -113,32 +133,25 @@ bot:
 ## 项目结构说明
 
 ```
-├── ruoyi-ui              // 前端框架 [80]
-├── ruoyi-gateway         // 网关模块 [8080]
-├── ruoyi-auth           // 认证中心 [9200]
-├── ruoyi-api           // 接口模块
-│       └── ruoyi-api-system                          // 系统接口
-├── ruoyi-common         // 通用模块
+├── ruoyi-admin              // 后台管理模块 [8080]
+├── ruoyi-common             // 通用模块
 │       └── ruoyi-common-core                         // 核心模块
-│       └── ruoyi-common-datascope                    // 权限范围
-│       └── ruoyi-common-datasource                   // 多数据源
 │       └── ruoyi-common-log                          // 日志记录
-│       └── ruoyi-common-redis                        // 缓存服务
 │       └── ruoyi-common-security                     // 安全模块
 │       └── ruoyi-common-swagger                      // 系统接口
-├── ruoyi-modules         // 业务模块
-│       └── ruoyi-system                              // 系统模块 [9201]
-│       └── ruoyi-gen                                 // 代码生成 [9202]
-│       └── ruoyi-job                                 // 定时任务 [9203]
-│       └── ruoyi-file                                // 文件服务 [9300]
-│       └── ruoyi-crypto                          // 加密货币监控模块 [9204]
-├── ruoyi-visual         // 图形化管理模块
-│       └── ruoyi-visual-monitor                      // 监控中心 [9100]
-├── docker               // 容器化部署脚本
-└── python-service      // Python服务集群
+├── ruoyi-framework          // 框架核心
+├── ruoyi-system             // 系统模块
+├── ruoyi-quartz             // 定时任务
+├── ruoyi-generator          // 代码生成
+├── ruoyi-crypto             // 加密货币监控模块
+├── RuoYi-Vue3               // 前端项目 [80]
+│       └── src/views/crypto                          // 加密货币前端页面
+│       └── src/api/crypto                            // 加密货币API接口
+└── python-service           // Python服务集群 (独立部署)
         └── price_monitor                             // 价格监控服务
         └── wechat_bot                                // 微信机器人服务
         └── telegram_bot                              // Telegram机器人服务
+        └── okx_signals                               // OKX信号监控服务
         └── data_analysis                             // 数据分析服务
 ```
 

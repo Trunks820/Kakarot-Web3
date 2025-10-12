@@ -1,91 +1,86 @@
 import request from '@/utils/request'
 
-// 查询监控配置列表
-export function listCryptoMonitorConfig(query) {
+// 查询Token监控配置列表
+export function listMonitorConfig(query) {
   return request({
-    url: '/crypto/monitor/list',
+    url: '/crypto/tokenMonitor/list',
     method: 'get',
     params: query
   })
 }
 
-// 查询监控配置详细
-export function getCryptoMonitorConfig(id) {
+// 查询Token监控配置详情
+export function getMonitorConfig(id) {
   return request({
-    url: '/crypto/monitor/' + id,
+    url: '/crypto/tokenMonitor/' + id,
     method: 'get'
   })
 }
 
-// 新增监控配置
-export function addCryptoMonitorConfig(data) {
+// 根据CA查询监控配置
+export function getMonitorConfigByCa(ca) {
   return request({
-    url: '/crypto/monitor',
+    url: '/crypto/tokenMonitor/ca/' + ca,
+    method: 'get'
+  })
+}
+
+// 新增Token监控配置
+export function addMonitorConfig(data) {
+  return request({
+    url: '/crypto/tokenMonitor',
     method: 'post',
     data: data
   })
 }
 
-// 修改监控配置
-export function updateCryptoMonitorConfig(data) {
+// 修改Token监控配置
+export function updateMonitorConfig(data) {
   return request({
-    url: '/crypto/monitor',
+    url: '/crypto/tokenMonitor',
     method: 'put',
     data: data
   })
 }
 
-// 删除监控配置
-export function delCryptoMonitorConfig(id) {
+// 删除Token监控配置
+export function delMonitorConfig(ids) {
   return request({
-    url: '/crypto/monitor/' + id,
+    url: '/crypto/tokenMonitor/' + ids,
     method: 'delete'
   })
 }
 
-// 修改监控配置状态
-export function changeCryptoMonitorStatus(id, status) {
-  const data = {
-    id,
-    status
-  }
+// 启用监控
+export function enableMonitor(id) {
   return request({
-    url: '/crypto/monitor/changeStatus',
-    method: 'put',
-    data: data
+    url: '/crypto/tokenMonitor/enable/' + id,
+    method: 'put'
   })
 }
 
-// 批量启用监控配置
-export function batchEnableCryptoMonitor(ids) {
+// 停用监控
+export function disableMonitor(id) {
   return request({
-    url: '/crypto/monitor/batchEnable',
-    method: 'put',
-    data: ids
+    url: '/crypto/tokenMonitor/disable/' + id,
+    method: 'put'
   })
 }
 
-// 批量停用监控配置
-export function batchDisableCryptoMonitor(ids) {
+// 批量启用监控
+export function batchEnableMonitor(ids) {
   return request({
-    url: '/crypto/monitor/batchDisable',
+    url: '/crypto/tokenMonitor/batchEnable',
     method: 'put',
     data: ids
   })
 }
 
-// 测试通知
-export function testCryptoMonitorNotify(id) {
+// 批量停用监控
+export function batchDisableMonitor(ids) {
   return request({
-    url: '/crypto/monitor/testNotify/' + id,
-    method: 'post'
+    url: '/crypto/tokenMonitor/batchDisable',
+    method: 'put',
+    data: ids
   })
 }
-
-// 获取监控统计信息
-export function getCryptoMonitorStats() {
-  return request({
-    url: '/crypto/monitor/stats',
-    method: 'get'
-  })
-} 
