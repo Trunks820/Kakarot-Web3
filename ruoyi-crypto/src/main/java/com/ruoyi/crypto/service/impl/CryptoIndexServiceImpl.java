@@ -44,35 +44,36 @@ public class CryptoIndexServiceImpl implements CryptoIndexService {
     public AjaxResult getBotStatus(String type) {
         String url = "http://tgalert-app:5000/api/status";
 
-        AjaxResult botApi = BotApiUtils.getBotApi(url);
-        if(botApi.isError()){
-            return botApi;
-        }
-
-        try {
-            // 直接获取已经解析好的data对象
-            Object dataObj = botApi.get("data");
-
-            // 如果是JSONObject，直接使用；如果是字符串，则解析
-            JSONObject fullResponse;
-            if (dataObj instanceof JSONObject) {
-                fullResponse = (JSONObject) dataObj;
-            } else {
-                // 如果是字符串，则解析
-                String jsonString = dataObj.toString();
-                fullResponse = JSONUtil.parseObj(jsonString);
-            }
-
-            // 获取bots信息
-            JSONObject bots = fullResponse.getJSONObject("bots");
-            
-            // 获取指定类型的机器人信息
-            JSONObject botInfo = bots.getJSONObject(type);
-            botInfo.put("name", type);
-            return AjaxResult.success(botInfo);
-        } catch (Exception e) {
-            return AjaxResult.error("解析机器人状态数据失败：" + e.getMessage());
-        }
+//        AjaxResult botApi = BotApiUtils.getBotApi(url);
+//        if(botApi.isError()){
+//            return botApi;
+//        }
+//
+//        try {
+//            // 直接获取已经解析好的data对象
+//            Object dataObj = botApi.get("data");
+//
+//            // 如果是JSONObject，直接使用；如果是字符串，则解析
+//            JSONObject fullResponse;
+//            if (dataObj instanceof JSONObject) {
+//                fullResponse = (JSONObject) dataObj;
+//            } else {
+//                // 如果是字符串，则解析
+//                String jsonString = dataObj.toString();
+//                fullResponse = JSONUtil.parseObj(jsonString);
+//            }
+//
+//            // 获取bots信息
+//            JSONObject bots = fullResponse.getJSONObject("bots");
+//
+//            // 获取指定类型的机器人信息
+//            JSONObject botInfo = bots.getJSONObject(type);
+//            botInfo.put("name", type);
+//            return AjaxResult.success(botInfo);
+            return AjaxResult.success();
+//        } catch (Exception e) {
+//            return AjaxResult.error("解析机器人状态数据失败：" + e.getMessage());
+//        }
     }
 
     @Override
