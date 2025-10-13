@@ -9,6 +9,7 @@
         <result property="twitterUrl"           column="twitter_url"            />
         <result property="twitterUsername"      column="twitter_username"       />
         <result property="twitterType"          column="twitter_type"           />
+        <result property="twitterUserId"        column="twitter_user_id"        />
         <result property="isFollowing"          column="is_following"           />
         <result property="followTime"           column="follow_time"            />
         <result property="unfollowTime"         column="unfollow_time"          />
@@ -25,7 +26,7 @@
     </resultMap>
 
     <sql id="selectTwitterAccountVo">
-        SELECT id, twitter_url, twitter_username, twitter_type, is_following, 
+        SELECT id, twitter_url, twitter_username, twitter_type, twitter_user_id, is_following, 
                follow_time, unfollow_time, enable_follow_push, enable_tweet_push,
                enable_retweet_push, enable_reply_push, enable_avatar_push,
                notify_methods, push_status, related_token_count, follow_count, last_check_time,
@@ -162,6 +163,14 @@
         SET is_following = 0,
             unfollow_time = NOW(),
             last_check_time = NOW(),
+            update_time = NOW()
+        WHERE twitter_url = #{twitterUrl}
+    </update>
+
+    <!-- 更新Twitter用户ID -->
+    <update id="updateTwitterUserId">
+        UPDATE twitter_account_manage
+        SET twitter_user_id = #{twitterUserId},
             update_time = NOW()
         WHERE twitter_url = #{twitterUrl}
     </update>

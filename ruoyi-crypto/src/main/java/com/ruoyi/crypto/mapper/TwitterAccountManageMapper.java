@@ -70,12 +70,20 @@ public interface TwitterAccountManageMapper {
     int updateUnfollowStatus(@Param("twitterUrl") String twitterUrl);
 
     /**
+     * 更新Twitter用户ID
+     *
+     * @param twitterUrl Twitter链接
+     * @param twitterUserId Twitter用户ID
+     * @return 结果
+     */
+    int updateTwitterUserId(@Param("twitterUrl") String twitterUrl, @Param("twitterUserId") String twitterUserId);
+
+    /**
      * 更新推送配置
      *
      * @param twitterAccount Twitter账号管理
      * @return 结果
      */
-
     int updatePushConfig(TwitterAccountManage twitterAccount);
 
     /**

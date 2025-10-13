@@ -2014,6 +2014,126 @@ import {
 
 **说明**：已在数据库表中预留 `twitter_user_id`、`sync_status`、`retry_count`、`last_sync_time` 字段，等待Twitter API接口提供后实现。
 
+#### 3. **Twitter推送配置定时任务**（待开发） ⚠️
+
+**当前状态**：
+- ✅ 前端UI已完成（推送配置对话框）
+- ✅ 数据库保存已完成（twitter_account_manage表）
+- ⚠️ **定时任务未实现**：需要定时扫描enable_xx_push=1的记录并调用Twitter API
+
+**实现方案**：
+```
+用户配置推送流程（已确定）：
+1. 用户在前端配置推送选项（关注/推文/转发/回复/头像）
+2. 点击保存 → 更新数据库（enable_follow_push等字段）
+3. 定时任务（例如每分钟）扫描数据库
+4. 找出enable_xx_push=1且sync_status=0的记录
+5. 调用Twitter API配置推送订阅
+6. 更新sync_status字段标记同步状态
+```
+
+**需要调用的Twitter API**（明天重点任务）：
+
+| API | 方法 | 路径 | 说明 |
+|-----|------|------|------|
+| 关注推送订阅 | POST | `/api/v1/user/follow/subscribe` | 配置关注推送 |
+| 推文推送订阅 | POST | `/api/v1/user/tweet/subscribe` | 配置推文推送 |
+| 转发推送订阅 | POST | `/api/v1/user/retweet/subscribe` | 配置转发推送 |
+| 回复推送订阅 | POST | `/api/v1/user/reply/subscribe` | 配置回复推送 |
+| 头像推送订阅 | POST | `/api/v1/user/avatar/subscribe` | 配置头像推送 |
+
+**请求格式（所有API通用）**：
+```json
+{
+  "user_id": "1958171043547500544",
+  "enable": true
+}
+```
+
+**定时任务实现方案**（使用Python）：
+
+**方案概述**：
+```
+1. 定时任务（例如每分钟执行一次）
+2. 查询数据库：SELECT * FROM twitter_account_manage 
+   WHERE sync_status=0 AND twitter_user_id IS NOT NULL AND retry_count<3
+3. 遍历每条记录，根据enable_xx_push字段调用对应的API
+4. API调用成功 → 更新sync_status=1
+5. API调用失败 → 增加retry_count，超过3次则放弃
+6. 每次调用间隔500ms，避免API限流
+```
+
+**Python脚本结构建议**：
+
+📁 **文件**: `scripts/twitter_push_sync.py`
+
+```python
+# 主要逻辑
+1. 连接数据库（MySQL）
+2. 查询待同步记录（sync_status=0）
+3. 遍历记录，根据enable_xx_push字段决定调用哪些API
+4. 调用Twitter API（使用requests库）
+5. 更新数据库状态（sync_status、last_sync_time）
+6. 错误处理：增加retry_count
+7. 日志记录
+
+# 需要的库
+- pymysql / mysql-connector-python（数据库连接）
+- requests（HTTP请求）
+- schedule（定时任务调度）
+- logging（日志记录）
+```
+
+**数据库查询SQL**：
+```sql
+-- 查询需要同步的记录
+SELECT id, twitter_url, twitter_user_id, 
+       enable_follow_push, enable_tweet_push, 
+       enable_retweet_push, enable_reply_push, 
+       enable_avatar_push
+FROM twitter_account_manage
+WHERE twitter_user_id IS NOT NULL 
+  AND twitter_user_id != ''
+  AND sync_status = 0
+  AND retry_count < 3
+  AND del_flag = '0'
+ORDER BY create_time ASC
+LIMIT 100;
+```
+
+**数据库更新SQL**：
+```sql
+-- 更新同步成功
+UPDATE twitter_account_manage 
+SET sync_status = 1, last_sync_time = NOW()
+WHERE id = ?;
+
+-- 更新同步失败（增加重试次数）
+UPDATE twitter_account_manage 
+SET retry_count = retry_count + 1, last_sync_time = NOW()
+WHERE id = ?;
+```
+
+**开发任务清单（明天）**：
+
+- [ ] 创建Python定时任务脚本 `scripts/twitter_push_sync.py`
+- [ ] 实现数据库查询逻辑（查询待同步记录）
+- [ ] 实现5个API调用函数（关注/推文/转发/回复/头像）
+- [ ] 实现同步状态更新逻辑（成功/失败）
+- [ ] 添加错误处理和重试机制
+- [ ] 添加日志记录
+- [ ] 配置定时任务（crontab或schedule库）
+- [ ] 测试脚本运行
+
+**测试步骤**：
+
+1. 在前端配置一个推送订阅（保存到数据库，sync_status默认为0）
+2. 手动运行Python脚本测试
+3. 查看日志确认API调用
+4. 检查数据库sync_status是否更新为1
+5. 配置定时任务（每分钟执行一次）
+6. 验证推送功能是否生效
+
 ---
 
 ### 📊 代码统计

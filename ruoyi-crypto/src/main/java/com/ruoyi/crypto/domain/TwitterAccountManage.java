@@ -38,6 +38,11 @@ public class TwitterAccountManage extends BaseEntity {
     @ApiModelProperty("Twitter类型(profile:主页, tweet:推文, community:社区)")
     private String twitterType;
 
+    /** Twitter用户ID */
+    @Excel(name = "Twitter用户ID")
+    @ApiModelProperty("Twitter用户ID（API返回的user_id，用于取消关注）")
+    private String twitterUserId;
+
     /** 是否已关注 */
     @Excel(name = "是否已关注", readConverterExp = "0=未关注,1=已关注")
     @ApiModelProperty("是否已关注(0:未关注 1:已关注)")

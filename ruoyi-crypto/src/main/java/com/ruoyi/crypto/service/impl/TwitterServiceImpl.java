@@ -1,5 +1,6 @@
 package com.ruoyi.crypto.service.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ruoyi.crypto.config.TwitterApiProperties;
 import com.ruoyi.crypto.domain.TwitterAccountManage;
@@ -94,18 +95,41 @@ public class TwitterServiceImpl implements ITwitterService {
 
                     // 解析响应
                     boolean success = false;
+                    String userId = null;
                     String jsonPart = extractJson(responseBody);
                     
                     try {
-                        TwitterApiResponse<?> apiResponse = objectMapper.readValue(jsonPart, TwitterApiResponse.class);
+                        // 尝试解析为包含Map类型data的响应
+                        TwitterApiResponse<Map<String, Object>> apiResponse = objectMapper.readValue(
+                            jsonPart, 
+                            new TypeReference<TwitterApiResponse<Map<String, Object>>>() {}
+                        );
 
                         if (apiResponse.isSuccess()) {
                             log.info("关注Twitter成功: {}", twitterUrl);
                             success = true;
+                            
+                            // 尝试从响应中提取user_id
+                            if (apiResponse.getData() != null) {
+                                Object userIdObj = apiResponse.getData().get("user_id");
+                                if (userIdObj != null) {
+                                    userId = userIdObj.toString();
+                                    log.info("提取到user_id: {}", userId);
+                                }
+                            }
                         } else if ("user already exist".equals(apiResponse.getMsg())) {
                             // 用户已存在，认为是成功的（已经关注过了）
                             log.info("Twitter账号已存在（已关注）: {}", twitterUrl);
                             success = true;
+                            
+                            // 尝试从响应中提取user_id（即使是already exist也可能返回）
+                            if (apiResponse.getData() != null) {
+                                Object userIdObj = apiResponse.getData().get("user_id");
+                                if (userIdObj != null) {
+                                    userId = userIdObj.toString();
+                                    log.info("从already exist响应中提取到user_id: {}", userId);
+                                }
+                            }
                         } else {
                             log.warn("关注Twitter失败: {}, 错误码: {}, 错误信息: {}", twitterUrl, apiResponse.getCode(), apiResponse.getMsg());
                         }
@@ -115,16 +139,29 @@ public class TwitterServiceImpl implements ITwitterService {
                         if (jsonPart.contains("\"code\":1")) {
                             log.info("根据响应内容判断关注Twitter成功: {}", twitterUrl);
                             success = true;
+                            
+                            // 尝试用正则提取user_id
+                            userId = extractUserIdFromJson(jsonPart);
                         } else if (jsonPart.contains("user already exist")) {
                             log.info("根据响应内容判断Twitter账号已存在: {}", twitterUrl);
                             success = true;
+                            
+                            // 尝试用正则提取user_id
+                            userId = extractUserIdFromJson(jsonPart);
                         }
                     }
                     
                     // 如果关注成功，更新数据库
                     if (success) {
                         // 先确保账号存在
-                        getOrCreateAccount(twitterUrl);
+                        TwitterAccountManage account = getOrCreateAccount(twitterUrl);
+                        
+                        // 如果获取到了user_id，更新到数据库
+                        if (userId != null && !userId.isEmpty()) {
+                            log.info("更新Twitter账号的user_id: {} -> {}", twitterUrl, userId);
+                            twitterAccountMapper.updateTwitterUserId(twitterUrl, userId);
+                        }
+                        
                         // 更新关注状态
                         twitterAccountMapper.updateFollowStatus(twitterUrl);
                     }
@@ -146,50 +183,55 @@ public class TwitterServiceImpl implements ITwitterService {
         try {
             log.info("开始取消关注Twitter账号: {}", twitterUrl);
 
-            // 构建请求体
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("twitter_url", twitterUrl);
+            // 先从数据库获取该Twitter账号的信息，获取user_id
+            TwitterAccountManage account = twitterAccountMapper.selectByTwitterUrl(twitterUrl);
+            if (account == null || account.getTwitterUserId() == null || account.getTwitterUserId().isEmpty()) {
+                log.error("取消关注失败: Twitter账号不存在或未保存user_id: {}", twitterUrl);
+                return false;
+            }
 
-            String jsonBody = objectMapper.writeValueAsString(requestBody);
+            String userId = account.getTwitterUserId();
+            log.info("准备取消关注，user_id: {}", userId);
 
-            // 构建请求
-            MediaType mediaType = MediaType.parse("application/json");
-            RequestBody body = RequestBody.create(mediaType, jsonBody);
+            // 构建DELETE请求URL（使用user_id）
+            // baseUrl已包含/api/v1，直接拼接/user/follow/{user_id}
+            String unfollowUrl = twitterApiProperties.getBaseUrl() + "/user/follow/" + userId;
+            log.info("取消关注请求URL: {}", unfollowUrl);
 
             Request request = new Request.Builder()
-                    .url(twitterApiProperties.getBaseUrl() + twitterApiProperties.getUnfollowUrl())
-                    .post(body)
+                    .url(unfollowUrl)
+                    .delete(null)  // 使用DELETE方法，传入null作为body
                     .addHeader("User-Agent", twitterApiProperties.getUserAgent())
                     .addHeader("Accept", "application/json, text/plain, */*")
                     .addHeader("Accept-Encoding", "gzip, deflate, br, zstd")
-                    .addHeader("Content-Type", "application/json")
                     .addHeader("sec-ch-ua-platform", "\"Windows\"")
                     .addHeader("authorization", twitterApiProperties.getAuthorization())
-                    .addHeader("sec-ch-ua", "\"Chromium\";v=\"140\", \"Not=A?Brand\";v=\"24\", \"Google Chrome\";v=\"140\"")
+                    .addHeader("sec-ch-ua", "\"Google Chrome\";v=\"141\", \"Not?A_Brand\";v=\"8\", \"Chromium\";v=\"141\"")
                     .addHeader("sec-ch-ua-mobile", "?0")
                     .addHeader("origin", "https://alpha.apidance.pro")
                     .addHeader("sec-fetch-site", "same-origin")
                     .addHeader("sec-fetch-mode", "cors")
                     .addHeader("sec-fetch-dest", "empty")
                     .addHeader("referer", "https://alpha.apidance.pro/")
-                    .addHeader("accept-language", "zh-CN,zh;q=0.9,en;q=0.8")
+                    .addHeader("accept-language", "zh-CN,zh;q=0.9")
                     .addHeader("priority", "u=1, i")
                     .addHeader("Cookie", twitterApiProperties.getCookie())
                     .build();
 
             // 执行请求
             try (Response response = client.newCall(request).execute()) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String responseBody = response.body().string();
-                    log.info("取消关注Twitter响应: {}", responseBody);
+                String responseBody = response.body() != null ? response.body().string() : "";
+                log.info("取消关注Twitter响应 [HTTP {}]: {}", response.code(), responseBody);
 
-                    // 解析响应
-                    boolean success = false;
+                boolean success = false;
+                
+                // 判断是否成功
+                if (response.isSuccessful()) {
+                    // HTTP 200/204 等成功状态码
                     String jsonPart = extractJson(responseBody);
                     
                     try {
                         TwitterApiResponse<?> apiResponse = objectMapper.readValue(jsonPart, TwitterApiResponse.class);
-
                         if (apiResponse.isSuccess()) {
                             log.info("取消关注Twitter成功: {}", twitterUrl);
                             success = true;
@@ -197,26 +239,22 @@ public class TwitterServiceImpl implements ITwitterService {
                             log.warn("取消关注Twitter失败: {}, 错误码: {}, 错误信息: {}", twitterUrl, apiResponse.getCode(), apiResponse.getMsg());
                         }
                     } catch (Exception e) {
-                        log.error("解析取消关注Twitter响应失败: {}, JSON内容: {}", twitterUrl, jsonPart, e);
-                        // 如果响应包含 "code":1，认为成功
-                        if (jsonPart.contains("\"code\":1")) {
-                            log.info("根据响应内容判断取消关注Twitter成功: {}", twitterUrl);
+                        log.warn("解析取消关注响应失败，但HTTP状态码为成功: {}", response.code());
+                        // 如果响应包含 "code":1，或者HTTP状态码为200/204，认为成功
+                        if (jsonPart.contains("\"code\":1") || response.code() == 200 || response.code() == 204) {
+                            log.info("根据HTTP状态码判断取消关注Twitter成功: {}", twitterUrl);
                             success = true;
                         }
                     }
-                    
-                    // 如果取消关注成功，更新数据库
-                    if (success) {
-                        // 先确保账号存在
-                        getOrCreateAccount(twitterUrl);
-                        // 更新取消关注状态
-                        twitterAccountMapper.updateUnfollowStatus(twitterUrl);
-                    }
-                    return success;
                 } else {
-                    log.error("取消关注Twitter请求失败: {}, HTTP状态码: {}", twitterUrl, response.code());
-                    return false;
+                    log.error("取消关注Twitter请求失败: {}, HTTP状态码: {}, 响应: {}", twitterUrl, response.code(), responseBody);
                 }
+                
+                // 如果取消关注成功，更新数据库
+                if (success) {
+                    twitterAccountMapper.updateUnfollowStatus(twitterUrl);
+                }
+                return success;
             }
 
         } catch (IOException e) {
@@ -417,6 +455,60 @@ public class TwitterServiceImpl implements ITwitterService {
         
         // 从找到的位置开始截取
         return responseBody.substring(jsonStart);
+    }
+
+    /**
+     * 从JSON字符串中提取user_id（使用简单的字符串查找）
+     * 
+     * @param jsonStr JSON字符串
+     * @return user_id，如果未找到返回null
+     */
+    private String extractUserIdFromJson(String jsonStr) {
+        if (jsonStr == null || jsonStr.isEmpty()) {
+            return null;
+        }
+        
+        try {
+            // 查找 "user_id" 字段
+            int userIdIndex = jsonStr.indexOf("\"user_id\"");
+            if (userIdIndex == -1) {
+                log.debug("JSON中未找到user_id字段");
+                return null;
+            }
+            
+            // 查找值的开始位置（跳过 "user_id": 和可能的空格、引号）
+            int colonIndex = jsonStr.indexOf(':', userIdIndex);
+            if (colonIndex == -1) {
+                return null;
+            }
+            
+            // 跳过冒号后的空格和引号
+            int valueStart = colonIndex + 1;
+            while (valueStart < jsonStr.length() && 
+                   (jsonStr.charAt(valueStart) == ' ' || jsonStr.charAt(valueStart) == '"')) {
+                valueStart++;
+            }
+            
+            // 查找值的结束位置（遇到引号、逗号、}、]或空格）
+            int valueEnd = valueStart;
+            while (valueEnd < jsonStr.length()) {
+                char c = jsonStr.charAt(valueEnd);
+                if (c == '"' || c == ',' || c == '}' || c == ']' || c == ' ') {
+                    break;
+                }
+                valueEnd++;
+            }
+            
+            if (valueEnd > valueStart) {
+                String userId = jsonStr.substring(valueStart, valueEnd);
+                log.info("从JSON中提取到user_id: {}", userId);
+                return userId;
+            }
+        } catch (Exception e) {
+            log.warn("提取user_id失败", e);
+        }
+        
+        return null;
     }
 }
 
