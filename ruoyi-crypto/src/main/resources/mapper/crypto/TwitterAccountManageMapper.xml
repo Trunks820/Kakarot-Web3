@@ -186,6 +186,9 @@
             <if test="enableAvatarPush != null">enable_avatar_push = #{enableAvatarPush},</if>
             <if test="notifyMethods != null">notify_methods = #{notifyMethods},</if>
             <if test="pushStatus != null">push_status = #{pushStatus},</if>
+            <!-- 重置同步状态为待同步，让Python定时任务重新处理 -->
+            sync_status = 0,
+            retry_count = 0,
             update_time = sysdate()
         </trim>
         WHERE twitter_url = #{twitterUrl}
