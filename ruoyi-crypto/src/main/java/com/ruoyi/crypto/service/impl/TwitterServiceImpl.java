@@ -7,6 +7,7 @@ import com.ruoyi.crypto.domain.TwitterAccountManage;
 import com.ruoyi.crypto.domain.dto.TwitterApiResponse;
 import com.ruoyi.crypto.mapper.TwitterAccountManageMapper;
 import com.ruoyi.crypto.service.ITwitterService;
+import com.ruoyi.crypto.service.ITwitterPushSyncService;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,9 @@ public class TwitterServiceImpl implements ITwitterService {
 
     @Resource
     private TwitterAccountManageMapper twitterAccountMapper;
+
+    @Resource
+    private ITwitterPushSyncService twitterPushSyncService;
 
     private final OkHttpClient client;
     private final ObjectMapper objectMapper;
@@ -412,10 +416,34 @@ public class TwitterServiceImpl implements ITwitterService {
                 return false;
             }
 
-            // 更新推送配置
+            // 设置账号ID（用于异步调用）
+            twitterAccount.setId(existing.getId());
+            if (twitterAccount.getTwitterUserId() == null) {
+                twitterAccount.setTwitterUserId(existing.getTwitterUserId());
+            }
+
+            // 更新推送配置到数据库
             int result = twitterAccountMapper.updatePushConfig(twitterAccount);
             if (result > 0) {
                 log.info("更新Twitter推送配置成功: {}", twitterAccount.getTwitterUrl());
+                
+                // 异步调用Twitter API同步推送配置
+                if (twitterAccount.getTwitterUserId() != null && !twitterAccount.getTwitterUserId().isEmpty()) {
+                    log.info("开始异步同步Twitter推送配置: {}", twitterAccount.getTwitterUrl());
+                    twitterPushSyncService.asyncSyncPushConfig(twitterAccount)
+                            .whenComplete((success, throwable) -> {
+                                if (throwable != null) {
+                                    log.error("异步同步Twitter推送配置异常: {}", twitterAccount.getTwitterUrl(), throwable);
+                                } else if (success) {
+                                    log.info("异步同步Twitter推送配置成功: {}", twitterAccount.getTwitterUrl());
+                                } else {
+                                    log.warn("异步同步Twitter推送配置失败: {}", twitterAccount.getTwitterUrl());
+                                }
+                            });
+                } else {
+                    log.warn("Twitter用户ID为空，跳过异步同步: {}", twitterAccount.getTwitterUrl());
+                }
+                
                 return true;
             } else {
                 log.warn("更新Twitter推送配置失败: {}", twitterAccount.getTwitterUrl());

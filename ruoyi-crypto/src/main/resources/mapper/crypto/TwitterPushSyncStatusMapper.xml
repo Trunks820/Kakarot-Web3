@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.TwitterPushSyncStatusMapper">
+
+    <resultMap type="TwitterPushSyncStatus" id="TwitterPushSyncStatusResult">
+        <id     property="id"               column="id"                 />
+        <result property="accountId"        column="account_id"         />
+        <result property="pushType"         column="push_type"          />
+        <result property="currentStatus"    column="current_status"     />
+        <result property="lastSyncTime"     column="last_sync_time"     />
+        <result property="apiResponse"      column="api_response"       />
+        <result property="createTime"       column="create_time"        />
+        <result property="updateTime"       column="update_time"        />
+        <!-- 关联字段 -->
+        <result property="twitterUrl"       column="twitter_url"        />
+        <result property="twitterUsername"  column="twitter_username"   />
+        <result property="twitterUserId"    column="twitter_user_id"    />
+    </resultMap>
+
+    <sql id="selectSyncStatusVo">
+        SELECT s.id, s.account_id, s.push_type, s.current_status, 
+               s.last_sync_time, s.api_response, s.create_time, s.update_time
+        FROM twitter_push_sync_status s
+    </sql>
+
+    <sql id="selectSyncStatusWithAccountVo">
+        SELECT s.id, s.account_id, s.push_type, s.current_status, 
+               s.last_sync_time, s.api_response, s.create_time, s.update_time,
+               a.twitter_url, a.twitter_username, a.twitter_user_id
+        FROM twitter_push_sync_status s
+        LEFT JOIN twitter_account_manage a ON s.account_id = a.id
+    </sql>
+
+    <!-- 查询Twitter推送同步状态列表 -->
+    <select id="selectSyncStatusList" parameterType="TwitterPushSyncStatus" resultMap="TwitterPushSyncStatusResult">
+        <include refid="selectSyncStatusWithAccountVo"/>
+        <where>
+            <if test="accountId != null">
+                AND s.account_id = #{accountId}
+            </if>
+            <if test="pushType != null and pushType != ''">
+                AND s.push_type = #{pushType}
+            </if>
+            <if test="currentStatus != null">
+                AND s.current_status = #{currentStatus}
+            </if>
+        </where>
+        ORDER BY s.account_id, s.push_type
+    </select>
+
+    <!-- 根据账号ID和推送类型查询 -->
+    <select id="selectByAccountAndType" resultMap="TwitterPushSyncStatusResult">
+        <include refid="selectSyncStatusVo"/>
+        WHERE account_id = #{accountId} AND push_type = #{pushType}
+    </select>
+
+    <!-- 根据账号ID查询所有推送类型 -->
+    <select id="selectByAccountId" resultMap="TwitterPushSyncStatusResult">
+        <include refid="selectSyncStatusVo"/>
+        WHERE account_id = #{accountId}
+        ORDER BY push_type
+    </select>
+
+    <!-- 新增Twitter推送同步状态 -->
+    <insert id="insertSyncStatus" parameterType="TwitterPushSyncStatus" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO twitter_push_sync_status
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="accountId != null">account_id,</if>
+            <if test="pushType != null and pushType != ''">push_type,</if>
+            <if test="currentStatus != null">current_status,</if>
+            <if test="lastSyncTime != null">last_sync_time,</if>
+            <if test="apiResponse != null">api_response,</if>
+            create_time,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="accountId != null">#{accountId},</if>
+            <if test="pushType != null and pushType != ''">#{pushType},</if>
+            <if test="currentStatus != null">#{currentStatus},</if>
+            <if test="lastSyncTime != null">#{lastSyncTime},</if>
+            <if test="apiResponse != null">#{apiResponse},</if>
+            NOW(),
+        </trim>
+    </insert>
+
+    <!-- 修改Twitter推送同步状态 -->
+    <update id="updateSyncStatus" parameterType="TwitterPushSyncStatus">
+        UPDATE twitter_push_sync_status
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="currentStatus != null">current_status = #{currentStatus},</if>
+            <if test="lastSyncTime != null">last_sync_time = #{lastSyncTime},</if>
+            <if test="apiResponse != null">api_response = #{apiResponse},</if>
+            update_time = NOW()
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新或插入同步状态（UPSERT） -->
+    <insert id="upsertSyncStatus" parameterType="TwitterPushSyncStatus">
+        INSERT INTO twitter_push_sync_status (account_id, push_type, current_status, last_sync_time, api_response, create_time)
+        VALUES (#{accountId}, #{pushType}, #{currentStatus}, #{lastSyncTime}, #{apiResponse}, NOW())
+        ON DUPLICATE KEY UPDATE
+            current_status = VALUES(current_status),
+            last_sync_time = VALUES(last_sync_time),
+            api_response = VALUES(api_response),
+            update_time = NOW()
+    </insert>
+
+    <!-- 批量更新同步状态 -->
+    <update id="batchUpdateSyncStatus">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE twitter_push_sync_status
+            SET current_status = #{item.currentStatus},
+                last_sync_time = #{item.lastSyncTime},
+                api_response = #{item.apiResponse},
+                update_time = NOW()
+            WHERE account_id = #{item.accountId} AND push_type = #{item.pushType}
+        </foreach>
+    </update>
+
+    <!-- 删除Twitter推送同步状态 -->
+    <delete id="deleteSyncStatusById" parameterType="Long">
+        DELETE FROM twitter_push_sync_status WHERE id = #{id}
+    </delete>
+
+    <!-- 根据账号ID删除所有推送同步状态 -->
+    <delete id="deleteSyncStatusByAccountId">
+        DELETE FROM twitter_push_sync_status WHERE account_id = #{accountId}
+    </delete>
+
+    <!-- 批量删除Twitter推送同步状态 -->
+    <delete id="deleteSyncStatusByIds" parameterType="String">
+        DELETE FROM twitter_push_sync_status WHERE id IN
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>
