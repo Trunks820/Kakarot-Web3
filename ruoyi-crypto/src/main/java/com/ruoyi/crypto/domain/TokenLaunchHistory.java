@@ -66,4 +66,30 @@ public class TokenLaunchHistory extends BaseEntity {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty("入库时间")
     private Date createdAt;
+    
+    // ========== 关联查询字段（不存储在数据库） ==========
+    
+    /** 监控配置ID */
+    @ApiModelProperty("监控配置ID")
+    private Long monitorConfigId;
+    
+    /** 监控状态 */
+    @ApiModelProperty("监控状态(0:停用 1:启用)")
+    private String monitorStatus;
+    
+    /** 事件配置JSON */
+    @ApiModelProperty("事件配置JSON")
+    private String monitorEventsConfig;
+    
+    /** 触发逻辑 */
+    @ApiModelProperty("触发逻辑(any/all)")
+    private String monitorTriggerLogic;
+    
+    /** 通知方式 */
+    @ApiModelProperty("通知方式")
+    private String monitorNotifyMethods;
+    
+    /** 监控备注 */
+    @ApiModelProperty("监控备注")
+    private String monitorRemark;
 }

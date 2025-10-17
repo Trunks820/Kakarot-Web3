@@ -125,6 +125,39 @@ public class TokenMonitorConfigController extends BaseController {
         }
         return toAjax(monitorConfigService.updateMonitorConfig(config));
     }
+    
+    /**
+     * 保存或更新Token监控配置（根据CA自动判断）
+     */
+    @ApiOperation("保存或更新监控配置")
+    @PreAuthorize("@ss.hasPermi('crypto:monitor:edit')")
+    @Log(title = "Token监控配置", businessType = BusinessType.UPDATE)
+    @PostMapping("/saveOrUpdate")
+    public AjaxResult saveOrUpdate(@RequestBody TokenMonitorConfig config) {
+        // 参数校验
+        if (config.getCa() == null || config.getCa().isEmpty()) {
+            return error("合约地址不能为空");
+        }
+        if (config.getNotifyMethods() == null || config.getNotifyMethods().isEmpty()) {
+            return error("通知方式不能为空");
+        }
+        if (config.getEventsConfig() == null || config.getEventsConfig().isEmpty()) {
+            return error("监控事件配置不能为空");
+        }
+        if (config.getTriggerLogic() == null || config.getTriggerLogic().isEmpty()) {
+            return error("触发逻辑不能为空");
+        }
+        
+        // 设置默认值
+        if (config.getStatus() == null) {
+            config.setStatus("1");  // 默认启用
+        }
+        if (config.getAlertMode() == null) {
+            config.setAlertMode("event");  // 默认为事件监控模式
+        }
+        
+        return toAjax(monitorConfigService.saveOrUpdateMonitorConfig(config));
+    }
 
     /**
      * 删除Token监控配置

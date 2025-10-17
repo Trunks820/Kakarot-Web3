@@ -5,16 +5,23 @@
 <mapper namespace="com.ruoyi.crypto.mapper.TokenLaunchHistoryMapper">
 
     <resultMap type="TokenLaunchHistory" id="TokenLaunchHistoryResult">
-        <id     property="id"                column="id"                    />
-        <result property="ca"                column="ca"                    />
-        <result property="tokenName"         column="token_name"            />
-        <result property="tokenSymbol"       column="token_symbol"          />
-        <result property="twitterUrl"        column="twitter_url"           />
-        <result property="source"            column="source"                />
-        <result property="launchTime"        column="launch_time"           />
-        <result property="highestMarketCap"  column="highest_market_cap"    />
-        <result property="tgMsgId"           column="tg_msg_id"             />
-        <result property="createdAt"         column="created_at"            />
+        <id     property="id"                     column="id"                    />
+        <result property="ca"                     column="ca"                    />
+        <result property="tokenName"              column="token_name"            />
+        <result property="tokenSymbol"            column="token_symbol"          />
+        <result property="twitterUrl"             column="twitter_url"           />
+        <result property="source"                 column="source"                />
+        <result property="launchTime"             column="launch_time"           />
+        <result property="highestMarketCap"       column="highest_market_cap"    />
+        <result property="tgMsgId"                column="tg_msg_id"             />
+        <result property="createdAt"              column="created_at"            />
+        <!-- 监控配置关联字段 -->
+        <result property="monitorConfigId"        column="monitor_config_id"     />
+        <result property="monitorStatus"          column="monitor_status"        />
+        <result property="monitorEventsConfig"    column="monitor_events_config" />
+        <result property="monitorTriggerLogic"    column="monitor_trigger_logic" />
+        <result property="monitorNotifyMethods"   column="monitor_notify_methods"/>
+        <result property="monitorRemark"          column="monitor_remark"        />
     </resultMap>
 
     <sql id="selectTokenVo">
@@ -28,9 +35,16 @@
     <select id="selectTokenList" parameterType="TokenLaunchHistory" resultMap="TokenLaunchHistoryResult">
         SELECT t.id, t.ca, t.token_name, t.token_symbol, t.twitter_url, t.source,
                t.launch_time, t.highest_market_cap, t.tg_msg_id, t.created_at,
-               t.del_flag, t.create_by, t.create_time, t.update_by, t.update_time
+               t.del_flag, t.create_by, t.create_time, t.update_by, t.update_time,
+               m.id AS monitor_config_id,
+               m.status AS monitor_status,
+               m.events_config AS monitor_events_config,
+               m.trigger_logic AS monitor_trigger_logic,
+               m.notify_methods AS monitor_notify_methods,
+               m.remark AS monitor_remark
         FROM token_launch_history t
         LEFT JOIN twitter_account_manage ta ON t.twitter_url = ta.twitter_url
+        LEFT JOIN token_monitor_config m ON t.ca = m.ca AND m.del_flag = '0'
         <where>
             <if test="source != null and source != '' and source != 'all'">
                 AND t.source = #{source}
@@ -84,6 +98,18 @@
                     <!-- 未关注 -->
                     <when test='params.isFollowing == "0"'>
                         AND (ta.is_following = 0 OR ta.is_following IS NULL)
+                    </when>
+                </choose>
+            </if>
+            <if test="params.monitorStatus != null and params.monitorStatus != ''">
+                <choose>
+                    <!-- 已监控 -->
+                    <when test='params.monitorStatus == "monitored"'>
+                        AND m.status = '1' AND m.del_flag = '0'
+                    </when>
+                    <!-- 未监控 -->
+                    <when test='params.monitorStatus == "unmonitored"'>
+                        AND (m.status IS NULL OR m.status = '0' OR m.del_flag = '2')
                     </when>
                 </choose>
             </if>

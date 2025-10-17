@@ -67,6 +67,18 @@ public class TokenMonitorConfig extends BaseEntity {
     /** 事件配置 */
     @ApiModelProperty("事件配置(JSON格式)")
     private String eventConfig;
+    
+    /** 事件配置JSON（新结构） */
+    @ApiModelProperty("事件配置JSON - 包含涨跌幅、持币人数、交易量的详细配置")
+    private String eventsConfig;
+    
+    /** 触发逻辑 */
+    @ApiModelProperty("触发逻辑(any:任一条件满足, all:所有条件同时满足)")
+    private String triggerLogic;
+    
+    /** 备注 */
+    @ApiModelProperty("备注信息")
+    private String remark;
 
     /** 通知方式 */
     @Excel(name = "通知方式")
@@ -98,5 +110,9 @@ public class TokenMonitorConfig extends BaseEntity {
     @Excel(name = "累计通知次数")
     @ApiModelProperty("累计通知次数")
     private Integer notificationCount;
+    
+    /** 删除标志（0代表存在 2代表删除） */
+    @ApiModelProperty("删除标志(0:存在 2:删除)")
+    private String delFlag;
 }
 

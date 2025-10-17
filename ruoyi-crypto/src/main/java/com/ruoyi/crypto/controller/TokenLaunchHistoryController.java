@@ -41,23 +41,14 @@ public class TokenLaunchHistoryController extends BaseController {
     @ApiOperation("查询Token列表")
     @PreAuthorize("@ss.hasPermi('crypto:token:list')")
     @GetMapping("/list")
-    public TableDataInfo list(TokenLaunchHistory token, 
-                              @RequestParam(required = false) String hasTwitter,
-                              @RequestParam(required = false) String minMarketCap,
-                              @RequestParam(required = false) String isFollowing) {
+    public TableDataInfo list(TokenLaunchHistory token, @RequestParam Map<String, Object> params) {
         startPage();
-        // 手动将参数放入 params
-        if (hasTwitter != null && !hasTwitter.isEmpty()) {
-            token.getParams().put("hasTwitter", hasTwitter);
-        }
-
-        if (minMarketCap != null && !minMarketCap.isEmpty()) {
-            token.getParams().put("minMarketCap", minMarketCap);
-        }
         
-        if (isFollowing != null && !isFollowing.isEmpty()) {
-            token.getParams().put("isFollowing", isFollowing);
-        }
+        // 自动将所有额外参数放入 token.params，排除 pageNum 和 pageSize
+        params.entrySet().stream()
+            .filter(entry -> !"pageNum".equals(entry.getKey()) && !"pageSize".equals(entry.getKey()))
+            .filter(entry -> entry.getValue() != null && !entry.getValue().toString().isEmpty())
+            .forEach(entry -> token.getParams().put(entry.getKey(), entry.getValue()));
         
         List<TokenLaunchHistory> list = tokenLaunchHistoryService.selectTokenList(token);
         return getDataTable(list);

@@ -65,6 +65,43 @@ public class TokenMonitorConfigServiceImpl implements ITokenMonitorConfigService
             throw e;
         }
     }
+    
+    @Override
+    public int saveOrUpdateMonitorConfig(TokenMonitorConfig config) {
+        try {
+            // 根据ID判断是新增还是更新
+            if (config.getId() != null && config.getId() > 0) {
+                // 更新
+                int result = monitorConfigMapper.updateMonitorConfig(config);
+                if (result > 0) {
+                    log.info("更新Token监控配置成功: ID={}, CA={}", config.getId(), config.getCa());
+                }
+                return result;
+            } else {
+                // 新增前先检查是否已存在该CA的配置
+                List<TokenMonitorConfig> existingConfigs = monitorConfigMapper.selectMonitorConfigByCa(config.getCa());
+                if (existingConfigs != null && !existingConfigs.isEmpty()) {
+                    // 如果已存在，则更新第一条记录
+                    config.setId(existingConfigs.get(0).getId());
+                    int result = monitorConfigMapper.updateMonitorConfig(config);
+                    if (result > 0) {
+                        log.info("更新现有Token监控配置成功: ID={}, CA={}", config.getId(), config.getCa());
+                    }
+                    return result;
+                } else {
+                    // 不存在则新增
+                    int result = monitorConfigMapper.insertMonitorConfig(config);
+                    if (result > 0) {
+                        log.info("新增Token监控配置成功: CA={}", config.getCa());
+                    }
+                    return result;
+                }
+            }
+        } catch (Exception e) {
+            log.error("保存或更新Token监控配置失败: CA={}", config.getCa(), e);
+            throw e;
+        }
+    }
 
     @Override
     public int deleteMonitorConfigById(Long id) {

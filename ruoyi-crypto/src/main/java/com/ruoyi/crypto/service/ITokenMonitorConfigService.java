@@ -50,6 +50,14 @@ public interface ITokenMonitorConfigService {
      * @return 结果
      */
     int updateMonitorConfig(TokenMonitorConfig config);
+    
+    /**
+     * 保存或更新Token监控配置（根据CA判断新增还是更新）
+     *
+     * @param config Token监控配置
+     * @return 结果
+     */
+    int saveOrUpdateMonitorConfig(TokenMonitorConfig config);
 
     /**
      * 删除Token监控配置
