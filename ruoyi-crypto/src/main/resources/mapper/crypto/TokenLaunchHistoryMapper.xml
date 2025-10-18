@@ -49,6 +49,9 @@
             <if test="source != null and source != '' and source != 'all'">
                 AND t.source = #{source}
             </if>
+            <if test="ca != null and ca != ''">
+                AND t.ca = #{ca}
+            </if>
             <if test="params.beginTime != null and params.beginTime != ''">
                 AND t.launch_time &gt;= #{params.beginTime}
             </if>

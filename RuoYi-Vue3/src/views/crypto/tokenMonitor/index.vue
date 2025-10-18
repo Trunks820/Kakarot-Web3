@@ -8,6 +8,7 @@
           <el-option label="全部" value="all" />
           <el-option label="Pump" value="pump" />
           <el-option label="BONK" value="bonk" />
+          <el-option label="Fourmeme" value="fourmeme" />
         </el-select>
       </el-form-item>
       
@@ -44,6 +45,15 @@
           <el-option label="已关注" value="1" />
           <el-option label="未关注" value="0" />
         </el-select>
+      </el-form-item>
+      
+      <el-form-item label="合约地址" prop="ca">
+        <el-input
+          v-model="queryParams.ca"
+          placeholder="请输入合约地址"
+          clearable
+          style="width: 300px"
+        />
       </el-form-item>
       
       <br />
@@ -153,6 +163,14 @@
                     class="source-tag"
                   >
                     BONK
+                  </el-tag>
+                  <el-tag 
+                    v-else-if="scope.row.source === 'fourmeme'" 
+                    type="warning" 
+                    size="small"
+                    class="source-tag"
+                  >
+                    Fourmeme
                   </el-tag>
                   <!-- 状态点：市值指示（仅高市值显示） -->
                   <span v-if="scope.row.highestMarketCap >= 1000000" class="status-dot hot" title="高市值 ≥ 100万"></span>
@@ -668,7 +686,8 @@ const queryParams = reactive({
   monitorStatus: '',
   hasTwitter: '',
   minMarketCap: '',
-  isFollowing: ''
+  isFollowing: '',
+  ca: ''
 })
 
 // 数据
@@ -883,6 +902,7 @@ const resetQuery = () => {
   queryParams.hasTwitter = ''
   queryParams.minMarketCap = ''
   queryParams.isFollowing = ''
+  queryParams.ca = ''
   initTodayDateRange()
   handleQuery()
 }
