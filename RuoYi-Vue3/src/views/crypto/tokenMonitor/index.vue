@@ -876,12 +876,14 @@ const getList = () => {
   }
   
   // 🎯 处理数据源筛选
-  if (params.source === 'all') {
-    // SOL链的"全部"：查询 pump 和 bonk（发送逗号分隔字符串）
-    if (currentChain.value === 'sol') {
+  if (currentChain.value === 'sol') {
+    // SOL链：如果是'all'或为空，查询 pump 和 bonk
+    if (params.source === 'all' || !params.source) {
       params.source = 'pump,bonk'
     }
-    // BSC链没有"全部"选项，直接传 fourmeme
+  } else {
+    // BSC链：固定查询 fourmeme
+    params.source = 'fourmeme'
   }
   
   // 如果hasTwitter为空，则不传递
