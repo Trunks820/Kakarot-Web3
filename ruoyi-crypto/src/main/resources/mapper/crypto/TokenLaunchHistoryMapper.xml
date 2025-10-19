@@ -46,9 +46,20 @@
         LEFT JOIN twitter_account_manage ta ON t.twitter_url = ta.twitter_url
         LEFT JOIN token_monitor_config m ON t.ca = m.ca AND m.del_flag = '0'
         <where>
-            <if test="source != null and source != '' and source != 'all'">
-                AND t.source = #{source}
-            </if>
+            <!-- 🎯 数据源筛选：支持单个或多个 -->
+            <choose>
+                <!-- 优先检查 params.source（多个数据源） -->
+                <when test="params.source != null and params.source instanceof java.util.Collection">
+                    AND t.source IN
+                    <foreach collection="params.source" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </when>
+                <!-- 否则检查 source（单个数据源） -->
+                <when test="source != null and source != '' and source != 'all'">
+                    AND t.source = #{source}
+                </when>
+            </choose>
             <if test="ca != null and ca != ''">
                 AND t.ca = #{ca}
             </if>

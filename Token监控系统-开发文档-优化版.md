@@ -712,9 +712,7 @@ public class TokenLaunchHistoryController extends BaseController {
     public AjaxResult stats() {
         Map<String, Object> stats = tokenService.selectTokenStats();
         return success(stats);
-    }
-}
-```
+
 
 ---
 

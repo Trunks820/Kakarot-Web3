@@ -1,14 +1,31 @@
 <template>
   <div class="app-container">
+    <!-- 🎯 链类型标签 -->
+    <el-tag 
+      :type="chainConfig.type" 
+      size="large" 
+      effect="dark"
+      style="margin-bottom: 16px; font-size: 14px; padding: 8px 16px;"
+    >
+      {{ chainConfig.label }}
+    </el-tag>
+
     <!-- 查询表单 -->
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="80px">
       <!-- 第一行：短选项 -->
-      <el-form-item label="数据来源" prop="source">
+      <!-- 🎯 SOL链显示数据来源选择，BSC链隐藏（默认Fourmeme） -->
+      <el-form-item 
+        v-if="currentChain === 'sol'" 
+        label="数据来源" 
+        prop="source"
+      >
         <el-select v-model="queryParams.source" placeholder="请选择" clearable style="width: 120px">
-          <el-option label="全部" value="all" />
-          <el-option label="Pump" value="pump" />
-          <el-option label="BONK" value="bonk" />
-          <el-option label="Fourmeme" value="fourmeme" />
+          <el-option 
+            v-for="item in sourceOptions" 
+            :key="item.value" 
+            :label="item.label" 
+            :value="item.value" 
+          />
         </el-select>
       </el-form-item>
       
@@ -655,7 +672,8 @@
 </template>
 
 <script setup name="TokenMonitor">
-import { ref, reactive, computed, onMounted, onUnmounted, getCurrentInstance } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, getCurrentInstance, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { 
   listToken, 
   followTwitter, 
@@ -677,12 +695,57 @@ import {
 } from '@element-plus/icons-vue'
 
 const { proxy } = getCurrentInstance()
+const route = useRoute()
+
+// 🎯 识别当前链类型（通过路由查询参数）
+const currentChain = computed(() => {
+  const chain = route.query.chain || 'sol'
+  console.log('当前链类型:', chain, '路由参数:', route.query)
+  return chain
+})
+
+// 📊 页面标题
+const pageTitle = computed(() => {
+  return currentChain.value === 'sol' ? 'SOL链Token监控' : 'BSC链Token监控'
+})
+
+// 📊 链类型标签配置
+const chainConfig = computed(() => {
+  if (currentChain.value === 'sol') {
+    return {
+      label: 'Solana链 (Pump + Bonk)',
+      type: 'success',
+      sources: ['pump', 'bonk']
+    }
+  } else {
+    return {
+      label: 'BSC链 (Fourmeme)',
+      type: 'warning',
+      sources: ['fourmeme']
+    }
+  }
+})
+
+// 📊 根据链类型动态生成数据源选项
+const sourceOptions = computed(() => {
+  if (currentChain.value === 'sol') {
+    return [
+      { label: '全部', value: 'all' },
+      { label: 'Pump', value: 'pump' },
+      { label: 'BONK', value: 'bonk' }
+    ]
+  } else {
+    return [
+      { label: 'Fourmeme', value: 'fourmeme' }
+    ]
+  }
+})
 
 // 查询参数
 const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,
-  source: 'all',
+  source: currentChain.value === 'sol' ? 'all' : 'fourmeme',
   monitorStatus: '',
   hasTwitter: '',
   minMarketCap: '',
@@ -812,9 +875,13 @@ const getList = () => {
     console.log('时间范围为空:', dateRange.value)
   }
   
-  // 如果source是all，则不传递该参数
+  // 🎯 处理数据源筛选
   if (params.source === 'all') {
-    delete params.source
+    // SOL链的"全部"：查询 pump 和 bonk（发送逗号分隔字符串）
+    if (currentChain.value === 'sol') {
+      params.source = 'pump,bonk'
+    }
+    // BSC链没有"全部"选项，直接传 fourmeme
   }
   
   // 如果hasTwitter为空，则不传递
@@ -897,7 +964,8 @@ const handleQuery = () => {
 const resetQuery = () => {
   dateRange.value = []
   proxy.resetForm('queryRef')
-  queryParams.source = 'all'
+  // 🎯 根据当前链类型重置数据源
+  queryParams.source = currentChain.value === 'sol' ? 'all' : 'fourmeme'
   queryParams.monitorStatus = ''
   queryParams.hasTwitter = ''
   queryParams.minMarketCap = ''
@@ -1437,7 +1505,24 @@ watch(() => monitorDialog.events.volume.enabled, (newVal) => {
   }
 })
 
+// 🎯 监听路由变化，自动切换链类型并刷新数据
+watch(() => route.query.chain, (newChain, oldChain) => {
+  if (newChain && newChain !== oldChain) {
+    console.log('链类型切换:', oldChain, '→', newChain)
+    // 根据新链类型重置数据源
+    queryParams.source = newChain === 'sol' ? 'all' : 'fourmeme'
+    // 重置分页
+    queryParams.pageNum = 1
+    // 刷新数据
+    getList()
+  }
+})
+
 onMounted(() => {
+  // 🎯 根据当前链类型初始化数据源
+  queryParams.source = currentChain.value === 'sol' ? 'all' : 'fourmeme'
+  console.log('页面初始化 - 当前链:', currentChain.value, '数据源:', queryParams.source)
+  
   initTodayDateRange()
   getList()
   startAutoRefresh()

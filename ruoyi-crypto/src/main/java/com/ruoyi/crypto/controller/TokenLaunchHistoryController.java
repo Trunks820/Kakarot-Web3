@@ -14,6 +14,7 @@ import io.swagger.annotations.ApiParam;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,21 @@ public class TokenLaunchHistoryController extends BaseController {
     @GetMapping("/list")
     public TableDataInfo list(TokenLaunchHistory token, @RequestParam Map<String, Object> params) {
         startPage();
+        
+        // 🎯 特殊处理：source 参数可能是逗号分隔的字符串（SOL链的"全部"）
+        Object sourceParam = params.get("source");
+        if (sourceParam != null && sourceParam instanceof String) {
+            String sourceStr = (String) sourceParam;
+            if (sourceStr.contains(",")) {
+                // 如果包含逗号，说明是多个数据源，转换为 List
+                token.getParams().put("source", Arrays.asList(sourceStr.split(",")));
+            } else {
+                // 单个数据源，直接设置到 token.source
+                token.setSource(sourceStr);
+            }
+            // 从 params 中移除，避免重复处理
+            params.remove("source");
+        }
         
         // 自动将所有额外参数放入 token.params，排除 pageNum 和 pageSize
         params.entrySet().stream()
