@@ -100,38 +100,18 @@
         <el-button 
           type="primary" 
           plain 
-          icon="Plus" 
-          @click="handleBatchFollow"
-          :disabled="!hasTwitterSelected"
-        >
-          批量关注
-        </el-button>
-        <el-button 
-          type="danger" 
-          plain 
-          icon="Remove" 
-          @click="handleBatchUnfollow"
-          :disabled="!hasTwitterSelected"
-        >
-          批量取消关注
-        </el-button>
-        <el-button 
-          type="primary" 
-          plain 
           icon="Monitor" 
-          @click="handleBatchMonitor"
-          :disabled="multiple"
+          @click="handleGlobalMonitor"
         >
-          批量监控
+          全局监控
         </el-button>
         <el-button 
           type="danger" 
           plain 
           icon="RemoveFilled" 
-          @click="handleBatchCancelMonitor"
-          :disabled="multiple"
+          @click="handleCancelGlobalMonitor"
         >
-          批量取消监控
+          取消全局监控
         </el-button>
         <el-button type="info" plain icon="Refresh" @click="refreshData">刷新数据</el-button>
       </el-space>
@@ -152,7 +132,6 @@
         class="token-table"
         style="width: 100%"
       >
-        <el-table-column type="selection" width="50" align="center" :reserve-selection="true" />
       
       <!-- Token信息 -->
       <el-table-column label="Token信息" align="left" min-width="300" v-if="columns[0].visible">
@@ -668,6 +647,232 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- 全局监控配置弹窗 -->
+    <el-dialog
+      v-model="globalMonitorDialog.visible"
+      title="全局监控配置"
+      :width="'min(720px, 90vw)'"
+      @close="resetGlobalMonitorForm"
+    >
+      <el-alert
+        type="warning"
+        :closable="false"
+        style="margin-bottom: 20px"
+      >
+        <template #title>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>🌐</span>
+            <span>将为数据库中 <strong>所有Token</strong> 应用此全局监控配置</span>
+          </div>
+        </template>
+      </el-alert>
+      
+      <el-form :model="globalMonitorDialog.form" label-width="100px">
+        <!-- 显示Token统计信息 -->
+        <el-form-item label="应用范围">
+          <el-tag type="danger" effect="dark">🌐 数据库所有Token</el-tag>
+          <span style="margin-left: 12px; color: #909399; font-size: 13px;">
+            所有已有配置将被覆盖
+          </span>
+        </el-form-item>
+        
+        <el-divider content-position="left">
+          <span style="font-weight: 600;">监控事件</span>
+        </el-divider>
+        
+        <!-- 涨跌幅变化 -->
+        <el-card class="event-card" :class="{ disabled: !globalMonitorDialog.events.priceChange.enabled }">
+          <template #header>
+            <div class="event-title">
+              <el-checkbox v-model="globalMonitorDialog.events.priceChange.enabled">
+                📈 涨跌幅变化
+              </el-checkbox>
+            </div>
+          </template>
+          <div v-if="globalMonitorDialog.events.priceChange.enabled" class="event-config">
+            <el-row :gutter="16">
+              <el-col :span="12">
+                <el-form-item label="涨幅" label-position="top" class="event-field">
+                  <el-input-number
+                    v-model="globalMonitorDialog.events.priceChange.risePercent"
+                    :min="0"
+                    :max="1000"
+                    :precision="1"
+                    style="width: 100%"
+                  >
+                    <template #suffix>%</template>
+                  </el-input-number>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="跌幅" label-position="top" class="event-field">
+                  <el-input-number
+                    v-model="globalMonitorDialog.events.priceChange.fallPercent"
+                    :min="0"
+                    :max="1000"
+                    :precision="1"
+                    style="width: 100%"
+                  >
+                    <template #suffix>%</template>
+                  </el-input-number>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <div class="event-tip">💡 留空表示不监控该方向</div>
+          </div>
+        </el-card>
+        
+        <!-- 持币人数变化 -->
+        <el-card class="event-card" :class="{ disabled: !globalMonitorDialog.events.holders.enabled }">
+          <template #header>
+            <div class="event-title">
+              <el-checkbox v-model="globalMonitorDialog.events.holders.enabled">
+                👥 持币人数变化
+              </el-checkbox>
+            </div>
+          </template>
+          <div v-if="globalMonitorDialog.events.holders.enabled" class="event-config">
+            <el-row :gutter="16">
+              <el-col :span="12">
+                <el-form-item label="增长" label-position="top" class="event-field">
+                  <el-input-number
+                    v-model="globalMonitorDialog.events.holders.increasePercent"
+                    :min="0"
+                    :max="1000"
+                    :precision="1"
+                    style="width: 100%"
+                  >
+                    <template #suffix>%</template>
+                  </el-input-number>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="减少" label-position="top" class="event-field">
+                  <el-input-number
+                    v-model="globalMonitorDialog.events.holders.decreasePercent"
+                    :min="0"
+                    :max="1000"
+                    :precision="1"
+                    style="width: 100%"
+                  >
+                    <template #suffix>%</template>
+                  </el-input-number>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <div class="event-tip">💡 留空表示不监控该方向</div>
+          </div>
+        </el-card>
+        
+        <!-- 交易量变化 -->
+        <el-card class="event-card" :class="{ disabled: !globalMonitorDialog.events.volume.enabled }">
+          <template #header>
+            <div class="event-title">
+              <el-checkbox v-model="globalMonitorDialog.events.volume.enabled">
+                💰 交易量变化
+              </el-checkbox>
+            </div>
+          </template>
+          <div v-if="globalMonitorDialog.events.volume.enabled" class="event-config">
+            <el-row :gutter="16">
+              <el-col :span="12">
+                <el-form-item label="增长" label-position="top" class="event-field">
+                  <el-input-number
+                    v-model="globalMonitorDialog.events.volume.increasePercent"
+                    :min="0"
+                    :max="1000"
+                    :precision="1"
+                    style="width: 100%"
+                  >
+                    <template #suffix>%</template>
+                  </el-input-number>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="减少" label-position="top" class="event-field">
+                  <el-input-number
+                    v-model="globalMonitorDialog.events.volume.decreasePercent"
+                    :min="0"
+                    :max="1000"
+                    :precision="1"
+                    style="width: 100%"
+                  >
+                    <template #suffix>%</template>
+                  </el-input-number>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <div class="event-tip">💡 留空表示不监控该方向</div>
+          </div>
+        </el-card>
+        
+        <el-divider content-position="left">
+          <span style="font-weight: 600;">触发设置</span>
+        </el-divider>
+        
+        <!-- 触发逻辑 -->
+        <el-form-item label="触发逻辑">
+          <el-radio-group v-model="globalMonitorDialog.form.triggerLogic">
+            <el-radio label="any">
+              任一条件满足即触发
+              <span style="color: #909399; font-size: 12px;">（OR逻辑）</span>
+            </el-radio>
+            <el-radio label="all">
+              需同时满足所有已勾选条件
+              <span style="color: #909399; font-size: 12px;">（AND逻辑）</span>
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        
+        <el-divider content-position="left">
+          <span style="font-weight: 600;">其他设置</span>
+        </el-divider>
+        
+        <!-- 通知方式 -->
+        <el-form-item>
+          <template #label>
+            <span class="required-mark">*</span>
+            <span>通知方式</span>
+          </template>
+          <el-checkbox-group v-model="globalMonitorDialog.notifyMethodsArray">
+            <el-checkbox label="telegram">Telegram</el-checkbox>
+            <el-checkbox label="wechat">微信</el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+        
+        <!-- 监控状态 -->
+        <el-form-item label="监控状态">
+          <el-switch
+            v-model="globalMonitorDialog.form.status"
+            active-value="1"
+            inactive-value="0"
+            active-text="启用"
+            inactive-text="停用"
+          />
+        </el-form-item>
+        
+        <!-- 备注 -->
+        <el-form-item label="备注">
+          <div class="remark-tip">💡 记录触发条件备注，便于后续识别</div>
+          <el-input
+            v-model="globalMonitorDialog.form.remark"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入备注信息"
+            maxlength="200"
+            show-word-limit
+          />
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <el-button @click="globalMonitorDialog.visible = false">取消</el-button>
+        <el-button type="primary" @click="saveGlobalMonitor">
+          应用到数据库所有Token
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -844,11 +1049,6 @@ const isTwitterProfile = (twitterUrl) => {
          !twitterUrl.includes('/search')
 }
 
-// 计算是否有选中带推特主页的行
-const hasTwitterSelected = computed(() => {
-  return selectedRows.value.some(row => row.twitterUrl && isTwitterProfile(row.twitterUrl))
-})
-
 // 初始化今天的时间范围
 const initTodayDateRange = () => {
   const now = new Date()
@@ -990,78 +1190,289 @@ const handleSelectionChange = (selection) => {
   multiple.value = !selection.length
 }
 
-// 批量关注
-const handleBatchFollow = () => {
-  // 只筛选推特主页
-  const twitterTokens = selectedRows.value.filter(row => 
-    row.twitterUrl && isTwitterProfile(row.twitterUrl)
-  )
-  
-  if (twitterTokens.length === 0) {
-    proxy.$modal.msgWarning('请选择带有推特主页的Token（推文和社区不支持关注）')
-    return
+// ========================================
+// 全局监控功能
+// ========================================
+
+// 全局监控配置
+const globalMonitorDialog = reactive({
+  visible: false,
+  form: {
+    triggerLogic: 'any',
+    status: '1',
+    remark: '全局监控配置'
+  },
+  events: {
+    priceChange: {
+      enabled: false,
+      risePercent: null,
+      fallPercent: null
+    },
+    holders: {
+      enabled: false,
+      increasePercent: null,
+      decreasePercent: null
+    },
+    volume: {
+      enabled: false,
+      increasePercent: null,
+      decreasePercent: null
+    }
+  },
+  notifyMethodsArray: []
+})
+
+// 重置全局监控表单
+const resetGlobalMonitorForm = () => {
+  globalMonitorDialog.form = {
+    triggerLogic: 'any',
+    status: '1',
+    remark: '全局监控配置'
   }
   
-  proxy.$modal.confirm(`确认关注选中的 ${twitterTokens.length} 个推特主页？`).then(() => {
-    const twitterUrls = twitterTokens.map(token => token.twitterUrl)
-    batchFollowTwitter(twitterUrls).then(response => {
-      proxy.$modal.msgSuccess(response.msg || '批量关注成功')
-      getList()
-    }).catch(() => {
-      proxy.$modal.msgError('批量关注失败')
+  globalMonitorDialog.events = {
+    priceChange: { enabled: false, risePercent: null, fallPercent: null },
+    holders: { enabled: false, increasePercent: null, decreasePercent: null },
+    volume: { enabled: false, increasePercent: null, decreasePercent: null }
+  }
+  
+  globalMonitorDialog.notifyMethodsArray = []
+}
+
+// 全局监控 - 打开配置弹窗
+const handleGlobalMonitor = () => {
+  // 重置表单
+  resetGlobalMonitorForm()
+  
+  // 显示弹窗
+  globalMonitorDialog.visible = true
+}
+
+// 保存全局监控
+const saveGlobalMonitor = async () => {
+  // 1. 验证
+  if (globalMonitorDialog.form.status === '1') {
+    // 至少选择一个事件
+    const hasEnabledEvent = Object.values(globalMonitorDialog.events).some(e => e.enabled)
+    if (!hasEnabledEvent) {
+      proxy.$modal.msgWarning('请至少选择一个监控事件')
+      return
+    }
+    
+    // 验证启用的事件至少有一个阈值
+    for (const [key, event] of Object.entries(globalMonitorDialog.events)) {
+      if (event.enabled) {
+        const hasThreshold = Object.values(event)
+          .filter(v => typeof v === 'number')
+          .some(v => v !== null && v !== undefined)
+        
+        if (!hasThreshold) {
+          const eventNames = {
+            priceChange: '涨跌幅变化',
+            holders: '持币人数变化',
+            volume: '交易量变化'
+          }
+          proxy.$modal.msgWarning(`${eventNames[key]}至少需要设置一个阈值`)
+          return
+        }
+      }
+    }
+    
+    // 至少选择一个通知方式
+    if (globalMonitorDialog.notifyMethodsArray.length === 0) {
+      proxy.$modal.msgWarning('请至少选择一个通知方式')
+      return
+    }
+  }
+  
+  // 2. 确认操作
+  const confirmMessage = `
+    <p>将为数据库中 <strong>所有Token</strong> 应用此全局监控配置</p>
+    <p style="color: #E6A23C; margin-top: 10px;">
+      ⚠️ 注意：数据库中所有Token已有的单独监控配置将被覆盖为此全局配置
+    </p>
+    <p style="color: #909399; margin-top: 8px; font-size: 12px;">
+      💡 提示：后端将批量应用配置，可能需要一些时间
+    </p>
+  `
+  
+  try {
+    await proxy.$modal.confirm(confirmMessage, '确认全局监控', {
+      dangerouslyUseHTMLString: true,
+      confirmButtonText: '确定应用',
+      cancelButtonText: '取消',
+      type: 'warning'
     })
-  }).catch(() => {})
-}
-
-// 批量取消关注
-const handleBatchUnfollow = () => {
-  // 只筛选推特主页
-  const twitterTokens = selectedRows.value.filter(row => 
-    row.twitterUrl && isTwitterProfile(row.twitterUrl)
-  )
-  
-  if (twitterTokens.length === 0) {
-    proxy.$modal.msgWarning('请选择带有推特主页的Token（推文和社区不支持关注）')
+  } catch {
     return
   }
   
-  proxy.$modal.confirm(`确认取消关注选中的 ${twitterTokens.length} 个推特主页？`).then(() => {
-    const twitterUrls = twitterTokens.map(token => token.twitterUrl)
-    batchUnfollowTwitter(twitterUrls).then(response => {
-      proxy.$modal.msgSuccess(response.msg || '批量取消关注成功')
+  // 3. 组装数据
+  const configData = {
+    eventsConfig: JSON.stringify(globalMonitorDialog.events),
+    triggerLogic: globalMonitorDialog.form.triggerLogic,
+    notifyMethods: globalMonitorDialog.notifyMethodsArray.join(','),
+    status: globalMonitorDialog.form.status,
+    remark: globalMonitorDialog.form.remark,
+    isGlobal: true  // 标记为全局配置
+  }
+  
+  // 4. 调用后端全局配置API（TODO: 需要后端实现批量配置接口）
+  proxy.$modal.loading('正在应用全局配置到所有Token，请稍候...')
+  
+  try {
+    // TODO: 调用后端批量配置API
+    // await batchApplyGlobalMonitorConfig(configData)
+    
+    // 临时方案：分页获取所有Token并逐个配置
+    let currentPage = 1
+    let hasMore = true
+    let successCount = 0
+    let failCount = 0
+    
+    while (hasMore) {
+      try {
+        // 获取当前页Token列表
+        const params = {
+          pageNum: currentPage,
+          pageSize: 100,  // 每次处理100个
+          source: queryParams.source || 'all'
+        }
+        
+        const response = await listToken(params)
+        const tokens = response.rows || []
+        
+        if (tokens.length === 0) {
+          hasMore = false
+          break
+        }
+        
+        // 批量应用配置
+        for (const token of tokens) {
+          try {
+            await saveOrUpdateMonitorConfig({
+              ca: token.ca,
+              tokenName: token.tokenName,
+              ...configData
+            })
+            successCount++
+          } catch (error) {
+            console.error(`Token ${token.ca} 配置失败:`, error)
+            failCount++
+          }
+        }
+        
+        // 判断是否还有下一页
+        if (tokens.length < 100) {
+          hasMore = false
+        } else {
+          currentPage++
+        }
+      } catch (error) {
+        console.error('获取Token列表失败:', error)
+        hasMore = false
+      }
+    }
+    
+    proxy.$modal.closeLoading()
+    
+    // 5. 显示结果
+    if (failCount === 0) {
+      proxy.$modal.msgSuccess(`全局配置成功！已应用到 ${successCount} 个Token`)
+    } else {
+      proxy.$modal.msgWarning(`配置完成：成功 ${successCount} 个，失败 ${failCount} 个`)
+    }
+    
+    // 6. 关闭弹窗并刷新列表
+    globalMonitorDialog.visible = false
+    getList()
+  } catch (error) {
+    proxy.$modal.closeLoading()
+    proxy.$modal.msgError('全局配置失败：' + (error.message || '未知错误'))
+  }
+}
+
+// 取消全局监控
+const handleCancelGlobalMonitor = () => {
+  proxy.$modal.confirm(
+    `确认取消数据库中所有Token的监控配置？`,
+    '取消全局监控',
+    { 
+      type: 'warning',
+      dangerouslyUseHTMLString: true,
+      message: `
+        <p>将取消数据库中 <strong>所有Token</strong> 的监控配置</p>
+        <p style="color: #909399; margin-top: 8px; font-size: 12px;">
+          💡 提示：后端将批量取消配置，可能需要一些时间
+        </p>
+      `
+    }
+  ).then(async () => {
+    proxy.$modal.loading('正在取消全局监控，请稍候...')
+    
+    try {
+      // 分页获取所有Token并逐个取消
+      let currentPage = 1
+      let hasMore = true
+      let successCount = 0
+      let failCount = 0
+      
+      while (hasMore) {
+        try {
+          // 获取当前页Token列表
+          const params = {
+            pageNum: currentPage,
+            pageSize: 100,
+            source: queryParams.source || 'all'
+          }
+          
+          const response = await listToken(params)
+          const tokens = response.rows || []
+          
+          if (tokens.length === 0) {
+            hasMore = false
+            break
+          }
+          
+          // 批量取消配置
+          for (const token of tokens) {
+            try {
+              if (token.monitorConfigId && token.monitorStatus === '1') {
+                await changeMonitorStatus(token.monitorConfigId, '0')
+                successCount++
+              }
+            } catch (error) {
+              console.error(`Token ${token.ca} 取消失败:`, error)
+              failCount++
+            }
+          }
+          
+          // 判断是否还有下一页
+          if (tokens.length < 100) {
+            hasMore = false
+          } else {
+            currentPage++
+          }
+        } catch (error) {
+          console.error('获取Token列表失败:', error)
+          hasMore = false
+        }
+      }
+      
+      proxy.$modal.closeLoading()
+      
+      if (failCount === 0) {
+        proxy.$modal.msgSuccess(`全局取消成功！已取消 ${successCount} 个Token的监控`)
+      } else {
+        proxy.$modal.msgWarning(`取消完成：成功 ${successCount} 个，失败 ${failCount} 个`)
+      }
+      
       getList()
-    }).catch(() => {
-      proxy.$modal.msgError('批量取消关注失败')
-    })
+    } catch (error) {
+      proxy.$modal.closeLoading()
+      proxy.$modal.msgError('取消全局监控失败：' + (error.message || '未知错误'))
+    }
   }).catch(() => {})
-}
-
-// 批量监控
-const handleBatchMonitor = () => {
-  if (selectedRows.value.length === 0) {
-    proxy.$modal.msgWarning('请选择要监控的Token')
-    return
-  }
-  
-  proxy.$modal.confirm(`确认对选中的 ${selectedRows.value.length} 个Token启用监控？`).then(() => {
-    // TODO: 调用批量启用监控API
-    proxy.$modal.msgSuccess('批量监控启用成功')
-    getList()
-  })
-}
-
-// 批量取消监控
-const handleBatchCancelMonitor = () => {
-  if (selectedRows.value.length === 0) {
-    proxy.$modal.msgWarning('请选择要取消监控的Token')
-    return
-  }
-  
-  proxy.$modal.confirm(`确认取消选中的 ${selectedRows.value.length} 个Token的监控？`).then(() => {
-    // TODO: 调用批量取消监控API
-    proxy.$modal.msgSuccess('批量取消监控成功')
-    getList()
-  })
 }
 
 // 格式化地址
