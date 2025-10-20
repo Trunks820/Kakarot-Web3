@@ -28,6 +28,9 @@ import './permission' // permission control
 import { useDict } from '@/utils/dict'
 import { parseTime, resetForm, addDateRange, handleTree, selectDictLabel, selectDictLabels } from '@/utils/ruoyi'
 
+// 初始化通知接收器
+import { notificationReceiver } from '@/utils/notificationReceiver'
+
 // Import dark theme overrides last to ensure highest priority
 import '@/assets/styles/dark-theme-overrides.css' // dark theme overrides
 
@@ -81,5 +84,8 @@ app.use(ElementPlus, {
   // 支持 large、default、small
   size: Cookies.get('size') || 'default'
 })
+
+// 挂载应用实例到window（供通知接收器使用）
+window.__app__ = app
 
 app.mount('#app')
