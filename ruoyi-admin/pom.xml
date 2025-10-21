@@ -67,6 +67,12 @@
             <artifactId>ruoyi-crypto</artifactId>
         </dependency>
 
+        <!-- WebSocket 支持 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

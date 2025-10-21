@@ -36,6 +36,6 @@ export function testNotification() {
     }
   }
   
-  return receiveNotification(testData, 'your-secret-token-here-change-it')
+  return receiveNotification(testData, 'Wy1997@Kakarot')
 }
 

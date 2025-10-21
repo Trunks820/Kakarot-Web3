@@ -128,7 +128,7 @@
         <template #title>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span>🌐</span>
-            <span>此配置将应用于 <strong>{{ configDialog.chainType.toUpperCase() }}链区块监听</strong>，由Python脚本读取</span>
+            <span>此配置将应用于 <strong>{{ configDialog.chainType.toUpperCase() }}链区块监听</strong></span>
           </div>
         </template>
       </el-alert>
