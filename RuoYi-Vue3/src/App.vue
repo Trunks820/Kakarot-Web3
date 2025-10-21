@@ -3,15 +3,69 @@
 </template>
 
 <script setup>
+import { onMounted, onUnmounted, nextTick } from 'vue'
 import useSettingsStore from '@/store/modules/settings'
 import { handleThemeStyle } from '@/utils/theme'
+import { NotificationWebSocket } from '@/utils/websocket'
+import useUserStore from '@/store/modules/user'
+import { useNotificationStore } from '@/store/modules/notification'
+
+// WebSocket 实例
+let wsClient = null
 
 onMounted(() => {
   nextTick(() => {
     // 初始化主题样式
     handleThemeStyle(useSettingsStore().theme)
+    
+    // 初始化 WebSocket 连接
+    initWebSocket()
   })
 })
+
+onUnmounted(() => {
+  // 组件卸载时关闭 WebSocket
+  if (wsClient) {
+    wsClient.close()
+  }
+})
+
+/**
+ * 初始化 WebSocket 连接
+ */
+function initWebSocket() {
+  try {
+    const userStore = useUserStore()
+    const token = userStore.token
+    
+    if (!token) {
+      console.warn('用户未登录，跳过 WebSocket 初始化')
+      return
+    }
+    
+    const notificationStore = useNotificationStore()
+    
+    // 创建 WebSocket 实例
+    wsClient = new NotificationWebSocket({
+      token: token,
+      autoReconnect: true,
+      reconnectInterval: 5000,
+      heartbeatInterval: 30000
+    })
+    
+    // 连接 WebSocket，并传入通知回调
+    wsClient.connect(null, (notification) => {
+      // 将通知添加到 Pinia store
+      notificationStore.addNotification(notification)
+      console.log('✅ 通知已添加到 Store:', notification.title)
+    })
+    
+    console.log('WebSocket 初始化完成')
+    
+  } catch (error) {
+    console.error('WebSocket 初始化失败', error)
+  }
+}
 </script>
 
 <style>

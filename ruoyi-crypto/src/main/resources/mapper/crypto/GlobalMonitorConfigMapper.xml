@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.GlobalMonitorConfigMapper">
+    
+    <resultMap type="GlobalMonitorConfig" id="GlobalMonitorConfigResult">
+        <result property="id"    column="id"    />
+        <result property="configName"    column="config_name"    />
+        <result property="chainType"    column="chain_type"    />
+        <result property="source"    column="source"    />
+        <result property="minTransactionUsd"    column="min_transaction_usd"    />
+        <result property="eventsConfig"    column="events_config"    />
+        <result property="triggerLogic"    column="trigger_logic"    />
+        <result property="notifyMethods"    column="notify_methods"    />
+        <result property="status"    column="status"    />
+        <result property="priority"    column="priority"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectGlobalMonitorConfigVo">
+        select id, config_name, chain_type, source, min_transaction_usd, events_config, 
+               trigger_logic, notify_methods, status, priority, remark, 
+               create_by, create_time, update_by, update_time 
+        from global_monitor_config
+    </sql>
+
+    <select id="selectGlobalMonitorConfigList" parameterType="GlobalMonitorConfig" resultMap="GlobalMonitorConfigResult">
+        <include refid="selectGlobalMonitorConfigVo"/>
+        <where>  
+            <if test="configName != null  and configName != ''"> and config_name like concat('%', #{configName}, '%')</if>
+            <if test="chainType != null  and chainType != ''"> and chain_type = #{chainType}</if>
+            <if test="source != null  and source != ''"> and source = #{source}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+        order by priority desc, create_time desc
+    </select>
+    
+    <select id="selectGlobalMonitorConfigById" parameterType="Long" resultMap="GlobalMonitorConfigResult">
+        <include refid="selectGlobalMonitorConfigVo"/>
+        where id = #{id}
+    </select>
+    
+    <select id="selectGlobalMonitorConfigByChainType" parameterType="String" resultMap="GlobalMonitorConfigResult">
+        <include refid="selectGlobalMonitorConfigVo"/>
+        where chain_type = #{chainType} and status = '1'
+        order by priority desc
+        limit 1
+    </select>
+        
+    <insert id="insertGlobalMonitorConfig" parameterType="GlobalMonitorConfig" useGeneratedKeys="true" keyProperty="id">
+        insert into global_monitor_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="configName != null and configName != ''">config_name,</if>
+            <if test="chainType != null and chainType != ''">chain_type,</if>
+            <if test="source != null">source,</if>
+            <if test="minTransactionUsd != null">min_transaction_usd,</if>
+            <if test="eventsConfig != null">events_config,</if>
+            <if test="triggerLogic != null">trigger_logic,</if>
+            <if test="notifyMethods != null">notify_methods,</if>
+            <if test="status != null">status,</if>
+            <if test="priority != null">priority,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="configName != null and configName != ''">#{configName},</if>
+            <if test="chainType != null and chainType != ''">#{chainType},</if>
+            <if test="source != null">#{source},</if>
+            <if test="minTransactionUsd != null">#{minTransactionUsd},</if>
+            <if test="eventsConfig != null">#{eventsConfig},</if>
+            <if test="triggerLogic != null">#{triggerLogic},</if>
+            <if test="notifyMethods != null">#{notifyMethods},</if>
+            <if test="status != null">#{status},</if>
+            <if test="priority != null">#{priority},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <update id="updateGlobalMonitorConfig" parameterType="GlobalMonitorConfig">
+        update global_monitor_config
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="configName != null and configName != ''">config_name = #{configName},</if>
+            <if test="chainType != null and chainType != ''">chain_type = #{chainType},</if>
+            <if test="source != null">source = #{source},</if>
+            <if test="minTransactionUsd != null">min_transaction_usd = #{minTransactionUsd},</if>
+            <if test="eventsConfig != null">events_config = #{eventsConfig},</if>
+            <if test="triggerLogic != null">trigger_logic = #{triggerLogic},</if>
+            <if test="notifyMethods != null">notify_methods = #{notifyMethods},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="priority != null">priority = #{priority},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteGlobalMonitorConfigById" parameterType="Long">
+        delete from global_monitor_config where id = #{id}
+    </delete>
+
+    <delete id="deleteGlobalMonitorConfigByIds" parameterType="String">
+        delete from global_monitor_config where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
+
