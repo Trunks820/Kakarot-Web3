@@ -101,17 +101,19 @@
           type="primary" 
           plain 
           icon="Monitor" 
-          @click="handleGlobalMonitor"
+          @click="handleBatchMonitor"
+          :disabled="multiple"
         >
-          全局监控
+          批量监控
         </el-button>
         <el-button 
           type="danger" 
           plain 
           icon="RemoveFilled" 
-          @click="handleCancelGlobalMonitor"
+          @click="handleBatchCancelMonitor"
+          :disabled="multiple"
         >
-          取消全局监控
+          批量取消监控
         </el-button>
         <el-button type="info" plain icon="Refresh" @click="refreshData">刷新数据</el-button>
       </el-space>
@@ -132,6 +134,7 @@
         class="token-table"
         style="width: 100%"
       >
+        <el-table-column type="selection" width="50" align="center" :reserve-selection="true" />
       
       <!-- Token信息 -->
       <el-table-column label="Token信息" align="left" min-width="300" v-if="columns[0].visible">
@@ -648,33 +651,39 @@
       </template>
     </el-dialog>
 
-    <!-- 全局监控配置弹窗 -->
+    <!-- 批量监控配置弹窗 -->
     <el-dialog
-      v-model="globalMonitorDialog.visible"
-      title="全局监控配置"
+      v-model="batchMonitorDialog.visible"
+      title="批量监控配置"
       :width="'min(720px, 90vw)'"
-      @close="resetGlobalMonitorForm"
+      @close="resetBatchMonitorForm"
     >
       <el-alert
-        type="warning"
+        type="info"
         :closable="false"
         style="margin-bottom: 20px"
       >
         <template #title>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span>🌐</span>
-            <span>将为数据库中 <strong>所有Token</strong> 应用此全局监控配置</span>
+            <span>📊</span>
+            <span>将为选中的 <strong>{{ selectedRows.length }}</strong> 个Token应用此监控配置</span>
           </div>
         </template>
       </el-alert>
       
-      <el-form :model="globalMonitorDialog.form" label-width="100px">
-        <!-- 显示Token统计信息 -->
+      <el-form :model="batchMonitorDialog.form" label-width="100px">
+        <!-- 显示选中的Token信息 -->
         <el-form-item label="应用范围">
-          <el-tag type="danger" effect="dark">🌐 数据库所有Token</el-tag>
-          <span style="margin-left: 12px; color: #909399; font-size: 13px;">
-            所有已有配置将被覆盖
-          </span>
+          <el-tag
+            v-for="(row, index) in selectedRows.slice(0, 5)"
+            :key="row.ca"
+            style="margin-right: 8px; margin-bottom: 8px;"
+          >
+            {{ row.tokenSymbol || row.tokenName }}
+          </el-tag>
+          <el-tag v-if="selectedRows.length > 5" type="info">
+            +{{ selectedRows.length - 5 }} 个
+          </el-tag>
         </el-form-item>
         
         <el-divider content-position="left">
@@ -682,20 +691,20 @@
         </el-divider>
         
         <!-- 涨跌幅变化 -->
-        <el-card class="event-card" :class="{ disabled: !globalMonitorDialog.events.priceChange.enabled }">
+        <el-card class="event-card" :class="{ disabled: !batchMonitorDialog.events.priceChange.enabled }">
           <template #header>
             <div class="event-title">
-              <el-checkbox v-model="globalMonitorDialog.events.priceChange.enabled">
+              <el-checkbox v-model="batchMonitorDialog.events.priceChange.enabled">
                 📈 涨跌幅变化
               </el-checkbox>
             </div>
           </template>
-          <div v-if="globalMonitorDialog.events.priceChange.enabled" class="event-config">
+          <div v-if="batchMonitorDialog.events.priceChange.enabled" class="event-config">
             <el-row :gutter="16">
               <el-col :span="12">
                 <el-form-item label="涨幅" label-position="top" class="event-field">
                   <el-input-number
-                    v-model="globalMonitorDialog.events.priceChange.risePercent"
+                    v-model="batchMonitorDialog.events.priceChange.risePercent"
                     :min="0"
                     :max="1000"
                     :precision="1"
@@ -708,7 +717,7 @@
               <el-col :span="12">
                 <el-form-item label="跌幅" label-position="top" class="event-field">
                   <el-input-number
-                    v-model="globalMonitorDialog.events.priceChange.fallPercent"
+                    v-model="batchMonitorDialog.events.priceChange.fallPercent"
                     :min="0"
                     :max="1000"
                     :precision="1"
@@ -724,20 +733,20 @@
         </el-card>
         
         <!-- 持币人数变化 -->
-        <el-card class="event-card" :class="{ disabled: !globalMonitorDialog.events.holders.enabled }">
+        <el-card class="event-card" :class="{ disabled: !batchMonitorDialog.events.holders.enabled }">
           <template #header>
             <div class="event-title">
-              <el-checkbox v-model="globalMonitorDialog.events.holders.enabled">
+              <el-checkbox v-model="batchMonitorDialog.events.holders.enabled">
                 👥 持币人数变化
               </el-checkbox>
             </div>
           </template>
-          <div v-if="globalMonitorDialog.events.holders.enabled" class="event-config">
+          <div v-if="batchMonitorDialog.events.holders.enabled" class="event-config">
             <el-row :gutter="16">
               <el-col :span="12">
                 <el-form-item label="增长" label-position="top" class="event-field">
                   <el-input-number
-                    v-model="globalMonitorDialog.events.holders.increasePercent"
+                    v-model="batchMonitorDialog.events.holders.increasePercent"
                     :min="0"
                     :max="1000"
                     :precision="1"
@@ -750,7 +759,7 @@
               <el-col :span="12">
                 <el-form-item label="减少" label-position="top" class="event-field">
                   <el-input-number
-                    v-model="globalMonitorDialog.events.holders.decreasePercent"
+                    v-model="batchMonitorDialog.events.holders.decreasePercent"
                     :min="0"
                     :max="1000"
                     :precision="1"
@@ -766,20 +775,20 @@
         </el-card>
         
         <!-- 交易量变化 -->
-        <el-card class="event-card" :class="{ disabled: !globalMonitorDialog.events.volume.enabled }">
+        <el-card class="event-card" :class="{ disabled: !batchMonitorDialog.events.volume.enabled }">
           <template #header>
             <div class="event-title">
-              <el-checkbox v-model="globalMonitorDialog.events.volume.enabled">
+              <el-checkbox v-model="batchMonitorDialog.events.volume.enabled">
                 💰 交易量变化
               </el-checkbox>
             </div>
           </template>
-          <div v-if="globalMonitorDialog.events.volume.enabled" class="event-config">
+          <div v-if="batchMonitorDialog.events.volume.enabled" class="event-config">
             <el-row :gutter="16">
               <el-col :span="12">
                 <el-form-item label="增长" label-position="top" class="event-field">
                   <el-input-number
-                    v-model="globalMonitorDialog.events.volume.increasePercent"
+                    v-model="batchMonitorDialog.events.volume.increasePercent"
                     :min="0"
                     :max="1000"
                     :precision="1"
@@ -792,7 +801,7 @@
               <el-col :span="12">
                 <el-form-item label="减少" label-position="top" class="event-field">
                   <el-input-number
-                    v-model="globalMonitorDialog.events.volume.decreasePercent"
+                    v-model="batchMonitorDialog.events.volume.decreasePercent"
                     :min="0"
                     :max="1000"
                     :precision="1"
@@ -813,7 +822,7 @@
         
         <!-- 触发逻辑 -->
         <el-form-item label="触发逻辑">
-          <el-radio-group v-model="globalMonitorDialog.form.triggerLogic">
+          <el-radio-group v-model="batchMonitorDialog.form.triggerLogic">
             <el-radio label="any">
               任一条件满足即触发
               <span style="color: #909399; font-size: 12px;">（OR逻辑）</span>
@@ -835,7 +844,7 @@
             <span class="required-mark">*</span>
             <span>通知方式</span>
           </template>
-          <el-checkbox-group v-model="globalMonitorDialog.notifyMethodsArray">
+          <el-checkbox-group v-model="batchMonitorDialog.notifyMethodsArray">
             <el-checkbox label="telegram">Telegram</el-checkbox>
             <el-checkbox label="wechat">微信</el-checkbox>
           </el-checkbox-group>
@@ -844,7 +853,7 @@
         <!-- 监控状态 -->
         <el-form-item label="监控状态">
           <el-switch
-            v-model="globalMonitorDialog.form.status"
+            v-model="batchMonitorDialog.form.status"
             active-value="1"
             inactive-value="0"
             active-text="启用"
@@ -856,7 +865,7 @@
         <el-form-item label="备注">
           <div class="remark-tip">💡 记录触发条件备注，便于后续识别</div>
           <el-input
-            v-model="globalMonitorDialog.form.remark"
+            v-model="batchMonitorDialog.form.remark"
             type="textarea"
             :rows="3"
             placeholder="请输入备注信息"
@@ -866,10 +875,24 @@
         </el-form-item>
       </el-form>
       
+      <!-- 当前监控条件预览 -->
+      <el-alert 
+        v-if="batchMonitorConditionsSummary"
+        :title="batchMonitorConditionsSummary" 
+        type="info" 
+        :closable="false"
+        class="monitor-preview"
+      >
+        <template #title>
+          <div class="preview-title">📋 当前监控条件</div>
+          <div class="preview-content">{{ batchMonitorConditionsSummary }}</div>
+        </template>
+      </el-alert>
+      
       <template #footer>
-        <el-button @click="globalMonitorDialog.visible = false">取消</el-button>
-        <el-button type="primary" @click="saveGlobalMonitor">
-          应用到数据库所有Token
+        <el-button @click="batchMonitorDialog.visible = false">取消</el-button>
+        <el-button type="primary" @click="saveBatchMonitor">
+          应用到选中的 {{ selectedRows.length }} 个Token
         </el-button>
       </template>
     </el-dialog>
@@ -889,7 +912,7 @@ import {
   getPushConfig,
   updatePushConfig
 } from '@/api/crypto/token'
-import { saveOrUpdateMonitorConfig, getMonitorConfigByCa } from '@/api/crypto/monitorConfig'
+import { saveOrUpdateMonitorConfig, getMonitorConfigByCa, delMonitorConfig } from '@/api/crypto/monitorConfig'
 import { 
   DocumentCopy, 
   Link, 
@@ -1191,16 +1214,16 @@ const handleSelectionChange = (selection) => {
 }
 
 // ========================================
-// 全局监控功能
+// 批量监控功能
 // ========================================
 
-// 全局监控配置
-const globalMonitorDialog = reactive({
+// 批量监控配置
+const batchMonitorDialog = reactive({
   visible: false,
   form: {
     triggerLogic: 'any',
     status: '1',
-    remark: '全局监控配置'
+    remark: ''
   },
   events: {
     priceChange: {
@@ -1222,45 +1245,50 @@ const globalMonitorDialog = reactive({
   notifyMethodsArray: []
 })
 
-// 重置全局监控表单
-const resetGlobalMonitorForm = () => {
-  globalMonitorDialog.form = {
+// 重置批量监控表单
+const resetBatchMonitorForm = () => {
+  batchMonitorDialog.form = {
     triggerLogic: 'any',
     status: '1',
-    remark: '全局监控配置'
+    remark: ''
   }
   
-  globalMonitorDialog.events = {
+  batchMonitorDialog.events = {
     priceChange: { enabled: false, risePercent: null, fallPercent: null },
     holders: { enabled: false, increasePercent: null, decreasePercent: null },
     volume: { enabled: false, increasePercent: null, decreasePercent: null }
   }
   
-  globalMonitorDialog.notifyMethodsArray = []
+  batchMonitorDialog.notifyMethodsArray = []
 }
 
-// 全局监控 - 打开配置弹窗
-const handleGlobalMonitor = () => {
+// 批量监控 - 打开配置弹窗
+const handleBatchMonitor = () => {
+  if (selectedRows.value.length === 0) {
+    proxy.$modal.msgWarning('请至少选择一个Token')
+    return
+  }
+  
   // 重置表单
-  resetGlobalMonitorForm()
+  resetBatchMonitorForm()
   
   // 显示弹窗
-  globalMonitorDialog.visible = true
+  batchMonitorDialog.visible = true
 }
 
-// 保存全局监控
-const saveGlobalMonitor = async () => {
+// 保存批量监控
+const saveBatchMonitor = async () => {
   // 1. 验证
-  if (globalMonitorDialog.form.status === '1') {
+  if (batchMonitorDialog.form.status === '1') {
     // 至少选择一个事件
-    const hasEnabledEvent = Object.values(globalMonitorDialog.events).some(e => e.enabled)
+    const hasEnabledEvent = Object.values(batchMonitorDialog.events).some(e => e.enabled)
     if (!hasEnabledEvent) {
       proxy.$modal.msgWarning('请至少选择一个监控事件')
       return
     }
     
     // 验证启用的事件至少有一个阈值
-    for (const [key, event] of Object.entries(globalMonitorDialog.events)) {
+    for (const [key, event] of Object.entries(batchMonitorDialog.events)) {
       if (event.enabled) {
         const hasThreshold = Object.values(event)
           .filter(v => typeof v === 'number')
@@ -1279,7 +1307,7 @@ const saveGlobalMonitor = async () => {
     }
     
     // 至少选择一个通知方式
-    if (globalMonitorDialog.notifyMethodsArray.length === 0) {
+    if (batchMonitorDialog.notifyMethodsArray.length === 0) {
       proxy.$modal.msgWarning('请至少选择一个通知方式')
       return
     }
@@ -1287,17 +1315,14 @@ const saveGlobalMonitor = async () => {
   
   // 2. 确认操作
   const confirmMessage = `
-    <p>将为数据库中 <strong>所有Token</strong> 应用此全局监控配置</p>
+    <p>将为选中的 <strong>${selectedRows.value.length}</strong> 个Token应用此监控配置</p>
     <p style="color: #E6A23C; margin-top: 10px;">
-      ⚠️ 注意：数据库中所有Token已有的单独监控配置将被覆盖为此全局配置
-    </p>
-    <p style="color: #909399; margin-top: 8px; font-size: 12px;">
-      💡 提示：后端将批量应用配置，可能需要一些时间
+      ⚠️ 注意：这些Token已有的监控配置将被覆盖
     </p>
   `
   
   try {
-    await proxy.$modal.confirm(confirmMessage, '确认全局监控', {
+    await proxy.$modal.confirm(confirmMessage, '确认批量配置', {
       dangerouslyUseHTMLString: true,
       confirmButtonText: '确定应用',
       cancelButtonText: '取消',
@@ -1309,169 +1334,101 @@ const saveGlobalMonitor = async () => {
   
   // 3. 组装数据
   const configData = {
-    eventsConfig: JSON.stringify(globalMonitorDialog.events),
-    triggerLogic: globalMonitorDialog.form.triggerLogic,
-    notifyMethods: globalMonitorDialog.notifyMethodsArray.join(','),
-    status: globalMonitorDialog.form.status,
-    remark: globalMonitorDialog.form.remark,
-    isGlobal: true  // 标记为全局配置
+    eventsConfig: JSON.stringify(batchMonitorDialog.events),
+    triggerLogic: batchMonitorDialog.form.triggerLogic,
+    notifyMethods: batchMonitorDialog.notifyMethodsArray.join(','),
+    status: batchMonitorDialog.form.status,
+    remark: batchMonitorDialog.form.remark
   }
   
-  // 4. 调用后端全局配置API（TODO: 需要后端实现批量配置接口）
-  proxy.$modal.loading('正在应用全局配置到所有Token，请稍候...')
+  // 4. 批量保存
+  let successCount = 0
+  let failCount = 0
   
-  try {
-    // TODO: 调用后端批量配置API
-    // await batchApplyGlobalMonitorConfig(configData)
-    
-    // 临时方案：分页获取所有Token并逐个配置
-    let currentPage = 1
-    let hasMore = true
-    let successCount = 0
-    let failCount = 0
-    
-    while (hasMore) {
-      try {
-        // 获取当前页Token列表
-        const params = {
-          pageNum: currentPage,
-          pageSize: 100,  // 每次处理100个
-          source: queryParams.source || 'all'
-        }
-        
-        const response = await listToken(params)
-        const tokens = response.rows || []
-        
-        if (tokens.length === 0) {
-          hasMore = false
-          break
-        }
-        
-        // 批量应用配置
-        for (const token of tokens) {
-          try {
-            await saveOrUpdateMonitorConfig({
-              ca: token.ca,
-              tokenName: token.tokenName,
-              ...configData
-            })
-            successCount++
-          } catch (error) {
-            console.error(`Token ${token.ca} 配置失败:`, error)
-            failCount++
-          }
-        }
-        
-        // 判断是否还有下一页
-        if (tokens.length < 100) {
-          hasMore = false
-        } else {
-          currentPage++
-        }
-      } catch (error) {
-        console.error('获取Token列表失败:', error)
-        hasMore = false
-      }
+  proxy.$modal.loading('正在应用配置，请稍候...')
+  
+  for (const row of selectedRows.value) {
+    try {
+      await saveOrUpdateMonitorConfig({
+        ca: row.ca,
+        tokenName: row.tokenName,
+        ...configData
+      })
+      successCount++
+    } catch (error) {
+      console.error(`Token ${row.ca} 配置失败:`, error)
+      failCount++
     }
-    
-    proxy.$modal.closeLoading()
-    
-    // 5. 显示结果
-    if (failCount === 0) {
-      proxy.$modal.msgSuccess(`全局配置成功！已应用到 ${successCount} 个Token`)
-    } else {
-      proxy.$modal.msgWarning(`配置完成：成功 ${successCount} 个，失败 ${failCount} 个`)
-    }
-    
-    // 6. 关闭弹窗并刷新列表
-    globalMonitorDialog.visible = false
-    getList()
-  } catch (error) {
-    proxy.$modal.closeLoading()
-    proxy.$modal.msgError('全局配置失败：' + (error.message || '未知错误'))
   }
+  
+  proxy.$modal.closeLoading()
+  
+  // 5. 显示结果
+  if (failCount === 0) {
+    proxy.$modal.msgSuccess(`批量配置成功！已应用到 ${successCount} 个Token`)
+  } else {
+    proxy.$modal.msgWarning(`配置完成：成功 ${successCount} 个，失败 ${failCount} 个`)
+  }
+  
+  // 6. 关闭弹窗并刷新列表
+  batchMonitorDialog.visible = false
+  getList()
 }
 
-// 取消全局监控
-const handleCancelGlobalMonitor = () => {
+// 批量取消监控
+const handleBatchCancelMonitor = () => {
+  if (selectedRows.value.length === 0) {
+    proxy.$modal.msgWarning('请至少选择一个Token')
+    return
+  }
+  
+  // 筛选出有监控配置的Token（不管是启用还是停用状态）
+  const monitoredTokens = selectedRows.value.filter(row => row.monitorConfigId)
+  
+  if (monitoredTokens.length === 0) {
+    proxy.$modal.msgWarning('选中的Token中没有监控配置')
+    return
+  }
+  
   proxy.$modal.confirm(
-    `确认取消数据库中所有Token的监控配置？`,
-    '取消全局监控',
+    `确认删除选中的 ${monitoredTokens.length} 个Token的监控配置？`,
+    '批量取消监控',
     { 
       type: 'warning',
       dangerouslyUseHTMLString: true,
       message: `
-        <p>将取消数据库中 <strong>所有Token</strong> 的监控配置</p>
-        <p style="color: #909399; margin-top: 8px; font-size: 12px;">
-          💡 提示：后端将批量取消配置，可能需要一些时间
+        <p>将删除选中的 <strong>${monitoredTokens.length}</strong> 个Token的监控配置</p>
+        <p style="color: #909399; margin-top: 8px; font-size: 13px;">
+          💡 包括启用和停用状态的配置
         </p>
       `
     }
   ).then(async () => {
-    proxy.$modal.loading('正在取消全局监控，请稍候...')
+    let successCount = 0
+    let failCount = 0
     
-    try {
-      // 分页获取所有Token并逐个取消
-      let currentPage = 1
-      let hasMore = true
-      let successCount = 0
-      let failCount = 0
-      
-      while (hasMore) {
-        try {
-          // 获取当前页Token列表
-          const params = {
-            pageNum: currentPage,
-            pageSize: 100,
-            source: queryParams.source || 'all'
-          }
-          
-          const response = await listToken(params)
-          const tokens = response.rows || []
-          
-          if (tokens.length === 0) {
-            hasMore = false
-            break
-          }
-          
-          // 批量取消配置
-          for (const token of tokens) {
-            try {
-              if (token.monitorConfigId && token.monitorStatus === '1') {
-                await changeMonitorStatus(token.monitorConfigId, '0')
-                successCount++
-              }
-            } catch (error) {
-              console.error(`Token ${token.ca} 取消失败:`, error)
-              failCount++
-            }
-          }
-          
-          // 判断是否还有下一页
-          if (tokens.length < 100) {
-            hasMore = false
-          } else {
-            currentPage++
-          }
-        } catch (error) {
-          console.error('获取Token列表失败:', error)
-          hasMore = false
-        }
+    proxy.$modal.loading('正在取消监控，请稍候...')
+    
+    for (const row of monitoredTokens) {
+      try {
+        // 直接删除监控配置
+        await delMonitorConfig(row.monitorConfigId)
+        successCount++
+      } catch (error) {
+        console.error(`Token ${row.ca} 取消失败:`, error)
+        failCount++
       }
-      
-      proxy.$modal.closeLoading()
-      
-      if (failCount === 0) {
-        proxy.$modal.msgSuccess(`全局取消成功！已取消 ${successCount} 个Token的监控`)
-      } else {
-        proxy.$modal.msgWarning(`取消完成：成功 ${successCount} 个，失败 ${failCount} 个`)
-      }
-      
-      getList()
-    } catch (error) {
-      proxy.$modal.closeLoading()
-      proxy.$modal.msgError('取消全局监控失败：' + (error.message || '未知错误'))
     }
+    
+    proxy.$modal.closeLoading()
+    
+    if (failCount === 0) {
+      proxy.$modal.msgSuccess(`批量取消成功！已删除 ${successCount} 个Token的监控配置`)
+    } else {
+      proxy.$modal.msgWarning(`取消完成：成功 ${successCount} 个，失败 ${failCount} 个`)
+    }
+    
+    getList()
   }).catch(() => {})
 }
 
@@ -1862,6 +1819,7 @@ const stopAutoRefresh = () => {
 
 // 初始化
 // 计算监控条件摘要
+// 📋 单个监控配置：实时条件预览
 const monitorConditionsSummary = computed(() => {
   const conditions = []
   const { priceChange, holders, volume } = monitorDialog.events
@@ -1896,6 +1854,41 @@ const monitorConditionsSummary = computed(() => {
   return `${triggerLogicText}：${conditions.join(monitorDialog.form.triggerLogic === 'any' ? ' 或 ' : ' 且 ')}`
 })
 
+// 📋 批量监控配置：实时条件预览
+const batchMonitorConditionsSummary = computed(() => {
+  const conditions = []
+  const { priceChange, holders, volume } = batchMonitorDialog.events
+  const triggerLogicText = batchMonitorDialog.form.triggerLogic === 'any' ? '任一条件' : '所有条件'
+  
+  // 涨跌幅
+  if (priceChange.enabled) {
+    const parts = []
+    if (priceChange.risePercent) parts.push(`涨幅≥${priceChange.risePercent}%`)
+    if (priceChange.fallPercent) parts.push(`跌幅≥${priceChange.fallPercent}%`)
+    if (parts.length > 0) conditions.push(parts.join(' 或 '))
+  }
+  
+  // 持币人数
+  if (holders.enabled) {
+    const parts = []
+    if (holders.increasePercent) parts.push(`持币人数增长≥${holders.increasePercent}%`)
+    if (holders.decreasePercent) parts.push(`持币人数减少≥${holders.decreasePercent}%`)
+    if (parts.length > 0) conditions.push(parts.join(' 或 '))
+  }
+  
+  // 交易量
+  if (volume.enabled) {
+    const parts = []
+    if (volume.increasePercent) parts.push(`交易量增长≥${volume.increasePercent}%`)
+    if (volume.decreasePercent) parts.push(`交易量减少≥${volume.decreasePercent}%`)
+    if (parts.length > 0) conditions.push(parts.join(' 或 '))
+  }
+  
+  if (conditions.length === 0) return ''
+  
+  return `${triggerLogicText}：${conditions.join(batchMonitorDialog.form.triggerLogic === 'any' ? ' 或 ' : ' 且 ')}`
+})
+
 // 监听事件启用状态，自动填充建议阈值
 watch(() => monitorDialog.events.priceChange.enabled, (newVal) => {
   if (newVal && !monitorDialog.events.priceChange.risePercent && !monitorDialog.events.priceChange.fallPercent) {
@@ -1918,25 +1911,72 @@ watch(() => monitorDialog.events.volume.enabled, (newVal) => {
   }
 })
 
-// 🎯 监听路由变化，自动切换链类型并刷新数据
-watch(() => route.query.chain, (newChain, oldChain) => {
-  if (newChain && newChain !== oldChain) {
-    console.log('链类型切换:', oldChain, '→', newChain)
-    // 根据新链类型重置数据源
-    queryParams.source = newChain === 'sol' ? 'all' : 'fourmeme'
-    // 重置分页
-    queryParams.pageNum = 1
-    // 刷新数据
-    getList()
+// 🎯 批量监控：监听事件启用状态，自动填充默认阈值
+watch(() => batchMonitorDialog.events.priceChange.enabled, (newVal) => {
+  if (newVal && !batchMonitorDialog.events.priceChange.risePercent && !batchMonitorDialog.events.priceChange.fallPercent) {
+    batchMonitorDialog.events.priceChange.risePercent = 10
+    batchMonitorDialog.events.priceChange.fallPercent = 10
   }
 })
+
+watch(() => batchMonitorDialog.events.holders.enabled, (newVal) => {
+  if (newVal && !batchMonitorDialog.events.holders.increasePercent && !batchMonitorDialog.events.holders.decreasePercent) {
+    batchMonitorDialog.events.holders.increasePercent = 30
+    batchMonitorDialog.events.holders.decreasePercent = 20
+  }
+})
+
+watch(() => batchMonitorDialog.events.volume.enabled, (newVal) => {
+  if (newVal && !batchMonitorDialog.events.volume.increasePercent && !batchMonitorDialog.events.volume.decreasePercent) {
+    batchMonitorDialog.events.volume.increasePercent = 50
+    batchMonitorDialog.events.volume.decreasePercent = 30
+  }
+})
+
+// 🎯 监听路由变化，自动切换链类型并刷新数据
+watch(() => route.query, (newQuery, oldQuery) => {
+  // 如果路由参数发生变化（不是初始化）
+  if (oldQuery && JSON.stringify(newQuery) !== JSON.stringify(oldQuery)) {
+    console.log('路由参数变化:', oldQuery, '→', newQuery)
+    
+    // 更新链类型和数据源
+    const newChain = newQuery.chain || 'sol'
+    queryParams.source = newChain === 'sol' ? 'all' : 'fourmeme'
+    
+    // 更新监控状态
+    queryParams.monitorStatus = newQuery.monitorStatus || ''
+    
+    // 🎯 如果是从"监控中"跳转过来（有monitorStatus参数），清除日期范围
+    if (newQuery.monitorStatus) {
+      dateRange.value = []
+      console.log('从监控中跳转，清除日期范围筛选')
+    } else {
+      // 否则恢复默认的今日日期范围
+      initTodayDateRange()
+    }
+    
+    // 重置分页并刷新
+    queryParams.pageNum = 1
+    getList()
+  }
+}, { deep: true })
 
 onMounted(() => {
   // 🎯 根据当前链类型初始化数据源
   queryParams.source = currentChain.value === 'sol' ? 'all' : 'fourmeme'
   console.log('页面初始化 - 当前链:', currentChain.value, '数据源:', queryParams.source)
   
-  initTodayDateRange()
+  // 🎯 从路由参数初始化筛选条件
+  if (route.query.monitorStatus) {
+    queryParams.monitorStatus = route.query.monitorStatus
+    console.log('初始化监控状态筛选:', route.query.monitorStatus)
+    // 如果有监控状态参数，不设置默认日期范围
+    dateRange.value = []
+  } else {
+    // 否则设置默认的今日日期范围
+    initTodayDateRange()
+  }
+  
   getList()
   startAutoRefresh()
 })
