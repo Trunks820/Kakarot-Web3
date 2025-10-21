@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, nextTick } from 'vue'
+import { onMounted, onUnmounted, nextTick, watch } from 'vue'
 import useSettingsStore from '@/store/modules/settings'
 import { handleThemeStyle } from '@/utils/theme'
 import { NotificationWebSocket } from '@/utils/websocket'
@@ -18,7 +18,7 @@ onMounted(() => {
     // 初始化主题样式
     handleThemeStyle(useSettingsStore().theme)
     
-    // 初始化 WebSocket 连接
+    // 初次加载时尝试连接（如果已登录）
     initWebSocket()
   })
 })
@@ -30,20 +30,58 @@ onUnmounted(() => {
   }
 })
 
+// 监听 token 变化，登录成功后自动连接 WebSocket
+const userStore = useUserStore()
+watch(
+  () => userStore.token,
+  (newToken, oldToken) => {
+    console.log('🔑 Token 变化检测:', { oldToken: oldToken ? '有值' : '空', newToken: newToken ? '有值' : '空' })
+    
+    // 从无 token 变为有 token（登录成功）
+    if (!oldToken && newToken) {
+      console.log('✅ 用户登录成功，开始初始化 WebSocket...')
+      initWebSocket()
+    }
+    
+    // 从有 token 变为无 token（退出登录）
+    if (oldToken && !newToken) {
+      console.log('🚪 用户退出登录，关闭 WebSocket 连接...')
+      if (wsClient) {
+        wsClient.close()
+        wsClient = null
+      }
+    }
+  },
+  { immediate: false } // 不立即执行，避免重复初始化
+)
+
 /**
  * 初始化 WebSocket 连接
  */
 function initWebSocket() {
   try {
-    const userStore = useUserStore()
     const token = userStore.token
     
     if (!token) {
-      console.warn('用户未登录，跳过 WebSocket 初始化')
+      console.warn('⚠️ 用户未登录，跳过 WebSocket 初始化')
       return
     }
     
+    // 如果已经存在连接且处于连接状态，跳过
+    if (wsClient && wsClient.isConnected()) {
+      console.log('⚠️ WebSocket 已连接，跳过重复初始化')
+      return
+    }
+    
+    // 如果存在旧连接，先关闭
+    if (wsClient) {
+      console.log('🔄 关闭旧的 WebSocket 连接...')
+      wsClient.close()
+    }
+    
     const notificationStore = useNotificationStore()
+    
+    console.log('🚀 开始初始化 WebSocket，Token:', token.substring(0, 20) + '...')
     
     // 创建 WebSocket 实例
     wsClient = new NotificationWebSocket({
@@ -60,10 +98,10 @@ function initWebSocket() {
       console.log('✅ 通知已添加到 Store:', notification.title)
     })
     
-    console.log('WebSocket 初始化完成')
+    console.log('✅ WebSocket 初始化完成')
     
   } catch (error) {
-    console.error('WebSocket 初始化失败', error)
+    console.error('❌ WebSocket 初始化失败', error)
   }
 }
 </script>
