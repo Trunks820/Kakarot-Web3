@@ -186,5 +186,10 @@ public class TokenMonitorConfigServiceImpl implements ITokenMonitorConfigService
             throw e;
         }
     }
+
+    @Override
+    public Long getMonitoringCount() {
+        return monitorConfigMapper.getMonitoringCount();
+    }
 }
 

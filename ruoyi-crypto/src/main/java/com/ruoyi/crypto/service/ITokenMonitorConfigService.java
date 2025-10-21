@@ -106,5 +106,12 @@ public interface ITokenMonitorConfigService {
      * @return 结果
      */
     int batchDisableMonitor(Long[] ids);
+
+    /**
+     * 获取监控中Token数量
+     *
+     * @return 监控中数量
+     */
+    Long getMonitoringCount();
 }
 

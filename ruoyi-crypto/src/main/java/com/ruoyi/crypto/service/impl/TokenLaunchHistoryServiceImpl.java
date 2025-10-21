@@ -40,4 +40,9 @@ public class TokenLaunchHistoryServiceImpl implements TokenLaunchHistoryService 
     public Map<String, Object> selectTokenStats() {
         return tokenMapper.selectTokenStats();
     }
+
+    @Override
+    public Long getTodayNewCount() {
+        return tokenMapper.getTodayNewCount();
+    }
 }

@@ -186,5 +186,12 @@
         WHERE ca = #{ca} AND del_flag = '0'
     </select>
 
+    <!-- 获取监控中Token数量 -->
+    <select id="getMonitoringCount" resultType="long">
+        SELECT COUNT(*)
+        FROM token_monitor_config
+        WHERE status = '1' AND del_flag = '0'
+    </select>
+
 </mapper>
 

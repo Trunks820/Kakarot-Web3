@@ -93,5 +93,12 @@ public interface TokenMonitorConfigMapper {
      * @return 数量
      */
     int countByCa(@Param("ca") String ca);
+
+    /**
+     * 获取监控中Token数量
+     *
+     * @return 监控中数量
+     */
+    Long getMonitoringCount();
 }
 

@@ -147,4 +147,12 @@
         FROM token_launch_history
     </select>
 
+    <!-- 获取今日新增Token数量（仅统计SOL链：pump和bonk） -->
+    <select id="getTodayNewCount" resultType="long">
+        SELECT COUNT(*)
+        FROM token_launch_history
+        WHERE (DATE(launch_time) = CURDATE() OR (launch_time IS NULL AND DATE(create_time) = CURDATE()))
+          AND source IN ('pump', 'bonk')
+    </select>
+
 </mapper>

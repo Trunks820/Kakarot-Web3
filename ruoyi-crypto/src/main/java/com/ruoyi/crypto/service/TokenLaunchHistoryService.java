@@ -29,5 +29,11 @@ public interface TokenLaunchHistoryService {
      */
     Map<String, Object> selectTokenStats();
 
+    /**
+     * 获取今日新增Token数量
+     *
+     * @return 今日新增数量
+     */
+    Long getTodayNewCount();
 
 }
