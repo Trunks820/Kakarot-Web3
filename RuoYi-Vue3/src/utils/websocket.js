@@ -45,18 +45,19 @@ class NotificationWebSocket {
     // 构建 WebSocket URL（开发环境和生产环境自动适配）
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     
-    // 开发环境：直连后端 8080
-    // 生产环境：通过 Nginx 代理
     let host
     if (import.meta.env.DEV) {
-      // 开发环境直连后端
+      // 开发环境：本地开发
       host = 'localhost:8080'
-    } else if (import.meta.env.VITE_APP_BASE_API) {
-      // 生产环境使用配置的 API 地址
-      host = import.meta.env.VITE_APP_BASE_API.replace(/^https?:\/\//, '').replace(/\/$/, '')
     } else {
-      // 回退到当前 host
-      host = window.location.host
+      // 生产环境：使用当前访问的域名（浏览器访问的地址）
+      // 因为 WebSocket 是浏览器发起的，需要能从外部访问
+      host = window.location.host  // kakarot8.fun 或 kakarot8.fun:8080
+      
+      // 如果访问的是 80 端口（默认 HTTP），需要加上后端端口 8080
+      if (!host.includes(':')) {
+        host = host + ':8080'
+      }
     }
     
     this.url = `${protocol}//${host}/ws/notification/${this.token}`
