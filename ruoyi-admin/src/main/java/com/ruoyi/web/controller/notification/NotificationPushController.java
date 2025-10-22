@@ -58,12 +58,35 @@ public class NotificationPushController extends BaseController {
             // 4. 构建通知对象（与前端 NotificationCenter 格式一致）
             Map<String, Object> notification = new java.util.HashMap<>();
             notification.put("id", "alert_" + System.currentTimeMillis());
-            notification.put("module", "token-monitor");
-            notification.put("moduleName", "Token监控");
-            notification.put("type", "alert");
+            notification.put("module", data.getOrDefault("module", "token-monitor"));
+            notification.put("moduleName", data.getOrDefault("moduleName", "Token监控"));
+            notification.put("type", data.getOrDefault("type", "alert"));
             notification.put("title", data.get("tokenSymbol") + " 触发监控预警");
             notification.put("content", data.getOrDefault("triggerEvents", "触发监控条件"));
-            notification.put("actionUrl", "/crypto/tokenMonitor?ca=" + data.get("ca") + "&chain=sol");
+            
+            // 支持自定义跳转链接（如果 Python 传了 actionUrl 就用它的，否则默认跳转到监控页面）
+            String actionUrl = (String) data.getOrDefault("actionUrl", 
+                "/crypto/tokenMonitor?ca=" + data.get("ca") + "&chain=" + data.getOrDefault("chain", "sol"));
+            notification.put("actionUrl", actionUrl);
+            
+            // 支持额外数据（例如：价格、涨跌幅、市值等）
+            if (data.containsKey("extraData")) {
+                notification.put("extraData", data.get("extraData"));
+            } else {
+                // 默认额外数据
+                Map<String, Object> extraData = new java.util.HashMap<>();
+                extraData.put("ca", data.get("ca"));
+                extraData.put("chain", data.getOrDefault("chain", "sol"));
+                extraData.put("price", data.get("price")); // 价格
+                extraData.put("priceChange", data.get("priceChange")); // 涨跌幅
+                extraData.put("marketCap", data.get("marketCap")); // 市值
+                extraData.put("volume24h", data.get("volume24h")); // 24小时交易量
+                extraData.put("holders", data.get("holders")); // 持币人数
+                extraData.put("avatar", data.get("avatar")); // Token 头像
+                extraData.put("logo", data.get("logo")); // Token Logo
+                notification.put("extraData", extraData);
+            }
+            
             notification.put("isRead", 0);
             notification.put("createTime", data.getOrDefault("alertTime", 
                 new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date())));

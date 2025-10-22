@@ -143,50 +143,189 @@ class NotificationWebSocket {
    * 处理通知消息
    */
   _handleNotification(notification) {
-    // 1. 触发浏览器原生通知
+    console.log('📩 收到通知数据:', notification)
+    
+    // 1. 构建通知内容（包含额外数据）
+    let notificationBody = notification.content
+    
+    // 如果有额外数据，追加到通知内容中
+    if (notification.extraData) {
+      const extraData = notification.extraData
+      console.log('📊 额外数据:', extraData)
+      
+      const bodyParts = [notification.content, ''] // 空行分隔
+      
+      // 价格信息
+      if (extraData.price) {
+        const priceStr = typeof extraData.price === 'number' 
+          ? extraData.price.toFixed(8).replace(/\.?0+$/, '')  // 去除末尾的0
+          : extraData.price
+        bodyParts.push(`💰 价格: $${priceStr}`)
+      }
+      
+      // 涨跌幅（带标识）
+      if (extraData.priceChange !== null && extraData.priceChange !== undefined) {
+        const change = parseFloat(extraData.priceChange)
+        const changeText = change > 0 
+          ? `📈 涨幅: +${change.toFixed(2)}%` 
+          : `📉 跌幅: ${change.toFixed(2)}%`
+        bodyParts.push(changeText)
+      }
+      
+      // 市值
+      if (extraData.marketCap !== null && extraData.marketCap !== undefined) {
+        const marketCapFormatted = this._formatNumber(extraData.marketCap)
+        bodyParts.push(`💎 市值: $${marketCapFormatted}`)
+      }
+      
+      // 24小时交易量
+      if (extraData.volume24h !== null && extraData.volume24h !== undefined) {
+        const volumeFormatted = this._formatNumber(extraData.volume24h)
+        bodyParts.push(`📊 24h成交: $${volumeFormatted}`)
+      }
+      
+      // 持币人数
+      if (extraData.holders !== null && extraData.holders !== undefined) {
+        bodyParts.push(`👥 持币人: ${extraData.holders}`)
+      }
+      
+      notificationBody = bodyParts.join('\n')
+      console.log('📝 最终通知内容:', notificationBody)
+    }
+    
+    // 2. 触发浏览器原生通知
     if (Notification.permission === 'granted') {
+      // 使用 Token 头像作为通知图标（如果有）
+      const notificationIcon = notification.extraData?.avatar || 
+                               notification.extraData?.logo || 
+                               '/favicon.ico'
+      
       const browserNotification = new Notification(notification.title, {
-        body: notification.content,
-        icon: '/favicon.ico',
+        body: notificationBody,
+        icon: notificationIcon,
         tag: notification.id, // 防止重复通知
-        requireInteraction: false
+        requireInteraction: false,
+        badge: '/favicon.ico', // 小徽章图标
+        vibrate: [200, 100, 200] // 震动模式（移动设备）
       })
 
       // 点击通知时跳转到对应页面
       browserNotification.onclick = () => {
         window.focus()
         if (notification.actionUrl) {
-          window.location.href = notification.actionUrl
+          // 支持外部链接和内部路由
+          if (notification.actionUrl.startsWith('http')) {
+            window.open(notification.actionUrl, '_blank')
+          } else {
+            window.location.href = notification.actionUrl
+          }
         }
         browserNotification.close()
       }
 
-      // 3秒后自动关闭
+      // 5秒后自动关闭（增加到5秒，因为内容更多）
       setTimeout(() => {
         browserNotification.close()
-      }, 3000)
+      }, 5000)
     }
 
-    // 2. 显示 Element Plus 通知（页面内提示）
+    // 3. 显示 Element Plus 通知（页面内提示，带额外数据）
+    const elMessage = this._buildElNotificationMessage(notification)
+    
     ElNotification({
       title: notification.title,
-      message: notification.content,
+      dangerouslyUseHTMLString: true,
+      message: elMessage,
       type: notification.type || 'info',
       duration: 5000,
       onClick: () => {
         if (notification.actionUrl) {
-          window.location.href = notification.actionUrl
+          // 支持外部链接和内部路由
+          if (notification.actionUrl.startsWith('http')) {
+            window.open(notification.actionUrl, '_blank')
+          } else {
+            window.location.href = notification.actionUrl
+          }
         }
       }
     })
 
-    // 3. 触发回调（更新 Pinia store）
+    // 4. 触发回调（更新 Pinia store）
     if (this.onMessageCallback) {
       this.onMessageCallback(notification)
     }
 
-    // 4. 播放提示音（可选）
+    // 5. 播放提示音（可选）
     this._playNotificationSound()
+  }
+
+  /**
+   * 构建 Element Plus 通知消息（HTML 格式，带额外数据）
+   */
+  _buildElNotificationMessage(notification) {
+    let html = `<div style="line-height: 1.6;">`
+    html += `<p style="margin: 0 0 8px 0; font-weight: 500;">${notification.content}</p>`
+    
+    if (notification.extraData) {
+      const extraData = notification.extraData
+      html += `<div style="font-size: 12px; color: #606266; margin-top: 8px;">`
+      
+      // 价格和涨跌幅在同一行
+      if (extraData.price || extraData.priceChange !== null) {
+        html += `<div style="margin-bottom: 4px;">`
+        if (extraData.price) {
+          html += `<span style="margin-right: 12px;">💰 <strong>$${extraData.price}</strong></span>`
+        }
+        if (extraData.priceChange !== null && extraData.priceChange !== undefined) {
+          const color = extraData.priceChange > 0 ? '#67C23A' : '#F56C6C'
+          const icon = extraData.priceChange > 0 ? '📈' : '📉'
+          html += `<span style="color: ${color};">${icon} <strong>${extraData.priceChange > 0 ? '+' : ''}${extraData.priceChange}%</strong></span>`
+        }
+        html += `</div>`
+      }
+      
+      // 市值
+      if (extraData.marketCap) {
+        const marketCapFormatted = this._formatNumber(extraData.marketCap)
+        html += `<div style="margin-bottom: 4px;">💎 市值: <strong>$${marketCapFormatted}</strong></div>`
+      }
+      
+      // 24小时交易量
+      if (extraData.volume24h) {
+        const volumeFormatted = this._formatNumber(extraData.volume24h)
+        html += `<div style="margin-bottom: 4px;">📊 24h成交: <strong>$${volumeFormatted}</strong></div>`
+      }
+      
+      // 持币人数
+      if (extraData.holders) {
+        html += `<div>👥 持币人: <strong>${extraData.holders}</strong></div>`
+      }
+      
+      html += `</div>`
+    }
+    
+    html += `</div>`
+    return html
+  }
+
+  /**
+   * 格式化数字（K, M, B 单位）
+   */
+  _formatNumber(num) {
+    if (num === null || num === undefined) return '0'
+    
+    const number = parseFloat(num)
+    if (isNaN(number)) return '0'
+    
+    if (number >= 1e9) {
+      return (number / 1e9).toFixed(2) + 'B'
+    } else if (number >= 1e6) {
+      return (number / 1e6).toFixed(2) + 'M'
+    } else if (number >= 1e3) {
+      return (number / 1e3).toFixed(2) + 'K'
+    } else {
+      return number.toFixed(2)
+    }
   }
 
   /**
