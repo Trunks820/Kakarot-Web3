@@ -536,39 +536,23 @@
               v-model="monitorDialog.events.volume.enabled"
               :disabled="monitorDialog.form.status === '0'"
             >
-              <span class="event-title">📊 交易量变化</span>
+              <span class="event-title">📊 交易量阈值</span>
             </el-checkbox>
           </template>
           <div v-if="monitorDialog.events.volume.enabled" class="event-config">
-            <el-row :gutter="16">
-              <el-col :span="12">
-                <el-form-item label="增长阈值" label-position="top" class="event-field">
-                  <el-input-number 
-                    v-model="monitorDialog.events.volume.increasePercent" 
-                    :min="0" 
-                    :max="5000"
-                    :step="10"
-                    placeholder="50"
-                    :disabled="monitorDialog.form.status === '0'"
-                  />
-                  <span class="input-suffix">%</span>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="减少阈值" label-position="top" class="event-field">
-                  <el-input-number 
-                    v-model="monitorDialog.events.volume.decreasePercent" 
-                    :min="0" 
-                    :max="100"
-                    :step="10"
-                    placeholder="30"
-                    :disabled="monitorDialog.form.status === '0'"
-                  />
-                  <span class="input-suffix">%</span>
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <div class="event-tip">💡 留空表示不监控该方向</div>
+            <el-form-item label="交易量阈值" label-position="top" class="event-field">
+              <el-input-number 
+                v-model="monitorDialog.events.volume.threshold" 
+                :min="0" 
+                :max="100000000"
+                :step="1000"
+                :precision="0"
+                placeholder="5000"
+                :disabled="monitorDialog.form.status === '0'"
+                style="width: 100%"
+              />
+              <div class="event-tip">💡 单位：USD，触发通知的最小交易量</div>
+            </el-form-item>
           </div>
         </el-card>
         
@@ -779,40 +763,23 @@
           <template #header>
             <div class="event-title">
               <el-checkbox v-model="batchMonitorDialog.events.volume.enabled">
-                💰 交易量变化
+                💰 交易量阈值
               </el-checkbox>
             </div>
           </template>
           <div v-if="batchMonitorDialog.events.volume.enabled" class="event-config">
-            <el-row :gutter="16">
-              <el-col :span="12">
-                <el-form-item label="增长" label-position="top" class="event-field">
-                  <el-input-number
-                    v-model="batchMonitorDialog.events.volume.increasePercent"
-                    :min="0"
-                    :max="1000"
-                    :precision="1"
-                    style="width: 100%"
-                  >
-                    <template #suffix>%</template>
-                  </el-input-number>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="减少" label-position="top" class="event-field">
-                  <el-input-number
-                    v-model="batchMonitorDialog.events.volume.decreasePercent"
-                    :min="0"
-                    :max="1000"
-                    :precision="1"
-                    style="width: 100%"
-                  >
-                    <template #suffix>%</template>
-                  </el-input-number>
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <div class="event-tip">💡 留空表示不监控该方向</div>
+            <el-form-item label="交易量阈值" label-position="top" class="event-field">
+              <el-input-number
+                v-model="batchMonitorDialog.events.volume.threshold"
+                :min="0"
+                :max="100000000"
+                :step="1000"
+                :precision="0"
+                style="width: 100%"
+                placeholder="5000"
+              />
+              <div class="event-tip">💡 单位：USD，触发通知的最小交易量</div>
+            </el-form-item>
           </div>
         </el-card>
         
@@ -1256,7 +1223,7 @@ const resetBatchMonitorForm = () => {
   batchMonitorDialog.events = {
     priceChange: { enabled: false, risePercent: null, fallPercent: null },
     holders: { enabled: false, increasePercent: null, decreasePercent: null },
-    volume: { enabled: false, increasePercent: null, decreasePercent: null }
+    volume: { enabled: false, threshold: null }
   }
   
   batchMonitorDialog.notifyMethodsArray = []
@@ -1620,6 +1587,13 @@ const handleMonitorConfig = async (row) => {
   if (row.monitorConfigId && row.monitorEventsConfig) {
     try {
       const eventsConfig = JSON.parse(row.monitorEventsConfig)
+      
+      // 清理 volume 字段中的旧格式数据
+      if (eventsConfig.volume) {
+        const { enabled, threshold } = eventsConfig.volume
+        eventsConfig.volume = { enabled, threshold }
+      }
+      
       monitorDialog.events = eventsConfig
       monitorDialog.form = {
         id: row.monitorConfigId,
@@ -1644,6 +1618,13 @@ const handleMonitorConfig = async (row) => {
         const config = response.data[0]
         try {
           const eventsConfig = JSON.parse(config.eventsConfig)
+          
+          // 清理 volume 字段中的旧格式数据
+          if (eventsConfig.volume) {
+            const { enabled, threshold } = eventsConfig.volume
+            eventsConfig.volume = { enabled, threshold }
+          }
+          
           monitorDialog.events = eventsConfig
           monitorDialog.form = {
             id: config.id,
@@ -1696,8 +1677,7 @@ const resetMonitorForm = (row) => {
     },
     volume: {
       enabled: false,
-      increasePercent: null,
-      decreasePercent: null
+      threshold: null
     }
   }
   monitorDialog.notifyMethodsArray = []
@@ -1727,8 +1707,7 @@ const handleMonitorDialogClose = () => {
     },
     volume: {
       enabled: false,
-      increasePercent: null,
-      decreasePercent: null
+      threshold: null
     }
   }
   monitorDialog.notifyMethodsArray = ['telegram', 'wechat']
@@ -1843,10 +1822,7 @@ const monitorConditionsSummary = computed(() => {
   
   // 交易量
   if (volume.enabled) {
-    const parts = []
-    if (volume.increasePercent) parts.push(`交易量增长≥${volume.increasePercent}%`)
-    if (volume.decreasePercent) parts.push(`交易量减少≥${volume.decreasePercent}%`)
-    if (parts.length > 0) conditions.push(parts.join(' 或 '))
+    if (volume.threshold) conditions.push(`交易量≥$${volume.threshold}`)
   }
   
   if (conditions.length === 0) return ''
@@ -1878,10 +1854,7 @@ const batchMonitorConditionsSummary = computed(() => {
   
   // 交易量
   if (volume.enabled) {
-    const parts = []
-    if (volume.increasePercent) parts.push(`交易量增长≥${volume.increasePercent}%`)
-    if (volume.decreasePercent) parts.push(`交易量减少≥${volume.decreasePercent}%`)
-    if (parts.length > 0) conditions.push(parts.join(' 或 '))
+    if (volume.threshold) conditions.push(`交易量≥$${volume.threshold}`)
   }
   
   if (conditions.length === 0) return ''
@@ -1905,9 +1878,8 @@ watch(() => monitorDialog.events.holders.enabled, (newVal) => {
 })
 
 watch(() => monitorDialog.events.volume.enabled, (newVal) => {
-  if (newVal && !monitorDialog.events.volume.increasePercent && !monitorDialog.events.volume.decreasePercent) {
-    monitorDialog.events.volume.increasePercent = 50
-    monitorDialog.events.volume.decreasePercent = 30
+  if (newVal && !monitorDialog.events.volume.threshold) {
+    monitorDialog.events.volume.threshold = 5000
   }
 })
 
@@ -1927,9 +1899,8 @@ watch(() => batchMonitorDialog.events.holders.enabled, (newVal) => {
 })
 
 watch(() => batchMonitorDialog.events.volume.enabled, (newVal) => {
-  if (newVal && !batchMonitorDialog.events.volume.increasePercent && !batchMonitorDialog.events.volume.decreasePercent) {
-    batchMonitorDialog.events.volume.increasePercent = 50
-    batchMonitorDialog.events.volume.decreasePercent = 30
+  if (newVal && !batchMonitorDialog.events.volume.threshold) {
+    batchMonitorDialog.events.volume.threshold = 5000
   }
 })
 

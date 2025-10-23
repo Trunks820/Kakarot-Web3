@@ -250,40 +250,23 @@
           <template #header>
             <div class="event-title">
               <el-checkbox v-model="configDialog.events.volume.enabled">
-                💰 交易量变化
+                💰 交易量阈值
               </el-checkbox>
             </div>
           </template>
           <div v-if="configDialog.events.volume.enabled" class="event-config">
-            <el-row :gutter="16">
-              <el-col :span="12">
-                <el-form-item label="增长" label-position="top" class="event-field">
-                  <el-input-number
-                    v-model="configDialog.events.volume.increasePercent"
-                    :min="0"
-                    :max="1000"
-                    :precision="1"
-                    style="width: 100%"
-                  >
-                    <template #suffix>%</template>
-                  </el-input-number>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="减少" label-position="top" class="event-field">
-                  <el-input-number
-                    v-model="configDialog.events.volume.decreasePercent"
-                    :min="0"
-                    :max="1000"
-                    :precision="1"
-                    style="width: 100%"
-                  >
-                    <template #suffix>%</template>
-                  </el-input-number>
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <div class="event-tip">💡 留空表示不监控该方向</div>
+            <el-form-item label="交易量阈值" label-position="top" class="event-field">
+              <el-input-number
+                v-model="configDialog.events.volume.threshold"
+                :min="0"
+                :max="100000000"
+                :step="1000"
+                :precision="0"
+                style="width: 100%"
+                placeholder="5000"
+              />
+              <div class="event-tip">💡 单位：USD，触发通知的最小交易量</div>
+            </el-form-item>
           </div>
         </el-card>
 
@@ -468,8 +451,7 @@ const configDialog = reactive({
     },
     volume: {
       enabled: false,
-      increasePercent: null,
-      decreasePercent: null
+      threshold: null
     }
   },
   notifyMethodsArray: []
@@ -496,10 +478,7 @@ const configConditionsSummary = computed(() => {
   }
   
   if (volume.enabled) {
-    const parts = []
-    if (volume.increasePercent) parts.push(`交易量增长≥${volume.increasePercent}%`)
-    if (volume.decreasePercent) parts.push(`交易量减少≥${volume.decreasePercent}%`)
-    if (parts.length > 0) conditions.push(parts.join(' 或 '))
+    if (volume.threshold) conditions.push(`交易量≥$${volume.threshold}`)
   }
   
   if (conditions.length === 0) return ''
@@ -523,9 +502,8 @@ watch(() => configDialog.events.holders.enabled, (newVal) => {
 })
 
 watch(() => configDialog.events.volume.enabled, (newVal) => {
-  if (newVal && !configDialog.events.volume.increasePercent && !configDialog.events.volume.decreasePercent) {
-    configDialog.events.volume.increasePercent = 200
-    configDialog.events.volume.decreasePercent = 100
+  if (newVal && !configDialog.events.volume.threshold) {
+    configDialog.events.volume.threshold = 5000
   }
 })
 
@@ -601,7 +579,15 @@ const handleConfigClick = (chainType) => {
     // 解析事件配置
     if (config.data.eventsConfig) {
       try {
-        configDialog.events = JSON.parse(config.data.eventsConfig)
+        const parsedEvents = JSON.parse(config.data.eventsConfig)
+        
+        // 清理 volume 字段中的旧格式数据
+        if (parsedEvents.volume) {
+          const { enabled, threshold } = parsedEvents.volume
+          parsedEvents.volume = { enabled, threshold }
+        }
+        
+        configDialog.events = parsedEvents
       } catch (e) {
         console.error('解析事件配置失败:', e)
       }
@@ -635,7 +621,7 @@ const resetConfigForm = () => {
   configDialog.events = {
     priceChange: { enabled: false, risePercent: null, fallPercent: null },
     holders: { enabled: false, increasePercent: null, decreasePercent: null },
-    volume: { enabled: false, increasePercent: null, decreasePercent: null }
+    volume: { enabled: false, threshold: null }
   }
   
   configDialog.notifyMethodsArray = []

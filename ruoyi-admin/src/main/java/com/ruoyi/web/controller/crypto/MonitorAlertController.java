@@ -28,10 +28,11 @@ public class MonitorAlertController extends BaseController
     @GetMapping("/recent")
     public AjaxResult recent(@RequestParam(defaultValue = "10") int limit)
     {
-        // 1. 查询监控预警记录
+        // 1. 查询监控预警记录（包含市值、链类型）
         String alertSql = "SELECT " +
                 "id, ca, token_name, token_symbol, trigger_time, " +
-                "trigger_events, stats_data, notify_methods, notify_status " +
+                "trigger_events, stats_data, notify_methods, notify_status, " +
+                "market_cap, chain_type " +
                 "FROM token_monitor_alert_log " +
                 "ORDER BY trigger_time DESC " +
                 "LIMIT ?";
@@ -67,9 +68,15 @@ public class MonitorAlertController extends BaseController
             String triggerEvents = (String) alert.get("trigger_events");
             notification.put("content", parseAlertContent(triggerEvents));
             
-            // 跳转链接
+            // 跳转链接和额外信息
             String ca = (String) alert.get("ca");
-            notification.put("actionUrl", "/crypto/tokenMonitor?ca=" + ca + "&chain=sol");
+            String chainType = alert.get("chain_type") != null ? (String) alert.get("chain_type") : "sol";
+            notification.put("actionUrl", "/crypto/tokenMonitor?ca=" + ca + "&chain=" + chainType);
+            
+            // 添加CA、市值、链类型
+            notification.put("ca", ca);
+            notification.put("marketCap", alert.get("market_cap"));
+            notification.put("chainType", chainType);
             
             notification.put("isRead", 0);
             notification.put("createTime", alert.get("trigger_time"));

@@ -194,7 +194,10 @@ class NotificationWebSocket {
       console.log('📝 最终通知内容:', notificationBody)
     }
     
-    // 2. 触发浏览器原生通知
+    // 2. 播放提示音
+    this._playNotificationSound()
+    
+    // 3. 触发浏览器原生通知
     if (Notification.permission === 'granted') {
       // 使用 Token 头像作为通知图标（如果有）
       const notificationIcon = notification.extraData?.avatar || 
@@ -207,7 +210,8 @@ class NotificationWebSocket {
         tag: notification.id, // 防止重复通知
         requireInteraction: false,
         badge: '/favicon.ico', // 小徽章图标
-        vibrate: [200, 100, 200] // 震动模式（移动设备）
+        vibrate: [200, 100, 200], // 震动模式（移动设备）
+        silent: false // 允许系统声音
       })
 
       // 点击通知时跳转到对应页面
@@ -230,7 +234,7 @@ class NotificationWebSocket {
       }, 5000)
     }
 
-    // 3. 显示 Element Plus 通知（页面内提示，带额外数据）
+    // 4. 显示 Element Plus 通知（页面内提示，带额外数据）
     const elMessage = this._buildElNotificationMessage(notification)
     
     ElNotification({
@@ -403,6 +407,44 @@ class NotificationWebSocket {
    */
   isConnected() {
     return this.ws && this.ws.readyState === WebSocket.OPEN
+  }
+
+  /**
+   * 播放通知提示音
+   */
+  _playNotificationSound() {
+    try {
+      // 使用 Web Audio API 生成提示音
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+
+      // 设置音调和音量
+      oscillator.frequency.value = 800 // 频率 (Hz)
+      oscillator.type = 'sine' // 波形类型：正弦波
+      gainNode.gain.value = 0.3 // 音量 (0-1)
+
+      // 播放提示音：两声哔哔
+      const now = audioContext.currentTime
+      
+      // 第一声
+      oscillator.start(now)
+      gainNode.gain.setValueAtTime(0.3, now)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1)
+      
+      // 第二声
+      gainNode.gain.setValueAtTime(0.3, now + 0.15)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.25)
+      
+      oscillator.stop(now + 0.3)
+
+      console.log('🔔 播放通知提示音')
+    } catch (error) {
+      console.warn('播放提示音失败:', error)
+    }
   }
 }
 

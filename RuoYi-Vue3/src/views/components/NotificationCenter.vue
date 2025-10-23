@@ -79,6 +79,32 @@
               </div>
               <div class="notification-title">{{ item.title }}</div>
               <div class="notification-content-text">{{ item.content }}</div>
+              
+              <!-- Token监控专属信息：CA、市值、GMGN链接 -->
+              <div v-if="item.module === 'token-monitor' && item.ca" class="notification-extra">
+                <div class="extra-item ca-item">
+                  <span class="extra-label">CA:</span>
+                  <span class="extra-value ca-address" @click.stop="handleCopyCA(item.ca)">
+                    {{ item.ca }}
+                    <el-icon class="copy-icon"><CopyDocument /></el-icon>
+                  </span>
+                </div>
+                <div v-if="item.marketCap" class="extra-item">
+                  <span class="extra-label">市值:</span>
+                  <span class="extra-value">${{ formatNumber(item.marketCap) }}</span>
+                </div>
+                <div class="extra-item">
+                  <el-button 
+                    type="primary" 
+                    size="small" 
+                    link
+                    @click.stop="handleOpenGMGN(item.ca, item.chainType)"
+                  >
+                    <el-icon><Link /></el-icon>
+                    在GMGN查看
+                  </el-button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -96,7 +122,9 @@ import {
   WarningFilled,
   SuccessFilled,
   InfoFilled,
-  Warning
+  Warning,
+  CopyDocument,
+  Link
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import request from '@/utils/request'
@@ -238,6 +266,35 @@ const handleMarkAllRead = async () => {
 const handleViewAll = () => {
   // TODO: 跳转到通知列表页
   ElMessage.info('通知列表页面开发中')
+}
+
+// 复制 CA 地址
+const handleCopyCA = async (ca) => {
+  try {
+    await navigator.clipboard.writeText(ca)
+    ElMessage.success('CA地址已复制')
+  } catch (error) {
+    console.error('复制失败:', error)
+    ElMessage.error('复制失败，请手动复制')
+  }
+}
+
+// 格式化数字（市值）
+const formatNumber = (num) => {
+  if (!num) return '0'
+  const value = Number(num)
+  if (value >= 1e9) return (value / 1e9).toFixed(2) + 'B'
+  if (value >= 1e6) return (value / 1e6).toFixed(2) + 'M'
+  if (value >= 1e3) return (value / 1e3).toFixed(2) + 'K'
+  return value.toFixed(2)
+}
+
+// 打开 GMGN 链接
+const handleOpenGMGN = (ca, chainType = 'sol') => {
+  // GMGN 链接格式：https://gmgn.ai/{chain}/token/{CA}
+  const chain = chainType ? chainType.toLowerCase() : 'sol'
+  const url = `https://gmgn.ai/${chain}/token/${ca}`
+  window.open(url, '_blank')
 }
 
 // 定时器
@@ -422,6 +479,59 @@ defineExpose({
         font-size: 13px;
         color: #909399;
         line-height: 1.6;
+        margin-bottom: 8px;
+      }
+      
+      .notification-extra {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        padding-top: 8px;
+        border-top: 1px solid #EBEEF5;
+        margin-top: 8px;
+        
+        .extra-item {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 12px;
+          
+          .extra-label {
+            color: #909399;
+            font-weight: 500;
+          }
+          
+          .extra-value {
+            color: #606266;
+            
+            &.ca-address {
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+              padding: 2px 8px;
+              background: #F5F7FA;
+              border-radius: 4px;
+              cursor: pointer;
+              transition: all 0.3s;
+              
+              &:hover {
+                background: #E6E8EB;
+                color: #409EFF;
+                
+                .copy-icon {
+                  opacity: 1;
+                }
+              }
+              
+              .copy-icon {
+                font-size: 12px;
+                opacity: 0.6;
+                transition: opacity 0.3s;
+              }
+            }
+          }
+        }
       }
     }
   }
