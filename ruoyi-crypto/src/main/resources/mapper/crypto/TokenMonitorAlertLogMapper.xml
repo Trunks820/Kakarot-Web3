@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.TokenMonitorAlertLogMapper">
+    
+    <resultMap type="TokenMonitorAlertLog" id="TokenMonitorAlertLogResult">
+        <result property="id"    column="id"    />
+        <result property="ca"    column="ca"    />
+        <result property="tokenName"    column="token_name"    />
+        <result property="tokenSymbol"    column="token_symbol"    />
+        <result property="triggerTime"    column="trigger_time"    />
+        <result property="triggerEvents"    column="trigger_events"    />
+        <result property="statsData"    column="stats_data"    />
+        <result property="notifyMethods"    column="notify_methods"    />
+        <result property="notifyStatus"    column="notify_status"    />
+        <result property="marketCap"    column="market_cap"    />
+        <result property="chainType"    column="chain_type"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectTokenMonitorAlertLogVo">
+        select id, ca, token_name, token_symbol, trigger_time, trigger_events, 
+               stats_data, notify_methods, notify_status, market_cap, chain_type, create_time
+        from token_monitor_alert_log
+    </sql>
+
+    <select id="selectTokenMonitorAlertLogList" parameterType="TokenMonitorAlertLog" resultMap="TokenMonitorAlertLogResult">
+        <include refid="selectTokenMonitorAlertLogVo"/>
+        <where>  
+            <if test="ca != null  and ca != ''"> and ca = #{ca}</if>
+            <if test="tokenName != null  and tokenName != ''"> and token_name like concat('%', #{tokenName}, '%')</if>
+            <if test="tokenSymbol != null  and tokenSymbol != ''"> and token_symbol like concat('%', #{tokenSymbol}, '%')</if>
+            <if test="triggerEvents != null  and triggerEvents != ''"> and trigger_events like concat('%', #{triggerEvents}, '%')</if>
+            <if test="notifyStatus != null  and notifyStatus != ''"> and notify_status = #{notifyStatus}</if>
+            <if test="chainType != null  and chainType != ''"> and chain_type = #{chainType}</if>
+            <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+                and date_format(trigger_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+                and date_format(trigger_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+            </if>
+        </where>
+        order by trigger_time desc
+    </select>
+    
+    <select id="selectTokenMonitorAlertLogById" parameterType="Long" resultMap="TokenMonitorAlertLogResult">
+        <include refid="selectTokenMonitorAlertLogVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertTokenMonitorAlertLog" parameterType="TokenMonitorAlertLog" useGeneratedKeys="true" keyProperty="id">
+        insert into token_monitor_alert_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="ca != null and ca != ''">ca,</if>
+            <if test="tokenName != null and tokenName != ''">token_name,</if>
+            <if test="tokenSymbol != null and tokenSymbol != ''">token_symbol,</if>
+            <if test="triggerTime != null">trigger_time,</if>
+            <if test="triggerEvents != null">trigger_events,</if>
+            <if test="statsData != null">stats_data,</if>
+            <if test="notifyMethods != null">notify_methods,</if>
+            <if test="notifyStatus != null">notify_status,</if>
+            <if test="marketCap != null">market_cap,</if>
+            <if test="chainType != null and chainType != ''">chain_type,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="ca != null and ca != ''">#{ca},</if>
+            <if test="tokenName != null and tokenName != ''">#{tokenName},</if>
+            <if test="tokenSymbol != null and tokenSymbol != ''">#{tokenSymbol},</if>
+            <if test="triggerTime != null">#{triggerTime},</if>
+            <if test="triggerEvents != null">#{triggerEvents},</if>
+            <if test="statsData != null">#{statsData},</if>
+            <if test="notifyMethods != null">#{notifyMethods},</if>
+            <if test="notifyStatus != null">#{notifyStatus},</if>
+            <if test="marketCap != null">#{marketCap},</if>
+            <if test="chainType != null and chainType != ''">#{chainType},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTokenMonitorAlertLog" parameterType="TokenMonitorAlertLog">
+        update token_monitor_alert_log
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="ca != null and ca != ''">ca = #{ca},</if>
+            <if test="tokenName != null and tokenName != ''">token_name = #{tokenName},</if>
+            <if test="tokenSymbol != null and tokenSymbol != ''">token_symbol = #{tokenSymbol},</if>
+            <if test="triggerTime != null">trigger_time = #{triggerTime},</if>
+            <if test="triggerEvents != null">trigger_events = #{triggerEvents},</if>
+            <if test="statsData != null">stats_data = #{statsData},</if>
+            <if test="notifyMethods != null">notify_methods = #{notifyMethods},</if>
+            <if test="notifyStatus != null">notify_status = #{notifyStatus},</if>
+            <if test="marketCap != null">market_cap = #{marketCap},</if>
+            <if test="chainType != null and chainType != ''">chain_type = #{chainType},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTokenMonitorAlertLogById" parameterType="Long">
+        delete from token_monitor_alert_log where id = #{id}
+    </delete>
+
+    <delete id="deleteTokenMonitorAlertLogByIds" parameterType="String">
+        delete from token_monitor_alert_log where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
+

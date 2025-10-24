@@ -47,6 +47,12 @@ export default {
       meta: { title: 'OKX信号', icon: 'chart' }
     },
     {
+      path: 'blockMonitor',
+      component: () => import('@/views/crypto/blockMonitor/index'),
+      name: 'BlockMonitor',
+      meta: { title: '历史播报', icon: 'bell' }
+    },
+    {
       path: 'records',
       component: () => import('@/views/crypto/records/index'),
       name: 'CryptoRecords',
