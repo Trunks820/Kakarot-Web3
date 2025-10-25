@@ -25,11 +25,17 @@ public class GlobalMonitorConfig extends BaseEntity
     /** 链类型：sol/bsc/eth/polygon等 */
     private String chainType;
 
+    /** 市场类型：internal-内盘, external-外盘 */
+    private String marketType;
+
     /** 数据源筛选：all/pump/fourmeme */
     private String source;
 
     /** 最小交易金额(USD) */
     private BigDecimal minTransactionUsd;
+
+    /** 累计最小金额(USD) */
+    private BigDecimal cumulativeMinAmountUsd;
 
     /** 监控事件配置JSON */
     private String eventsConfig;
@@ -79,6 +85,16 @@ public class GlobalMonitorConfig extends BaseEntity
         return chainType;
     }
 
+    public void setMarketType(String marketType) 
+    {
+        this.marketType = marketType;
+    }
+
+    public String getMarketType() 
+    {
+        return marketType;
+    }
+
     public void setSource(String source) 
     {
         this.source = source;
@@ -97,6 +113,16 @@ public class GlobalMonitorConfig extends BaseEntity
     public BigDecimal getMinTransactionUsd() 
     {
         return minTransactionUsd;
+    }
+
+    public void setCumulativeMinAmountUsd(BigDecimal cumulativeMinAmountUsd) 
+    {
+        this.cumulativeMinAmountUsd = cumulativeMinAmountUsd;
+    }
+
+    public BigDecimal getCumulativeMinAmountUsd() 
+    {
+        return cumulativeMinAmountUsd;
     }
 
     public void setEventsConfig(String eventsConfig) 
@@ -165,8 +191,10 @@ public class GlobalMonitorConfig extends BaseEntity
             .append("id", getId())
             .append("configName", getConfigName())
             .append("chainType", getChainType())
+            .append("marketType", getMarketType())
             .append("source", getSource())
             .append("minTransactionUsd", getMinTransactionUsd())
+            .append("cumulativeMinAmountUsd", getCumulativeMinAmountUsd())
             .append("eventsConfig", getEventsConfig())
             .append("triggerLogic", getTriggerLogic())
             .append("notifyMethods", getNotifyMethods())

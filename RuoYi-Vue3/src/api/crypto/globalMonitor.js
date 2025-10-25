@@ -17,11 +17,12 @@ export function getGlobalMonitor(id) {
   })
 }
 
-// 根据链类型获取配置
-export function getGlobalMonitorByChain(chainType) {
+// 根据链类型和市场类型获取配置
+export function getGlobalMonitorByChain(chainType, marketType = 'external') {
   return request({
     url: '/crypto/globalMonitor/chain/' + chainType,
-    method: 'get'
+    method: 'get',
+    params: { marketType }
   })
 }
 
@@ -65,6 +66,23 @@ export function delGlobalMonitor(ids) {
   return request({
     url: '/crypto/globalMonitor/' + ids,
     method: 'delete'
+  })
+}
+
+// 获取今日预警数量
+export function getTodayAlertCount() {
+  return request({
+    url: '/crypto/monitorAlert/todayCount',
+    method: 'get'
+  })
+}
+
+// 获取配置日志
+export function getGlobalMonitorLogs(limit = 20) {
+  return request({
+    url: '/crypto/globalMonitor/logs',
+    method: 'get',
+    params: { limit }
   })
 }
 

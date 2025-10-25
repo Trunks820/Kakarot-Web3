@@ -30,20 +30,22 @@
           <div class="widget-body">
             <!-- 核心数据展示 -->
             <div class="config-stats">
-              <div class="stat-card" :class="{ active: bscConfig.enabled }">
+              <!-- BSC卡片 -->
+              <div class="stat-card" :class="{ active: bscConfig.external.enabled || bscConfig.internal.enabled }">
                 <div class="stat-header">
                   <el-tag type="warning" size="small">BSC</el-tag>
-                  <el-switch
-                    v-model="bscConfig.enabled"
-                    :loading="bscConfig.switching"
-                    @change="handleStatusChange('bsc')"
-                    size="small"
-                  />
+                  <div style="display: flex; gap: 4px;">
+                    <el-tag v-if="bscConfig.external.enabled" type="success" size="small" effect="plain">外盘✓</el-tag>
+                    <el-tag v-if="bscConfig.internal.enabled" type="success" size="small" effect="plain">内盘✓</el-tag>
+                  </div>
                 </div>
                 <div class="stat-content">
-                  <div class="stat-label">交易阈值</div>
-                  <div class="stat-value">
-                    {{ bscConfig.data ? bscConfig.data.minTransactionUsd : 400 }} USD
+                  <div class="stat-label">配置状态</div>
+                  <div class="stat-value" style="font-size: 16px;">
+                    <span v-if="bscConfig.external.data || bscConfig.internal.data">
+                      {{ (bscConfig.external.data ? 1 : 0) + (bscConfig.internal.data ? 1 : 0) }}/2 已配置
+                    </span>
+                    <span v-else style="color: #909399;">未配置</span>
                   </div>
                 </div>
                 <div class="stat-footer">
@@ -53,16 +55,17 @@
                     @click="handleConfigClick('bsc')"
                     :icon="Setting"
                   >
-                    {{ bscConfig.data ? '编辑配置' : '新建配置' }}
+                    管理配置
                   </el-button>
                 </div>
               </div>
 
+              <!-- SOL卡片（开发中） -->
               <div class="stat-card disabled">
                 <div class="stat-header">
                   <el-tag type="success" size="small">SOL</el-tag>
                   <el-switch
-                    v-model="solConfig.enabled"
+                    v-model="solConfig.external.enabled"
                     size="small"
                     disabled
                   />
@@ -86,7 +89,7 @@
               <div class="summary-divider"></div>
               <div class="summary-item">
                 <span class="label">今日预警</span>
-                <span class="value">-</span>
+                <span class="value">{{ todayAlertCount }}</span>
               </div>
               <div class="summary-divider"></div>
               <div class="summary-item">
@@ -120,18 +123,28 @@
       :width="'min(720px, 90vw)'"
       @close="resetConfigForm"
     >
-      <el-alert
-        type="warning"
-        :closable="false"
-        style="margin-bottom: 20px"
-      >
-        <template #title>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span>🌐</span>
-            <span>此配置将应用于 <strong>{{ configDialog.chainType.toUpperCase() }}链区块监听</strong></span>
-          </div>
-        </template>
-      </el-alert>
+      <!-- 市场类型选择 -->
+      <div style="margin-bottom: 20px; padding: 16px; background: #F5F7FA; border-radius: 8px;">
+        <div style="font-size: 14px; font-weight: 600; color: #303133; margin-bottom: 12px;">
+          📊 选择市场类型
+        </div>
+        <el-radio-group v-model="configDialog.form.marketType" size="large">
+          <el-radio-button label="external">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <span>🌍</span>
+              <span>外盘</span>
+            </span>
+          </el-radio-button>
+          <el-radio-button label="internal">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <span>🏠</span>
+              <span>内盘</span>
+            </span>
+          </el-radio-button>
+        </el-radio-group>
+      </div>
+
+      
 
       <el-form :model="configDialog.form" label-width="120px">
         <!-- 基础配置 -->
@@ -143,7 +156,7 @@
           />
         </el-form-item>
 
-        <el-form-item label="最小交易金额">
+        <el-form-item label="单笔最小金额">
           <el-input-number
             v-model="configDialog.form.minTransactionUsd"
             :min="0"
@@ -153,7 +166,21 @@
             <template #suffix>USD</template>
           </el-input-number>
           <span style="margin-left: 12px; color: #909399; font-size: 13px;">
-            💡 只监控大于此金额的交易
+            💡 单笔交易金额需大于此值
+          </span>
+        </el-form-item>
+
+        <el-form-item label="累计最小金额">
+          <el-input-number
+            v-model="configDialog.form.cumulativeMinAmountUsd"
+            :min="0"
+            :precision="2"
+            style="width: 200px"
+          >
+            <template #suffix>USD</template>
+          </el-input-number>
+          <span style="margin-left: 12px; color: #909399; font-size: 13px;">
+            💡 累计交易金额需大于此值（可选）
           </span>
         </el-form-item>
 
@@ -347,20 +374,41 @@
         stripe
         style="width: 100%"
       >
-        <el-table-column label="时间" prop="time" width="180" />
+        <el-table-column label="时间" prop="updateTime" width="180" />
         <el-table-column label="链" prop="chainType" width="80">
           <template #default="scope">
             <el-tag 
-              :type="scope.row.chainType === 'BSC' ? 'warning' : 'success'" 
+              :type="scope.row.chainType === 'bsc' ? 'warning' : 'success'" 
               size="small"
             >
-              {{ scope.row.chainType }}
+              {{ scope.row.chainType.toUpperCase() }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" prop="action" width="100" />
-        <el-table-column label="操作人" prop="operator" width="100" />
-        <el-table-column label="详情" prop="details" show-overflow-tooltip />
+        <el-table-column label="市场" prop="marketType" width="80">
+          <template #default="scope">
+            <el-tag 
+              :type="scope.row.marketType === 'external' ? 'primary' : 'info'" 
+              size="small"
+              effect="plain"
+            >
+              {{ scope.row.marketType === 'external' ? '外盘' : '内盘' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="配置名称" prop="configName" width="180" show-overflow-tooltip />
+        <el-table-column label="状态" prop="status" width="80">
+          <template #default="scope">
+            <el-tag 
+              :type="scope.row.status === '1' ? 'success' : 'info'" 
+              size="small"
+            >
+              {{ scope.row.status === '1' ? '启用' : '停用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作人" prop="updateBy" width="100" />
+        <el-table-column label="备注" prop="remark" show-overflow-tooltip />
       </el-table>
       
       <div v-if="logsDialog.logs.length === 0 && !logsDialog.loading" style="text-align: center; padding: 40px; color: #909399;">
@@ -372,12 +420,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch, getCurrentInstance } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch, getCurrentInstance } from 'vue'
 import { Bell, Setting, Check, Close, Document, Tools } from '@element-plus/icons-vue'
 import { 
   getGlobalMonitorByChain, 
   saveOrUpdateGlobalMonitor,
-  changeGlobalMonitorStatus 
+  changeGlobalMonitorStatus,
+  getTodayAlertCount,
+  getGlobalMonitorLogs
 } from '@/api/crypto/globalMonitor'
 
 const { proxy } = getCurrentInstance()
@@ -385,41 +435,70 @@ const { proxy } = getCurrentInstance()
 // 加载状态
 const loading = ref(true)
 
-// BSC配置
+// 今日预警数量
+const todayAlertCount = ref(0)
+
+// 配置数据结构：支持内盘和外盘
 const bscConfig = reactive({
-  enabled: false,
-  switching: false,
-  data: null
+  external: {
+    enabled: false,
+    switching: false,
+    data: null
+  },
+  internal: {
+    enabled: false,
+    switching: false,
+    data: null
+  }
 })
 
-// SOL配置
+// SOL配置（预留）
 const solConfig = reactive({
-  enabled: false,
-  switching: false,
-  data: null
+  external: {
+    enabled: false,
+    switching: false,
+    data: null
+  },
+  internal: {
+    enabled: false,
+    switching: false,
+    data: null
+  }
 })
 
 // 活跃配置数量
 const activeConfigCount = computed(() => {
   let count = 0
-  if (bscConfig.enabled && bscConfig.data) count++
-  if (solConfig.enabled && solConfig.data) count++
+  if (bscConfig.external.enabled && bscConfig.external.data) count++
+  if (bscConfig.internal.enabled && bscConfig.internal.data) count++
+  if (solConfig.external.enabled && solConfig.external.data) count++
+  if (solConfig.internal.enabled && solConfig.internal.data) count++
   return count
 })
 
 // 监控事件总数
 const totalEvents = computed(() => {
   let count = 0
-  if (bscConfig.data && bscConfig.data.eventsConfig) {
-    try {
-      const events = JSON.parse(bscConfig.data.eventsConfig)
-      if (events.priceChange?.enabled) count++
-      if (events.holders?.enabled) count++
-      if (events.volume?.enabled) count++
-    } catch (e) {
-      console.error('解析事件配置失败:', e)
+  
+  const countEventsForConfig = (configData) => {
+    if (configData && configData.eventsConfig) {
+      try {
+        const events = JSON.parse(configData.eventsConfig)
+        let eventCount = 0
+        if (events.priceChange?.enabled) eventCount++
+        if (events.holders?.enabled) eventCount++
+        if (events.volume?.enabled) eventCount++
+        return eventCount
+      } catch (e) {
+        console.error('解析事件配置失败:', e)
+      }
     }
+    return 0
   }
+  
+  count += countEventsForConfig(bscConfig.external.data)
+  count += countEventsForConfig(bscConfig.internal.data)
+  
   return count
 })
 
@@ -432,8 +511,10 @@ const configDialog = reactive({
     id: null,
     configName: '',
     chainType: '',
+    marketType: 'external',
     source: 'all',
     minTransactionUsd: 400,
+    cumulativeMinAmountUsd: null,
     triggerLogic: 'any',
     status: '1',
     remark: ''
@@ -507,23 +588,93 @@ watch(() => configDialog.events.volume.enabled, (newVal) => {
   }
 })
 
+// 监听市场类型切换，自动加载对应配置
+watch(() => configDialog.form.marketType, (newMarketType, oldMarketType) => {
+  if (!configDialog.visible || !configDialog.chainType || newMarketType === oldMarketType) {
+    return
+  }
+  
+  // 加载对应市场类型的配置
+  const chainConfig = configDialog.chainType === 'bsc' ? bscConfig : solConfig
+  const config = chainConfig[newMarketType]
+  
+  if (config && config.data) {
+    // 有配置，加载它（编辑模式）
+    configDialog.form = {
+      id: config.data.id, // 保留ID用于编辑
+      configName: config.data.configName,
+      chainType: config.data.chainType,
+      marketType: config.data.marketType || newMarketType,
+      source: config.data.source || 'all',
+      minTransactionUsd: config.data.minTransactionUsd || 400,
+      cumulativeMinAmountUsd: config.data.cumulativeMinAmountUsd || null,
+      triggerLogic: config.data.triggerLogic || 'any',
+      status: config.data.status,
+      remark: config.data.remark || ''
+    }
+    
+    // 解析事件配置
+    if (config.data.eventsConfig) {
+      try {
+        const parsedEvents = JSON.parse(config.data.eventsConfig)
+        if (parsedEvents.volume) {
+          const { enabled, threshold } = parsedEvents.volume
+          parsedEvents.volume = { enabled, threshold }
+        }
+        configDialog.events = parsedEvents
+      } catch (e) {
+        console.error('解析事件配置失败:', e)
+      }
+    } else {
+      // 重置事件配置
+      configDialog.events = {
+        priceChange: { enabled: false, risePercent: null, fallPercent: null },
+        holders: { enabled: false, increasePercent: null, decreasePercent: null },
+        volume: { enabled: false, threshold: null }
+      }
+    }
+    
+    // 解析通知方式
+    if (config.data.notifyMethods) {
+      configDialog.notifyMethodsArray = config.data.notifyMethods.split(',')
+    } else {
+      configDialog.notifyMethodsArray = []
+    }
+  } else {
+    // 无配置，重置为新建模式（清空ID，保留 chainType 和 marketType）
+    const chainType = configDialog.form.chainType
+    resetConfigForm()
+    configDialog.form.id = null // ⚠️ 关键：清空ID，确保是新增而不是更新
+    configDialog.form.chainType = chainType
+    configDialog.form.marketType = newMarketType
+    configDialog.form.configName = `${chainType.toUpperCase()}链${newMarketType === 'internal' ? '内盘' : '外盘'}监控`
+  }
+})
+
 // 加载配置
 const loadConfigs = async () => {
   loading.value = true
   
   try {
-    // 加载BSC配置
-    const bscRes = await getGlobalMonitorByChain('bsc')
-    if (bscRes.data) {
-      bscConfig.data = bscRes.data
-      bscConfig.enabled = bscRes.data.status === '1'
+    // 加载BSC外盘配置
+    const bscExternalRes = await getGlobalMonitorByChain('bsc', 'external')
+    if (bscExternalRes.data) {
+      bscConfig.external.data = bscExternalRes.data
+      bscConfig.external.enabled = bscExternalRes.data.status === '1'
+    }
+    
+    // 加载BSC内盘配置
+    const bscInternalRes = await getGlobalMonitorByChain('bsc', 'internal')
+    if (bscInternalRes.data) {
+      bscConfig.internal.data = bscInternalRes.data
+      bscConfig.internal.enabled = bscInternalRes.data.status === '1'
     }
     
     // 加载SOL配置（预留）
-    // const solRes = await getGlobalMonitorByChain('sol')
-    // if (solRes.data) {
-    //   solConfig.data = solRes.data
-    //   solConfig.enabled = solRes.data.status === '1'
+    // const solExternalRes = await getGlobalMonitorByChain('sol', 'external')
+    // if (solExternalRes.data) {
+    //   solConfig.external.data = solExternalRes.data
+    //   solConfig.external.enabled = solExternalRes.data.status === '1'
     // }
   } catch (error) {
     console.error('加载配置失败:', error)
@@ -532,9 +683,23 @@ const loadConfigs = async () => {
   }
 }
 
+// 加载今日预警数量
+const loadTodayAlertCount = async () => {
+  try {
+    const res = await getTodayAlertCount()
+    if (res.code === 200 && res.data) {
+      // 获取BSC链的预警数量（可以根据需要调整）
+      todayAlertCount.value = res.data.bsc || res.data.total || 0
+    }
+  } catch (error) {
+    console.error('加载今日预警数量失败:', error)
+  }
+}
+
 // 切换状态
-const handleStatusChange = async (chainType) => {
-  const config = chainType === 'bsc' ? bscConfig : solConfig
+const handleStatusChange = async (chainType, marketType) => {
+  const chainConfig = chainType === 'bsc' ? bscConfig : solConfig
+  const config = chainConfig[marketType]
   
   if (!config.data) {
     proxy.$modal.msgWarning('请先配置监控规则')
@@ -547,7 +712,8 @@ const handleStatusChange = async (chainType) => {
   try {
     const newStatus = config.enabled ? '1' : '0'
     await changeGlobalMonitorStatus(config.data.id, newStatus)
-    proxy.$modal.msgSuccess(config.enabled ? '已启用' : '已停用')
+    const marketLabel = marketType === 'internal' ? '内盘' : '外盘'
+    proxy.$modal.msgSuccess(`${chainType.toUpperCase()} ${marketLabel}配置已${config.enabled ? '启用' : '停用'}`)
   } catch (error) {
     config.enabled = !config.enabled
     proxy.$modal.msgError('操作失败：' + (error.message || '未知错误'))
@@ -561,16 +727,26 @@ const handleConfigClick = (chainType) => {
   configDialog.chainType = chainType
   configDialog.visible = true
   
-  const config = chainType === 'bsc' ? bscConfig : solConfig
+  const chainConfig = chainType === 'bsc' ? bscConfig : solConfig
   
-  if (config.data) {
+  // 优先加载外盘配置，如果外盘没有就加载内盘
+  let initialMarketType = 'external'
+  if (!chainConfig.external.data && chainConfig.internal.data) {
+    initialMarketType = 'internal'
+  }
+  
+  const config = chainConfig[initialMarketType]
+  
+  if (config && config.data) {
     // 编辑现有配置
     configDialog.form = {
       id: config.data.id,
       configName: config.data.configName,
       chainType: config.data.chainType,
+      marketType: config.data.marketType || initialMarketType,
       source: config.data.source || 'all',
       minTransactionUsd: config.data.minTransactionUsd || 400,
+      cumulativeMinAmountUsd: config.data.cumulativeMinAmountUsd || null,
       triggerLogic: config.data.triggerLogic || 'any',
       status: config.data.status,
       remark: config.data.remark || ''
@@ -598,10 +774,11 @@ const handleConfigClick = (chainType) => {
       configDialog.notifyMethodsArray = config.data.notifyMethods.split(',')
     }
   } else {
-    // 新建配置
+    // 新建配置 - 默认外盘
     resetConfigForm()
     configDialog.form.chainType = chainType
-    configDialog.form.configName = `${chainType.toUpperCase()}链全局监控`
+    configDialog.form.marketType = 'external'
+    configDialog.form.configName = `${chainType.toUpperCase()}链外盘监控`
   }
 }
 
@@ -611,8 +788,10 @@ const resetConfigForm = () => {
     id: null,
     configName: '',
     chainType: '',
+    marketType: 'external',
     source: 'all',
     minTransactionUsd: 400,
+    cumulativeMinAmountUsd: null,
     triggerLogic: 'any',
     status: '1',
     remark: ''
@@ -689,41 +868,37 @@ const logsDialog = reactive({
 })
 
 // 查看配置日志
-const handleViewLogs = () => {
+const handleViewLogs = async () => {
   logsDialog.visible = true
   logsDialog.loading = true
   
-  // 模拟日志数据（后续可对接真实API）
-  setTimeout(() => {
-    logsDialog.logs = [
-      {
-        id: 1,
-        chainType: 'BSC',
-        action: '启用监控',
-        operator: 'admin',
-        time: '2025-10-21 14:30:00',
-        details: '启用BSC链全局监控，交易阈值: 400 USD'
-      },
-      {
-        id: 2,
-        chainType: 'BSC',
-        action: '修改配置',
-        operator: 'admin',
-        time: '2025-10-21 12:15:00',
-        details: '调整涨幅阈值从5%提升至10%'
-      }
-    ]
+  try {
+    const res = await getGlobalMonitorLogs(20)
+    if (res.code === 200 && res.data) {
+      logsDialog.logs = res.data
+    } else {
+      logsDialog.logs = []
+    }
+  } catch (error) {
+    console.error('加载配置日志失败:', error)
+    logsDialog.logs = []
+    proxy.$modal.msgError('加载配置日志失败')
+  } finally {
     logsDialog.loading = false
-  }, 500)
+  }
 }
 
 // 快速配置
 const handleQuickConfig = () => {
   // 快速配置BSC链
-  if (bscConfig.data) {
+  const hasConfig = bscConfig.external.data || bscConfig.internal.data
+  
+  if (hasConfig) {
+    // 已有配置，直接打开配置页面
     handleConfigClick('bsc')
   } else {
-    proxy.$modal.confirm('检测到BSC链未配置，是否立即配置？', '提示', {
+    // 未配置，询问是否立即配置
+    proxy.$modal.confirm('检测到BSC链未配置，是否立即配置外盘监控？', '提示', {
       type: 'info'
     }).then(() => {
       handleConfigClick('bsc')
@@ -731,9 +906,26 @@ const handleQuickConfig = () => {
   }
 }
 
+// 定时器
+let refreshTimer = null
+
 // 初始化
 onMounted(() => {
   loadConfigs()
+  loadTodayAlertCount()
+  
+  // 每10秒刷新今日预警数量
+  refreshTimer = setInterval(() => {
+    loadTodayAlertCount()
+  }, 10000)
+})
+
+// 清理定时器
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+  }
 })
 </script>
 

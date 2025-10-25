@@ -29,6 +29,15 @@ public interface IGlobalMonitorConfigService
     public GlobalMonitorConfig selectGlobalMonitorConfigByChainType(String chainType);
 
     /**
+     * 根据链类型和市场类型查询配置
+     * 
+     * @param chainType 链类型
+     * @param marketType 市场类型
+     * @return 链级全局监控配置
+     */
+    public GlobalMonitorConfig selectGlobalMonitorConfigByChainTypeAndMarket(String chainType, String marketType);
+
+    /**
      * 查询链级全局监控配置列表
      * 
      * @param globalMonitorConfig 链级全局监控配置

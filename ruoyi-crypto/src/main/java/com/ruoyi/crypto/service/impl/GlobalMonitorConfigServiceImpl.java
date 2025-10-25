@@ -81,6 +81,39 @@ public class GlobalMonitorConfigServiceImpl implements IGlobalMonitorConfigServi
     }
 
     /**
+     * 根据链类型和市场类型查询配置（优先从 Redis 读取）
+     *
+     * @param chainType 链类型
+     * @param marketType 市场类型
+     * @return 链级全局监控配置
+     */
+    @Override
+    public GlobalMonitorConfig selectGlobalMonitorConfigByChainTypeAndMarket(String chainType, String marketType)
+    {
+        String redisKey = REDIS_KEY_PREFIX + chainType.toLowerCase() + ":" + marketType;
+        
+        // 1. 先从 Redis 读取
+        GlobalMonitorConfig config = redisCache.getCacheObject(redisKey);
+        
+        if (config != null) {
+            log.debug("✅ 从 Redis 缓存读取链级配置: chainType={}, marketType={}", chainType, marketType);
+            return config;
+        }
+        
+        // 2. Redis 没有，从数据库读取
+        log.debug("⚠️ Redis 缓存未命中，从数据库读取链级配置: chainType={}, marketType={}", chainType, marketType);
+        config = globalMonitorConfigMapper.selectGlobalMonitorConfigByChainTypeAndMarket(chainType, marketType);
+        
+        // 3. 写入 Redis（永不过期）
+        if (config != null) {
+            redisCache.setCacheObject(redisKey, config);
+            log.info("📝 链级配置已缓存到 Redis（永不过期）: chainType={}, marketType={}", chainType, marketType);
+        }
+        
+        return config;
+    }
+
+    /**
      * 查询链级全局监控配置列表
      * 
      * @param globalMonitorConfig 链级全局监控配置
@@ -171,7 +204,7 @@ public class GlobalMonitorConfigServiceImpl implements IGlobalMonitorConfigServi
     }
 
     /**
-     * 保存或更新全局监控配置
+     * 保存或更新全局监控配置（支持内外盘）
      * 
      * @param globalMonitorConfig 链级全局监控配置
      * @return 结果
@@ -181,22 +214,32 @@ public class GlobalMonitorConfigServiceImpl implements IGlobalMonitorConfigServi
     {
         if (globalMonitorConfig.getId() != null)
         {
-            // 更新
+            // 更新：有ID，直接更新
             return updateGlobalMonitorConfig(globalMonitorConfig);
         }
         else
         {
-            // 检查是否已存在相同链类型的配置
-            GlobalMonitorConfig existing = selectGlobalMonitorConfigByChainType(globalMonitorConfig.getChainType());
+            // 新增：检查是否已存在相同链类型+市场类型的配置
+            String marketType = globalMonitorConfig.getMarketType();
+            if (marketType == null || marketType.isEmpty()) {
+                marketType = "external"; // 默认外盘
+                globalMonitorConfig.setMarketType(marketType);
+            }
+            
+            GlobalMonitorConfig existing = selectGlobalMonitorConfigByChainTypeAndMarket(
+                globalMonitorConfig.getChainType(), 
+                marketType
+            );
+            
             if (existing != null)
             {
-                // 更新现有配置
+                // 已存在相同的链类型+市场类型配置，更新它
                 globalMonitorConfig.setId(existing.getId());
                 return updateGlobalMonitorConfig(globalMonitorConfig);
             }
             else
             {
-                // 新增
+                // 不存在，新增
                 return insertGlobalMonitorConfig(globalMonitorConfig);
             }
         }
@@ -223,7 +266,7 @@ public class GlobalMonitorConfigServiceImpl implements IGlobalMonitorConfigServi
     }
     
     /**
-     * 刷新 Redis 缓存
+     * 刷新 Redis 缓存（支持内外盘）
      * 
      * @param config 链级全局监控配置
      */
@@ -233,22 +276,28 @@ public class GlobalMonitorConfigServiceImpl implements IGlobalMonitorConfigServi
             return;
         }
         
-        String redisKey = REDIS_KEY_PREFIX + config.getChainType().toLowerCase();
-        
         // 先从数据库查询完整的配置信息（确保数据完整性）
         GlobalMonitorConfig fullConfig = globalMonitorConfigMapper.selectGlobalMonitorConfigById(config.getId());
         
         if (fullConfig != null) {
+            String marketType = fullConfig.getMarketType();
+            if (marketType == null || marketType.isEmpty()) {
+                marketType = "external"; // 默认外盘
+            }
+            
+            // Redis Key格式：global_monitor:config:{chain_type}:{market_type}
+            String redisKey = REDIS_KEY_PREFIX + fullConfig.getChainType().toLowerCase() + ":" + marketType;
+            
             // 写入 Redis（永不过期）
             redisCache.setCacheObject(redisKey, fullConfig);
             
-            log.info("🔄 Redis 缓存已刷新: chainType={}, configId={}, status={}, configName={}", 
-                     fullConfig.getChainType(), fullConfig.getId(), fullConfig.getStatus(), fullConfig.getConfigName());
+            log.info("🔄 Redis 缓存已刷新: chainType={}, marketType={}, configId={}, status={}, configName={}", 
+                     fullConfig.getChainType(), marketType, fullConfig.getId(), fullConfig.getStatus(), fullConfig.getConfigName());
         }
     }
     
     /**
-     * 清除 Redis 缓存
+     * 清除 Redis 缓存（清除该链的内外盘缓存）
      * 
      * @param chainType 链类型
      */
@@ -258,10 +307,33 @@ public class GlobalMonitorConfigServiceImpl implements IGlobalMonitorConfigServi
             return;
         }
         
-        String redisKey = REDIS_KEY_PREFIX + chainType.toLowerCase();
+        // 清除外盘缓存
+        String externalKey = REDIS_KEY_PREFIX + chainType.toLowerCase() + ":external";
+        redisCache.deleteObject(externalKey);
+        
+        // 清除内盘缓存
+        String internalKey = REDIS_KEY_PREFIX + chainType.toLowerCase() + ":internal";
+        redisCache.deleteObject(internalKey);
+        
+        log.info("🗑️ Redis 缓存已清除: chainType={} (内外盘)", chainType);
+    }
+    
+    /**
+     * 清除指定市场类型的 Redis 缓存
+     * 
+     * @param chainType 链类型
+     * @param marketType 市场类型
+     */
+    private void clearRedisCache(String chainType, String marketType)
+    {
+        if (chainType == null || marketType == null) {
+            return;
+        }
+        
+        String redisKey = REDIS_KEY_PREFIX + chainType.toLowerCase() + ":" + marketType;
         redisCache.deleteObject(redisKey);
         
-        log.info("🗑️ Redis 缓存已清除: chainType={}", chainType);
+        log.info("🗑️ Redis 缓存已清除: chainType={}, marketType={}", chainType, marketType);
     }
 }
 

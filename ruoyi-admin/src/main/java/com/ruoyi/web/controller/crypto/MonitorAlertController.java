@@ -22,17 +22,49 @@ public class MonitorAlertController extends BaseController
     private JdbcTemplate jdbcTemplate;
 
     /**
+     * 查询今日预警数量（按链类型统计）
+     */
+    @GetMapping("/todayCount")
+    public AjaxResult todayCount()
+    {
+        // 查询今天的预警数量（按链类型分组）
+        String sql = "SELECT chain_type, COUNT(*) as count " +
+                "FROM token_monitor_alert_log " +
+                "WHERE DATE(trigger_time) = CURDATE() " +
+                "GROUP BY chain_type";
+        
+        List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
+        
+        // 转换为前端需要的格式
+        Map<String, Object> counts = new HashMap<>();
+        int totalCount = 0;
+        
+        for (Map<String, Object> result : results) {
+            String chainType = (String) result.get("chain_type");
+            if (chainType == null) chainType = "sol"; // 默认sol
+            
+            Long count = (Long) result.get("count");
+            counts.put(chainType, count);
+            totalCount += count.intValue();
+        }
+        
+        counts.put("total", totalCount);
+        
+        return success(counts);
+    }
+    
+    /**
      * 查询最新预警记录（用于首页通知中心显示）
      * 合并监控预警和配置变更记录
      */
     @GetMapping("/recent")
     public AjaxResult recent(@RequestParam(defaultValue = "10") int limit)
     {
-        // 1. 查询监控预警记录（包含市值、链类型）
+        // 1. 查询监控预警记录（包含市值、链类型、notify_error）
         String alertSql = "SELECT " +
                 "id, ca, token_name, token_symbol, trigger_time, " +
                 "trigger_events, stats_data, notify_methods, notify_status, " +
-                "market_cap, chain_type " +
+                "market_cap, chain_type, notify_error " +
                 "FROM token_monitor_alert_log " +
                 "ORDER BY trigger_time DESC " +
                 "LIMIT ?";
@@ -73,10 +105,11 @@ public class MonitorAlertController extends BaseController
             String chainType = alert.get("chain_type") != null ? (String) alert.get("chain_type") : "sol";
             notification.put("actionUrl", "/crypto/tokenMonitor?ca=" + ca + "&chain=" + chainType);
             
-            // 添加CA、市值、链类型
+            // 添加CA、市值、链类型、冷静期标记
             notification.put("ca", ca);
             notification.put("marketCap", alert.get("market_cap"));
             notification.put("chainType", chainType);
+            notification.put("notifyError", alert.get("notify_error")); // 冷静期标记
             
             notification.put("isRead", 0);
             notification.put("createTime", alert.get("trigger_time"));

@@ -1,6 +1,7 @@
 package com.ruoyi.crypto.mapper;
 
 import com.ruoyi.crypto.domain.GlobalMonitorConfig;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -27,6 +28,15 @@ public interface GlobalMonitorConfigMapper
      * @return 链级全局监控配置
      */
     public GlobalMonitorConfig selectGlobalMonitorConfigByChainType(String chainType);
+
+    /**
+     * 根据链类型和市场类型查询配置
+     * 
+     * @param chainType 链类型
+     * @param marketType 市场类型
+     * @return 链级全局监控配置
+     */
+    public GlobalMonitorConfig selectGlobalMonitorConfigByChainTypeAndMarket(@Param("chainType") String chainType, @Param("marketType") String marketType);
 
     /**
      * 查询链级全局监控配置列表

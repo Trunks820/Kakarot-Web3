@@ -64,12 +64,13 @@ public class GlobalMonitorConfigController extends BaseController
     }
 
     /**
-     * 根据链类型获取配置
+     * 根据链类型和市场类型获取配置
      */
     @GetMapping(value = "/chain/{chainType}")
-    public AjaxResult getByChainType(@PathVariable("chainType") String chainType)
+    public AjaxResult getByChainType(@PathVariable("chainType") String chainType, 
+                                      @RequestParam(value = "marketType", defaultValue = "external") String marketType)
     {
-        return success(globalMonitorConfigService.selectGlobalMonitorConfigByChainType(chainType));
+        return success(globalMonitorConfigService.selectGlobalMonitorConfigByChainTypeAndMarket(chainType, marketType));
     }
 
     /**
@@ -137,6 +138,29 @@ public class GlobalMonitorConfigController extends BaseController
     public AjaxResult remove(@PathVariable Long[] ids)
     {
         return toAjax(globalMonitorConfigService.deleteGlobalMonitorConfigByIds(ids));
+    }
+
+    /**
+     * 获取配置操作日志
+     */
+    @GetMapping("/logs")
+    public AjaxResult getLogs(@RequestParam(defaultValue = "20") int limit)
+    {
+        GlobalMonitorConfig query = new GlobalMonitorConfig();
+        List<GlobalMonitorConfig> list = globalMonitorConfigService.selectGlobalMonitorConfigList(query);
+        
+        // 按更新时间倒序，取前N条
+        list.sort((a, b) -> {
+            if (a.getUpdateTime() == null) return 1;
+            if (b.getUpdateTime() == null) return -1;
+            return b.getUpdateTime().compareTo(a.getUpdateTime());
+        });
+        
+        if (list.size() > limit) {
+            list = list.subList(0, limit);
+        }
+        
+        return success(list);
     }
 }
 

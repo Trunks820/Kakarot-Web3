@@ -68,14 +68,24 @@
             <!-- 右侧内容 -->
             <div class="notification-right">
               <div class="notification-time">
-                <span>{{ formatTime(item.createTime) }}</span>
-                <el-tag 
-                  :type="getModuleTagType(item.module)" 
-                  size="small"
-                  effect="plain"
-                >
-                  {{ item.moduleName }}
-                </el-tag>
+                <span>{{ formatExactTime(item.createTime) }}</span>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <el-tag 
+                    :type="getModuleTagType(item.module)" 
+                    size="small"
+                    effect="plain"
+                  >
+                    {{ item.moduleName }}
+                  </el-tag>
+                  <el-tag 
+                    v-if="item.notifyError === '冷静期内不播报'" 
+                    type="info" 
+                    size="small"
+                    effect="plain"
+                  >
+                    🧊 冷静期
+                  </el-tag>
+                </div>
               </div>
               <div class="notification-title">{{ item.title }}</div>
               <div class="notification-content-text">{{ item.content }}</div>
@@ -183,7 +193,7 @@ const getModuleTagType = (module) => {
   return typeMap[module] || 'info'
 }
 
-// 格式化时间
+// 格式化时间（相对时间，保留用于tooltip）
 const formatTime = (timeStr) => {
   if (!timeStr) return ''
   
@@ -202,6 +212,30 @@ const formatTime = (timeStr) => {
   const hour = time.getHours().toString().padStart(2, '0')
   const minute = time.getMinutes().toString().padStart(2, '0')
   return `${month}月${date}日 ${hour}:${minute}`
+}
+
+// 格式化精确时间（用于显示）
+const formatExactTime = (timeStr) => {
+  if (!timeStr) return ''
+  
+  const time = new Date(timeStr)
+  const now = new Date()
+  const isToday = time.toDateString() === now.toDateString()
+  const isYesterday = new Date(now.getTime() - 86400000).toDateString() === time.toDateString()
+  
+  const hour = time.getHours().toString().padStart(2, '0')
+  const minute = time.getMinutes().toString().padStart(2, '0')
+  const second = time.getSeconds().toString().padStart(2, '0')
+  
+  if (isToday) {
+    return `今天 ${hour}:${minute}:${second}`
+  } else if (isYesterday) {
+    return `昨天 ${hour}:${minute}:${second}`
+  } else {
+    const month = (time.getMonth() + 1).toString().padStart(2, '0')
+    const date = time.getDate().toString().padStart(2, '0')
+    return `${month}-${date} ${hour}:${minute}:${second}`
+  }
 }
 
 // 判断是否最后一项
@@ -264,15 +298,34 @@ const handleMarkAllRead = async () => {
 
 // 查看全部
 const handleViewAll = () => {
-  // TODO: 跳转到通知列表页
-  ElMessage.info('通知列表页面开发中')
+  // 跳转到历史播报页面
+  router.push('/crypto/blockMonitor')
 }
 
 // 复制 CA 地址
 const handleCopyCA = async (ca) => {
   try {
-    await navigator.clipboard.writeText(ca)
-    ElMessage.success('CA地址已复制')
+    // 尝试使用 Clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(ca)
+      ElMessage.success('CA地址已复制')
+    } else {
+      // 降级方案：使用 textarea
+      const textarea = document.createElement('textarea')
+      textarea.value = ca
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      try {
+        document.execCommand('copy')
+        ElMessage.success('CA地址已复制')
+      } catch (err) {
+        console.error('复制失败:', err)
+        ElMessage.error('复制失败，请手动复制')
+      }
+      document.body.removeChild(textarea)
+    }
   } catch (error) {
     console.error('复制失败:', error)
     ElMessage.error('复制失败，请手动复制')

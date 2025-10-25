@@ -21,7 +21,7 @@
         </el-select>
       </el-form-item>
       
-      <el-form-item label="Token名称" prop="tokenName">
+      <el-form-item label="名称" prop="tokenName">
         <el-input
           v-model="queryParams.tokenName"
           placeholder="请输入Token名称"
@@ -411,8 +411,27 @@ function handleExport() {
 /** 复制CA地址 */
 async function handleCopyCA(ca) {
   try {
-    await navigator.clipboard.writeText(ca)
-    proxy.$modal.msgSuccess('CA地址已复制')
+    // 尝试使用 Clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(ca)
+      proxy.$modal.msgSuccess('CA地址已复制')
+    } else {
+      // 降级方案：使用 textarea
+      const textarea = document.createElement('textarea')
+      textarea.value = ca
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      try {
+        document.execCommand('copy')
+        proxy.$modal.msgSuccess('CA地址已复制')
+      } catch (err) {
+        console.error('复制失败:', err)
+        proxy.$modal.msgError('复制失败，请手动复制')
+      }
+      document.body.removeChild(textarea)
+    }
   } catch (error) {
     console.error('复制失败:', error)
     proxy.$modal.msgError('复制失败，请手动复制')

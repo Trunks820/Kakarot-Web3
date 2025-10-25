@@ -8,8 +8,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="id"    column="id"    />
         <result property="configName"    column="config_name"    />
         <result property="chainType"    column="chain_type"    />
+        <result property="marketType"    column="market_type"    />
         <result property="source"    column="source"    />
         <result property="minTransactionUsd"    column="min_transaction_usd"    />
+        <result property="cumulativeMinAmountUsd"    column="cumulative_min_amount_usd"    />
         <result property="eventsConfig"    column="events_config"    />
         <result property="triggerLogic"    column="trigger_logic"    />
         <result property="notifyMethods"    column="notify_methods"    />
@@ -23,7 +25,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectGlobalMonitorConfigVo">
-        select id, config_name, chain_type, source, min_transaction_usd, events_config, 
+        select id, config_name, chain_type, market_type, source, min_transaction_usd, cumulative_min_amount_usd, events_config, 
                trigger_logic, notify_methods, status, priority, remark, 
                create_by, create_time, update_by, update_time 
         from global_monitor_config
@@ -34,6 +36,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <where>  
             <if test="configName != null  and configName != ''"> and config_name like concat('%', #{configName}, '%')</if>
             <if test="chainType != null  and chainType != ''"> and chain_type = #{chainType}</if>
+            <if test="marketType != null  and marketType != ''"> and market_type = #{marketType}</if>
             <if test="source != null  and source != ''"> and source = #{source}</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
         </where>
@@ -51,14 +54,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by priority desc
         limit 1
     </select>
+    
+    <select id="selectGlobalMonitorConfigByChainTypeAndMarket" resultMap="GlobalMonitorConfigResult">
+        <include refid="selectGlobalMonitorConfigVo"/>
+        where chain_type = #{chainType} and market_type = #{marketType} and status = '1'
+        order by priority desc
+        limit 1
+    </select>
         
     <insert id="insertGlobalMonitorConfig" parameterType="GlobalMonitorConfig" useGeneratedKeys="true" keyProperty="id">
         insert into global_monitor_config
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="configName != null and configName != ''">config_name,</if>
             <if test="chainType != null and chainType != ''">chain_type,</if>
+            <if test="marketType != null and marketType != ''">market_type,</if>
             <if test="source != null">source,</if>
             <if test="minTransactionUsd != null">min_transaction_usd,</if>
+            <if test="cumulativeMinAmountUsd != null">cumulative_min_amount_usd,</if>
             <if test="eventsConfig != null">events_config,</if>
             <if test="triggerLogic != null">trigger_logic,</if>
             <if test="notifyMethods != null">notify_methods,</if>
@@ -71,8 +83,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="configName != null and configName != ''">#{configName},</if>
             <if test="chainType != null and chainType != ''">#{chainType},</if>
+            <if test="marketType != null and marketType != ''">#{marketType},</if>
             <if test="source != null">#{source},</if>
             <if test="minTransactionUsd != null">#{minTransactionUsd},</if>
+            <if test="cumulativeMinAmountUsd != null">#{cumulativeMinAmountUsd},</if>
             <if test="eventsConfig != null">#{eventsConfig},</if>
             <if test="triggerLogic != null">#{triggerLogic},</if>
             <if test="notifyMethods != null">#{notifyMethods},</if>
@@ -89,8 +103,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="SET" suffixOverrides=",">
             <if test="configName != null and configName != ''">config_name = #{configName},</if>
             <if test="chainType != null and chainType != ''">chain_type = #{chainType},</if>
+            <if test="marketType != null and marketType != ''">market_type = #{marketType},</if>
             <if test="source != null">source = #{source},</if>
             <if test="minTransactionUsd != null">min_transaction_usd = #{minTransactionUsd},</if>
+            <if test="cumulativeMinAmountUsd != null">cumulative_min_amount_usd = #{cumulativeMinAmountUsd},</if>
             <if test="eventsConfig != null">events_config = #{eventsConfig},</if>
             <if test="triggerLogic != null">trigger_logic = #{triggerLogic},</if>
             <if test="notifyMethods != null">notify_methods = #{notifyMethods},</if>
