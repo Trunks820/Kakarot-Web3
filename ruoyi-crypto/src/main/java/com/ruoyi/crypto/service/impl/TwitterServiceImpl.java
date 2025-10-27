@@ -222,7 +222,7 @@ public class TwitterServiceImpl implements ITwitterService {
                     .addHeader("Cookie", twitterApiProperties.getCookie())
                     .build();
 
-            // 执行请求
+            // 执行请求n de
             try (Response response = client.newCall(request).execute()) {
                 String responseBody = response.body() != null ? response.body().string() : "";
                 log.info("取消关注Twitter响应 [HTTP {}]: {}", response.code(), responseBody);

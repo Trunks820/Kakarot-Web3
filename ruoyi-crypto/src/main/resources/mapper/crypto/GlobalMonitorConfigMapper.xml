@@ -12,6 +12,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="source"    column="source"    />
         <result property="minTransactionUsd"    column="min_transaction_usd"    />
         <result property="cumulativeMinAmountUsd"    column="cumulative_min_amount_usd"    />
+        <result property="timeInterval"    column="time_interval"    />
+        <result property="topHoldersThreshold"    column="top_holders_threshold"    />
         <result property="eventsConfig"    column="events_config"    />
         <result property="triggerLogic"    column="trigger_logic"    />
         <result property="notifyMethods"    column="notify_methods"    />
@@ -25,7 +27,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectGlobalMonitorConfigVo">
-        select id, config_name, chain_type, market_type, source, min_transaction_usd, cumulative_min_amount_usd, events_config, 
+        select id, config_name, chain_type, market_type, source, min_transaction_usd, cumulative_min_amount_usd, 
+               time_interval, top_holders_threshold, events_config, 
                trigger_logic, notify_methods, status, priority, remark, 
                create_by, create_time, update_by, update_time 
         from global_monitor_config
@@ -71,6 +74,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="source != null">source,</if>
             <if test="minTransactionUsd != null">min_transaction_usd,</if>
             <if test="cumulativeMinAmountUsd != null">cumulative_min_amount_usd,</if>
+            <if test="timeInterval != null">time_interval,</if>
+            <if test="topHoldersThreshold != null">top_holders_threshold,</if>
             <if test="eventsConfig != null">events_config,</if>
             <if test="triggerLogic != null">trigger_logic,</if>
             <if test="notifyMethods != null">notify_methods,</if>
@@ -87,6 +92,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="source != null">#{source},</if>
             <if test="minTransactionUsd != null">#{minTransactionUsd},</if>
             <if test="cumulativeMinAmountUsd != null">#{cumulativeMinAmountUsd},</if>
+            <if test="timeInterval != null">#{timeInterval},</if>
+            <if test="topHoldersThreshold != null">#{topHoldersThreshold},</if>
             <if test="eventsConfig != null">#{eventsConfig},</if>
             <if test="triggerLogic != null">#{triggerLogic},</if>
             <if test="notifyMethods != null">#{notifyMethods},</if>
@@ -107,6 +114,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="source != null">source = #{source},</if>
             <if test="minTransactionUsd != null">min_transaction_usd = #{minTransactionUsd},</if>
             <if test="cumulativeMinAmountUsd != null">cumulative_min_amount_usd = #{cumulativeMinAmountUsd},</if>
+            <if test="timeInterval != null">time_interval = #{timeInterval},</if>
+            <if test="topHoldersThreshold != null">top_holders_threshold = #{topHoldersThreshold},</if>
             <if test="eventsConfig != null">events_config = #{eventsConfig},</if>
             <if test="triggerLogic != null">trigger_logic = #{triggerLogic},</if>
             <if test="notifyMethods != null">notify_methods = #{notifyMethods},</if>

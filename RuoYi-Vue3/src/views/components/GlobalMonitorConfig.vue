@@ -184,6 +184,32 @@
           </span>
         </el-form-item>
 
+        <el-form-item label="时间周期">
+          <el-radio-group v-model="configDialog.form.timeInterval">
+            <el-radio-button label="1m">1分钟</el-radio-button>
+            <el-radio-button label="5m">5分钟</el-radio-button>
+            <el-radio-button label="1h">1小时</el-radio-button>
+          </el-radio-group>
+          <span style="margin-left: 12px; color: #909399; font-size: 13px;">
+            💡 监控API选择该时间段的交易量和涨跌幅
+          </span>
+        </el-form-item>
+
+        <el-form-item label="前十持仓过滤">
+          <el-input-number
+            v-model="configDialog.form.topHoldersThreshold"
+            :min="0"
+            :max="100"
+            :precision="1"
+            style="width: 200px"
+          >
+            <template #suffix>%</template>
+          </el-input-number>
+          <span style="margin-left: 12px; color: #909399; font-size: 13px;">
+            💡 前十持仓超过该百分比不播报（可选）
+          </span>
+        </el-form-item>
+
         <el-divider content-position="left">
           <span style="font-weight: 600;">监控事件</span>
         </el-divider>
@@ -747,6 +773,8 @@ const handleConfigClick = (chainType) => {
       source: config.data.source || 'all',
       minTransactionUsd: config.data.minTransactionUsd || 400,
       cumulativeMinAmountUsd: config.data.cumulativeMinAmountUsd || null,
+      timeInterval: config.data.timeInterval || '5m',
+      topHoldersThreshold: config.data.topHoldersThreshold || null,
       triggerLogic: config.data.triggerLogic || 'any',
       status: config.data.status,
       remark: config.data.remark || ''
@@ -792,6 +820,8 @@ const resetConfigForm = () => {
     source: 'all',
     minTransactionUsd: 400,
     cumulativeMinAmountUsd: null,
+    timeInterval: '5m',
+    topHoldersThreshold: null,
     triggerLogic: 'any',
     status: '1',
     remark: ''

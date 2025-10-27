@@ -37,6 +37,12 @@ public class GlobalMonitorConfig extends BaseEntity
     /** 累计最小金额(USD) */
     private BigDecimal cumulativeMinAmountUsd;
 
+    /** 时间周期：1m/5m/1h */
+    private String timeInterval;
+
+    /** 前十持仓过滤阈值(%) */
+    private BigDecimal topHoldersThreshold;
+
     /** 监控事件配置JSON */
     private String eventsConfig;
 
@@ -125,6 +131,26 @@ public class GlobalMonitorConfig extends BaseEntity
         return cumulativeMinAmountUsd;
     }
 
+    public void setTimeInterval(String timeInterval) 
+    {
+        this.timeInterval = timeInterval;
+    }
+
+    public String getTimeInterval() 
+    {
+        return timeInterval;
+    }
+
+    public void setTopHoldersThreshold(BigDecimal topHoldersThreshold) 
+    {
+        this.topHoldersThreshold = topHoldersThreshold;
+    }
+
+    public BigDecimal getTopHoldersThreshold() 
+    {
+        return topHoldersThreshold;
+    }
+
     public void setEventsConfig(String eventsConfig) 
     {
         this.eventsConfig = eventsConfig;
@@ -195,6 +221,8 @@ public class GlobalMonitorConfig extends BaseEntity
             .append("source", getSource())
             .append("minTransactionUsd", getMinTransactionUsd())
             .append("cumulativeMinAmountUsd", getCumulativeMinAmountUsd())
+            .append("timeInterval", getTimeInterval())
+            .append("topHoldersThreshold", getTopHoldersThreshold())
             .append("eventsConfig", getEventsConfig())
             .append("triggerLogic", getTriggerLogic())
             .append("notifyMethods", getNotifyMethods())

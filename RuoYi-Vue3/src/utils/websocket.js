@@ -167,7 +167,7 @@ class NotificationWebSocket {
       // 涨跌幅（带标识）
       if (extraData.priceChange !== null && extraData.priceChange !== undefined) {
         const change = parseFloat(extraData.priceChange)
-        const changeText = change > 0 
+        const changeText = change >= 0
           ? `📈 涨幅: +${change.toFixed(2)}%` 
           : `📉 跌幅: ${change.toFixed(2)}%`
         bodyParts.push(changeText)
@@ -279,12 +279,17 @@ class NotificationWebSocket {
       if (extraData.price || extraData.priceChange !== null) {
         html += `<div style="margin-bottom: 4px;">`
         if (extraData.price) {
-          html += `<span style="margin-right: 12px;">💰 <strong>$${extraData.price}</strong></span>`
+          // 格式化价格：去除末尾的0
+          const priceStr = typeof extraData.price === 'number' 
+            ? extraData.price.toFixed(8).replace(/\.?0+$/, '')
+            : extraData.price
+          html += `<span style="margin-right: 12px;">💰 <strong>$${priceStr}</strong></span>`
         }
         if (extraData.priceChange !== null && extraData.priceChange !== undefined) {
           const color = extraData.priceChange > 0 ? '#67C23A' : '#F56C6C'
           const icon = extraData.priceChange > 0 ? '📈' : '📉'
-          html += `<span style="color: ${color};">${icon} <strong>${extraData.priceChange > 0 ? '+' : ''}${extraData.priceChange}%</strong></span>`
+          const changeValue = parseFloat(extraData.priceChange).toFixed(2)
+          html += `<span style="color: ${color};">${icon} <strong>${extraData.priceChange > 0 ? '+' : ''}${changeValue}%</strong></span>`
         }
         html += `</div>`
       }
