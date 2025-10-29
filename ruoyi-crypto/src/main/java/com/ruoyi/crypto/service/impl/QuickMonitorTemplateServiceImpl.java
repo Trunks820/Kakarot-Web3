@@ -152,8 +152,8 @@ public class QuickMonitorTemplateServiceImpl implements IQuickMonitorTemplateSer
             return new java.util.ArrayList<>();
         }
         
-        // 按 minMarketCap 降序排序
-        templates.sort((a, b) -> b.getMinMarketCap().compareTo(a.getMinMarketCap()));
+        // 按 minMarketCap 升序排序（从小到大）
+        templates.sort((a, b) -> a.getMinMarketCap().compareTo(b.getMinMarketCap()));
         
         // 2. 循环统计每个区间的Token数量
         List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
@@ -162,7 +162,7 @@ public class QuickMonitorTemplateServiceImpl implements IQuickMonitorTemplateSer
             Long minMarketCap = template.getMinMarketCap().longValue();
             Long maxMarketCap = null;
             
-            // 如果不是最高档，设置上限为下一档的市值
+            // 如果不是最后一个（最高档），设置上限为下一个更高的市值
             if (i < templates.size() - 1) {
                 maxMarketCap = templates.get(i + 1).getMinMarketCap().longValue();
             }
