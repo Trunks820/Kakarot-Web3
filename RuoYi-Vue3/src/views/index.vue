@@ -10,7 +10,12 @@
         <GlobalMonitorConfig />
       </el-col>
       
-      <!-- Widget 2: 微信机器人（占位） -->
+      <!-- Widget 2: Token监控 -->
+      <el-col :xs="24" :sm="24" :md="8" :lg="8" class="widget-col">
+        <TokenQuickMonitorConfig />
+      </el-col>
+      
+      <!-- Widget 3: 微信机器人（占位） -->
       <el-col :xs="24" :sm="24" :md="8" :lg="8" class="widget-col">
         <el-card class="widget-card placeholder-widget" shadow="hover">
           <template #header>
@@ -27,30 +32,6 @@
             <el-empty description="功能开发中">
               <template #image>
                 <el-icon :size="80" color="#909399"><Setting /></el-icon>
-              </template>
-              <el-button type="primary" plain disabled>即将上线</el-button>
-            </el-empty>
-          </div>
-        </el-card>
-      </el-col>
-      
-      <!-- Widget 3: Twitter推送（占位） -->
-      <el-col :xs="24" :sm="24" :md="8" :lg="8" class="widget-col">
-        <el-card class="widget-card placeholder-widget" shadow="hover">
-          <template #header>
-            <div class="widget-header">
-              <div class="widget-title">
-                <el-icon class="widget-icon"><Share /></el-icon>
-                <span>Twitter推送</span>
-              </div>
-              <el-tag type="info" size="small" effect="plain">开发中</el-tag>
-            </div>
-          </template>
-          
-          <div class="placeholder-body">
-            <el-empty description="功能开发中">
-              <template #image>
-                <el-icon :size="80" color="#909399"><DataAnalysis /></el-icon>
               </template>
               <el-button type="primary" plain disabled>即将上线</el-button>
             </el-empty>
@@ -76,9 +57,10 @@
 
 <script setup name="Index">
 import { ref, onMounted } from 'vue'
-import { ChatDotRound, Setting, Share, DataAnalysis } from '@element-plus/icons-vue'
+import { ChatDotRound, Setting } from '@element-plus/icons-vue'
 import WelcomeHeader from '@/views/components/WelcomeHeader.vue'
 import GlobalMonitorConfig from '@/views/components/GlobalMonitorConfig.vue'
+import TokenQuickMonitorConfig from '@/views/components/TokenQuickMonitorConfig.vue'
 import NotificationCenter from '@/views/components/NotificationCenter.vue'
 import WidgetConfigDialog from '@/views/components/WidgetConfigDialog.vue'
 

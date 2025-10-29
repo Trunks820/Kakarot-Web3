@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.QuickMonitorTemplateMapper">
+    
+    <resultMap type="QuickMonitorTemplate" id="QuickMonitorTemplateResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="chainType"    column="chain_type"    />
+        <result property="minMarketCap"    column="min_market_cap"    />
+        <result property="configName"    column="config_name"    />
+        <result property="eventsConfig"    column="events_config"    />
+        <result property="notifyMethods"    column="notify_methods"    />
+        <result property="triggerLogic"    column="trigger_logic"    />
+        <result property="sortOrder"    column="sort_order"    />
+        <result property="status"    column="status"    />
+        <result property="remark"    column="remark"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectQuickMonitorTemplateVo">
+        select id, user_id, chain_type, min_market_cap, config_name, events_config, 
+               notify_methods, trigger_logic, sort_order, status, remark,
+               create_by, create_time, update_by, update_time
+        from quick_monitor_template
+    </sql>
+
+    <select id="selectQuickMonitorTemplateList" parameterType="QuickMonitorTemplate" resultMap="QuickMonitorTemplateResult">
+        <include refid="selectQuickMonitorTemplateVo"/>
+        <where>  
+            <if test="userId != null">and user_id = #{userId}</if>
+            <if test="chainType != null and chainType != ''">and chain_type = #{chainType}</if>
+            <if test="status != null and status != ''">and status = #{status}</if>
+        </where>
+        order by sort_order desc, min_market_cap desc, create_time desc
+    </select>
+    
+    <select id="selectQuickMonitorTemplateById" parameterType="Long" resultMap="QuickMonitorTemplateResult">
+        <include refid="selectQuickMonitorTemplateVo"/>
+        where id = #{id}
+    </select>
+    
+    <select id="selectQuickMonitorTemplateByChainType" parameterType="String" resultMap="QuickMonitorTemplateResult">
+        <include refid="selectQuickMonitorTemplateVo"/>
+        where chain_type = #{chainType} and status = '1'
+        order by sort_order desc, min_market_cap desc
+    </select>
+        
+    <insert id="insertQuickMonitorTemplate" parameterType="QuickMonitorTemplate" useGeneratedKeys="true" keyProperty="id">
+        insert into quick_monitor_template
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="chainType != null and chainType != ''">chain_type,</if>
+            <if test="minMarketCap != null">min_market_cap,</if>
+            <if test="configName != null">config_name,</if>
+            <if test="eventsConfig != null">events_config,</if>
+            <if test="notifyMethods != null">notify_methods,</if>
+            <if test="triggerLogic != null">trigger_logic,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="status != null">status,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="chainType != null and chainType != ''">#{chainType},</if>
+            <if test="minMarketCap != null">#{minMarketCap},</if>
+            <if test="configName != null">#{configName},</if>
+            <if test="eventsConfig != null">#{eventsConfig},</if>
+            <if test="notifyMethods != null">#{notifyMethods},</if>
+            <if test="triggerLogic != null">#{triggerLogic},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="status != null">#{status},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <update id="updateQuickMonitorTemplate" parameterType="QuickMonitorTemplate">
+        update quick_monitor_template
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="chainType != null and chainType != ''">chain_type = #{chainType},</if>
+            <if test="minMarketCap != null">min_market_cap = #{minMarketCap},</if>
+            <if test="configName != null">config_name = #{configName},</if>
+            <if test="eventsConfig != null">events_config = #{eventsConfig},</if>
+            <if test="notifyMethods != null">notify_methods = #{notifyMethods},</if>
+            <if test="triggerLogic != null">trigger_logic = #{triggerLogic},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteQuickMonitorTemplateById" parameterType="Long">
+        delete from quick_monitor_template where id = #{id}
+    </delete>
+
+    <delete id="deleteQuickMonitorTemplateByIds" parameterType="String">
+        delete from quick_monitor_template where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <insert id="batchInsertQuickMonitorTemplate" parameterType="java.util.List">
+        insert into quick_monitor_template
+        (user_id, chain_type, min_market_cap, config_name, events_config, notify_methods, trigger_logic, sort_order, status, remark, create_time)
+        values
+        <foreach collection="templates" item="item" separator=",">
+            (#{item.userId}, #{item.chainType}, #{item.minMarketCap}, #{item.configName}, #{item.eventsConfig}, 
+             #{item.notifyMethods}, #{item.triggerLogic}, #{item.sortOrder}, #{item.status}, #{item.remark}, sysdate())
+        </foreach>
+    </insert>
+    
+    <!-- 统计指定市值区间的Token数量 -->
+    <select id="countTokensInRange" resultType="int">
+        SELECT COUNT(*) 
+        FROM token_launch_history
+        WHERE del_flag = '0'
+          AND highest_market_cap >= #{minMarketCap}
+          <if test="maxMarketCap != null">
+              AND highest_market_cap &lt; #{maxMarketCap}
+          </if>
+    </select>
+
+</mapper>
+

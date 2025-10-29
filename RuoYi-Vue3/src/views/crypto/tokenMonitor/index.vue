@@ -53,6 +53,9 @@
           <el-option label="≥ 30万" :value="300000" />
           <el-option label="≥ 50万" :value="500000" />
           <el-option label="≥ 100万" :value="1000000" />
+          <el-option label="≥ 300万" :value="3000000" />
+          <el-option label="≥ 500万" :value="5000000" />
+          <el-option label="≥ 1千万" :value="10000000" />
         </el-select>
       </el-form-item>
       
@@ -107,6 +110,15 @@
           批量监控
         </el-button>
         <el-button 
+          type="success" 
+          plain 
+          icon="MagicStick" 
+          @click="applyQuickMonitor"
+          :disabled="multiple"
+        >
+          应用智能配置
+        </el-button>
+        <el-button 
           type="danger" 
           plain 
           icon="RemoveFilled" 
@@ -123,17 +135,15 @@
     </div>
 
     <!-- 数据表格 -->
-    <div class="table-wrapper">
-      <el-table 
-        v-loading="loading" 
-        :data="tokenList"
-        :row-key="row => row.ca"
-        :max-height="600"
-        @selection-change="handleSelectionChange"
-        ref="tokenTable"
-        class="token-table"
-        style="width: 100%"
-      >
+    <el-table 
+      v-loading="loading" 
+      :data="tokenList"
+      :row-key="row => row.ca"
+      @selection-change="handleSelectionChange"
+      ref="tokenTable"
+      class="token-table"
+      style="width: 100%"
+    >
         <el-table-column type="selection" width="50" align="center" :reserve-selection="true" />
       
       <!-- Token信息 -->
@@ -172,8 +182,11 @@
                     Fourmeme
                   </el-tag>
                   <!-- 状态点：市值指示（仅高市值显示） -->
-                  <span v-if="scope.row.highestMarketCap >= 1000000" class="status-dot hot" title="高市值 ≥ 100万"></span>
-                  <span v-else-if="scope.row.highestMarketCap >= 500000" class="status-dot warm" title="中市值 ≥ 50万"></span>
+                  <span v-if="scope.row.highestMarketCap >= 10000000" class="status-dot legendary" title="传奇 ≥ 1千万"></span>
+                  <span v-else-if="scope.row.highestMarketCap >= 5000000" class="status-dot epic" title="史诗 ≥ 500万"></span>
+                  <span v-else-if="scope.row.highestMarketCap >= 3000000" class="status-dot rare" title="稀有 ≥ 300万"></span>
+                  <span v-else-if="scope.row.highestMarketCap >= 1000000" class="status-dot hot" title="火热 ≥ 100万"></span>
+                  <span v-else-if="scope.row.highestMarketCap >= 500000" class="status-dot warm" title="温暖 ≥ 50万"></span>
                 </div>
               </div>
               
@@ -337,8 +350,7 @@
           </div>
         </template>
       </el-table-column>
-      </el-table>
-    </div>
+    </el-table>
 
     <!-- 分页 -->
     <pagination
@@ -1181,6 +1193,156 @@ const handleSelectionChange = (selection) => {
 }
 
 // ========================================
+// 智能配置应用功能
+// ========================================
+
+// 应用智能配置
+const applyQuickMonitor = async () => {
+  if (selectedRows.value.length === 0) {
+    proxy.$modal.msgWarning('请至少选择一个Token')
+    return
+  }
+  
+  // 从数据库读取配置
+  let response
+  try {
+    const { getQuickMonitorByChain } = await import('@/api/crypto/quickMonitor')
+    response = await getQuickMonitorByChain(currentChain.value)
+  } catch (error) {
+    proxy.$modal.msgError('加载配置失败: ' + (error.message || ''))
+    return
+  }
+  
+  if (!response || response.code !== 200 || !response.data || response.data.length === 0) {
+    console.warn('Token监控-未找到配置:', response)
+    proxy.$modal.msgWarning('未找到智能配置，请先在首页配置')
+    return
+  }
+  
+  console.log('Token监控-解析配置:', response.data)
+  
+  // 转换配置格式
+  const configs = response.data.map(item => ({
+    minMarketCap: parseFloat(item.minMarketCap),
+    events: JSON.parse(item.eventsConfig || '{}'),
+    notifyMethods: item.notifyMethods || ''
+  }))
+  
+  // 按市值从高到低排序配置
+  const sortedConfigs = configs.sort((a, b) => b.minMarketCap - a.minMarketCap)
+  
+  // 统计匹配结果
+  const stats = {
+    total: selectedRows.value.length,
+    matched: 0,
+    skipped: 0,
+    byConfig: {}
+  }
+  
+  selectedRows.value.forEach(token => {
+    const marketCap = token.highestMarketCap || 0
+    
+    // 找到第一个满足条件的配置
+    const matchedConfig = sortedConfigs.find(config => marketCap >= config.minMarketCap)
+    
+    if (matchedConfig) {
+      stats.matched++
+      const configLabel = formatMarketCap(matchedConfig.minMarketCap)
+      stats.byConfig[configLabel] = (stats.byConfig[configLabel] || 0) + 1
+    } else {
+      stats.skipped++
+    }
+  })
+  
+  // 构建确认消息
+  let confirmMessage = `<div style="line-height: 1.8;">
+    <p><strong>将为选中的 ${stats.total} 个Token应用智能监控配置：</strong></p>
+    <div style="margin: 12px 0; padding: 12px; background: #f5f7fa; border-radius: 6px;">`
+  
+  Object.entries(stats.byConfig).forEach(([label, count]) => {
+    confirmMessage += `<p style="margin: 4px 0;">✅ ≥${label}：${count}个Token</p>`
+  })
+  
+  if (stats.skipped > 0) {
+    confirmMessage += `<p style="margin: 4px 0; color: #E6A23C;">⚠️ 低于300K：${stats.skipped}个Token（将跳过）</p>`
+  }
+  
+  confirmMessage += `</div>
+    <p style="color: #F56C6C; margin-top: 12px;">⚠️ 注意：已有监控配置的Token将被覆盖</p>
+  </div>`
+  
+  try {
+    await proxy.$modal.confirm(confirmMessage, '确认应用智能配置', {
+      dangerouslyUseHTMLString: true,
+      confirmButtonText: '确定应用',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+  } catch {
+    return
+  }
+  
+  // 开始应用配置
+  proxy.$modal.loading('正在应用配置，请稍候...')
+  
+  let successCount = 0
+  let failCount = 0
+  
+  for (const token of selectedRows.value) {
+    const marketCap = token.highestMarketCap || 0
+    const matchedConfig = sortedConfigs.find(config => marketCap >= config.minMarketCap)
+    
+    if (!matchedConfig) {
+      continue // 跳过低于最低门槛的Token
+    }
+    
+    // 清理 volume 字段中的旧格式
+    const cleanedEvents = { ...matchedConfig.events }
+    if (cleanedEvents.volume) {
+      const { enabled, threshold } = cleanedEvents.volume
+      cleanedEvents.volume = { enabled, threshold }
+    }
+    
+    try {
+      await saveOrUpdateMonitorConfig({
+        ca: token.ca,
+        tokenName: token.tokenName,
+        eventsConfig: JSON.stringify(cleanedEvents),
+        triggerLogic: 'any',
+        notifyMethods: matchedConfig.notifyMethods,
+        status: '1',
+        remark: `智能配置 - ≥${formatMarketCap(matchedConfig.minMarketCap)}`
+      })
+      successCount++
+    } catch (error) {
+      console.error(`Token ${token.ca} 配置失败:`, error)
+      failCount++
+    }
+  }
+  
+  proxy.$modal.closeLoading()
+  
+  // 显示结果
+  if (failCount === 0) {
+    proxy.$modal.msgSuccess(`智能配置应用成功！已应用到 ${successCount} 个Token`)
+  } else {
+    proxy.$modal.msgWarning(`配置完成：成功 ${successCount} 个，失败 ${failCount} 个`)
+  }
+  
+  // 刷新列表
+  getList()
+}
+
+// 格式化市值（与首页组件保持一致）
+const formatMarketCap = (value) => {
+  if (!value || value === 0) return '-'
+  if (value >= 10000000) return `${(value / 10000000).toFixed(1)}千万`
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`
+  if (value >= 1000) return `${(value / 1000).toFixed(0)}K`
+  return value.toString()
+}
+
+// ========================================
 // 批量监控功能
 // ========================================
 
@@ -1205,8 +1367,7 @@ const batchMonitorDialog = reactive({
     },
     volume: {
       enabled: false,
-      increasePercent: null,
-      decreasePercent: null
+      threshold: null
     }
   },
   notifyMethodsArray: []
@@ -1299,9 +1460,15 @@ const saveBatchMonitor = async () => {
     return
   }
   
-  // 3. 组装数据
+  // 3. 组装数据（清理 volume 字段中的旧格式）
+  const cleanedEvents = { ...batchMonitorDialog.events }
+  if (cleanedEvents.volume) {
+    const { enabled, threshold } = cleanedEvents.volume
+    cleanedEvents.volume = { enabled, threshold }
+  }
+  
   const configData = {
-    eventsConfig: JSON.stringify(batchMonitorDialog.events),
+    eventsConfig: JSON.stringify(cleanedEvents),
     triggerLogic: batchMonitorDialog.form.triggerLogic,
     notifyMethods: batchMonitorDialog.notifyMethodsArray.join(','),
     status: batchMonitorDialog.form.status,
@@ -1404,17 +1571,6 @@ const formatAddress = (address) => {
   if (!address) return '-'
   if (address.length <= 14) return address
   return `${address.substring(0, 8)}...${address.substring(address.length - 6)}`
-}
-
-// 格式化市值
-const formatMarketCap = (value) => {
-  if (!value || value === 0) return '-'
-  if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(2)}M`
-  } else if (value >= 1000) {
-    return `$${(value / 1000).toFixed(2)}K`
-  }
-  return '$' + value.toLocaleString()
 }
 
 // 复制文本
@@ -1750,7 +1906,13 @@ const handleMonitorSave = () => {
     }
   }
   
-  // 4. 组装数据
+  // 4. 组装数据（清理 volume 字段中的旧格式）
+  const cleanedEvents = { ...monitorDialog.events }
+  if (cleanedEvents.volume) {
+    const { enabled, threshold } = cleanedEvents.volume
+    cleanedEvents.volume = { enabled, threshold }
+  }
+  
   const data = {
     id: monitorDialog.form.id,
     ca: monitorDialog.form.coinAddress,
@@ -1759,7 +1921,7 @@ const handleMonitorSave = () => {
     status: monitorDialog.form.status,
     remark: monitorDialog.form.remark,
     notifyMethods: monitorDialog.notifyMethodsArray.join(','),
-    eventsConfig: JSON.stringify(monitorDialog.events)
+    eventsConfig: JSON.stringify(cleanedEvents)
   }
   
   // 5. 调用API保存
@@ -1959,16 +2121,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-// 表格容器
-.table-wrapper {
-  flex: 1;
-  display: flex;
+// 确保容器全宽
+.app-container {
+  padding: 20px;
+  max-width: 100%;
+  width: 100%;
 }
 
 // 表格样式
 .token-table {
   width: 100%;
-  table-layout: fixed;
 }
 
 // 工具栏容器
@@ -2051,6 +2213,33 @@ onUnmounted(() => {
         &.hot {
           background: #f5222d;
           box-shadow: 0 0 4px rgba(245, 34, 45, 0.5);
+        }
+        
+        &.rare {
+          background: #722ed1;
+          box-shadow: 0 0 6px rgba(114, 46, 209, 0.6);
+        }
+        
+        &.epic {
+          background: #eb2f96;
+          box-shadow: 0 0 8px rgba(235, 47, 150, 0.7);
+        }
+        
+        &.legendary {
+          background: linear-gradient(135deg, #ffd700, #ffed4e);
+          box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+          animation: pulse-gold 2s ease-in-out infinite;
+        }
+      }
+      
+      @keyframes pulse-gold {
+        0%, 100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.15);
+          opacity: 0.9;
         }
       }
     }
