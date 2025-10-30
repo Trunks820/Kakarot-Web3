@@ -182,5 +182,44 @@ public class QuickMonitorTemplateServiceImpl implements IQuickMonitorTemplateSer
         
         return result;
     }
+
+    /**
+     * 预测配置的Token匹配数量（用于编辑时实时预测）
+     * 
+     * @param marketCapList 市值门槛列表
+     * @return 预测结果列表（每个市值门槛对应的Token数量）
+     */
+    @Override
+    public List<java.util.Map<String, Object>> predictTokenCounts(List<Long> marketCapList)
+    {
+        if (marketCapList == null || marketCapList.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        
+        // 按市值升序排序
+        marketCapList.sort(Long::compareTo);
+        
+        List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+        for (int i = 0; i < marketCapList.size(); i++) {
+            Long minMarketCap = marketCapList.get(i);
+            Long maxMarketCap = null;
+            
+            // 如果不是最后一个，设置上限
+            if (i < marketCapList.size() - 1) {
+                maxMarketCap = marketCapList.get(i + 1);
+            }
+            
+            // 统计该区间的Token数量
+            int tokenCount = quickMonitorTemplateMapper.countTokensInRange(minMarketCap, maxMarketCap);
+            
+            java.util.Map<String, Object> item = new java.util.HashMap<>();
+            item.put("minMarketCap", minMarketCap);
+            item.put("maxMarketCap", maxMarketCap);
+            item.put("tokenCount", tokenCount);
+            result.add(item);
+        }
+        
+        return result;
+    }
 }
 
