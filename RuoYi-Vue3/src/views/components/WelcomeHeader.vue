@@ -169,6 +169,7 @@ const stats = ref({
   systemStatus: 'normal'
 })
 
+
 // 待处理事项
 const showPendingDetail = ref(false)
 const pendingItems = ref([
@@ -298,7 +299,9 @@ onMounted(() => {
   loadStats()
   
   // 每30秒刷新统计
-  setInterval(loadStats, 30000)
+  setInterval(() => {
+    loadStats()
+  }, 30000)
 })
 </script>
 
@@ -545,6 +548,49 @@ onMounted(() => {
   
   .pending-list {
     grid-template-columns: 1fr !important;
+  }
+}
+
+// 暗黑模式适配
+:root[class~="dark"] {
+  .welcome-card {
+    :deep(.el-card__body) {
+      background: var(--el-bg-color);
+    }
+  }
+
+  .welcome-left {
+    .greeting-text {
+      color: var(--el-text-color-primary);
+    }
+  }
+
+  .stats-cards {
+    .stat-card {
+      background: var(--el-bg-color-overlay);
+      border-color: var(--el-border-color);
+
+      .stat-content {
+        .stat-value {
+          color: var(--el-text-color-primary);
+        }
+      }
+    }
+  }
+
+  .pending-detail {
+    .pending-item {
+      background: var(--el-fill-color-light);
+
+      &:hover {
+        background: var(--el-fill-color);
+      }
+
+      .pending-label,
+      .pending-value {
+        color: var(--el-text-color-primary);
+      }
+    }
   }
 }
 </style>

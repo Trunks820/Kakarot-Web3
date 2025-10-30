@@ -4,7 +4,7 @@
     <WelcomeHeader @config-click="showConfigDialog = true" />
 
     <!-- Widget展示区域 - 3列网格布局 -->
-    <el-row :gutter="16" class="mt20 widget-row">
+    <el-row :gutter="16" class="mt20 widget-row" align="stretch">
       <!-- Widget 1: 链监控配置 -->
       <el-col :xs="24" :sm="24" :md="8" :lg="8" class="widget-col">
         <GlobalMonitorConfig />
@@ -36,6 +36,15 @@
               <el-button type="primary" plain disabled>即将上线</el-button>
             </el-empty>
           </div>
+          
+          <template #footer>
+            <div class="widget-footer">
+              <el-button size="small" disabled style="width: 100%;">
+                <el-icon><Setting /></el-icon>
+                <span>敬请期待</span>
+              </el-button>
+            </div>
+          </template>
         </el-card>
       </el-col>
     </el-row>
@@ -97,13 +106,16 @@ onMounted(() => {
   .widget-row {
     .widget-col {
       margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
     }
   }
   
   // Widget卡片通用样式
   .widget-card {
     height: 100%;
-    min-height: 320px;
+    min-height: var(--widget-card-min-height); // 使用全局变量统一管理
+    max-height: var(--widget-card-max-height); // 使用全局变量统一管理
     display: flex;
     flex-direction: column;
     transition: all 0.3s;
@@ -121,9 +133,16 @@ onMounted(() => {
     
     :deep(.el-card__body) {
       flex: 1;
+      min-height: 0; // 关键：允许flex子元素正确收缩
       padding: 20px;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
+    }
+    
+    :deep(.el-card__footer) {
+      padding: 12px 20px;
+      border-top: 1px solid #EBEEF5;
     }
     
     // Widget Header样式
@@ -157,6 +176,17 @@ onMounted(() => {
         :deep(.el-empty) {
           padding: 40px 0;
         }
+      }
+    }
+    
+    // Widget Footer样式
+    .widget-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      
+      .el-button {
+        flex: 1;
       }
     }
   }

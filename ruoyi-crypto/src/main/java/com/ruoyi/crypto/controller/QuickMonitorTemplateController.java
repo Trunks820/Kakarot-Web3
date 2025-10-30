@@ -106,6 +106,16 @@ public class QuickMonitorTemplateController extends BaseController
     }
 
     /**
+     * 预测配置的Token匹配数量（用于编辑时实时预测）
+     * 注意：此接口不使用防重复提交注解，由前端防抖控制请求频率
+     */
+    @PostMapping("/predict")
+    public AjaxResult predictTokenCounts(@RequestBody PredictRequest request)
+    {
+        return success(quickMonitorTemplateService.predictTokenCounts(request.getMarketCapList()));
+    }
+
+    /**
      * 批量保存请求对象
      */
     public static class BatchSaveRequest {
@@ -126,6 +136,21 @@ public class QuickMonitorTemplateController extends BaseController
 
         public void setTemplates(List<QuickMonitorTemplate> templates) {
             this.templates = templates;
+        }
+    }
+
+    /**
+     * 预测请求对象
+     */
+    public static class PredictRequest {
+        private List<Long> marketCapList;
+
+        public List<Long> getMarketCapList() {
+            return marketCapList;
+        }
+
+        public void setMarketCapList(List<Long> marketCapList) {
+            this.marketCapList = marketCapList;
         }
     }
 }

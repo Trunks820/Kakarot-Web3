@@ -15,6 +15,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="triggerLogic"    column="trigger_logic"    />
         <result property="sortOrder"    column="sort_order"    />
         <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
         <result property="remark"    column="remark"    />
         <result property="createBy"    column="create_by"    />
         <result property="createTime"    column="create_time"    />
@@ -24,7 +25,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <sql id="selectQuickMonitorTemplateVo">
         select id, user_id, chain_type, min_market_cap, config_name, events_config, 
-               notify_methods, trigger_logic, sort_order, status, remark,
+               notify_methods, trigger_logic, sort_order, status, del_flag, remark,
                create_by, create_time, update_by, update_time
         from quick_monitor_template
     </sql>
@@ -35,18 +36,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="userId != null">and user_id = #{userId}</if>
             <if test="chainType != null and chainType != ''">and chain_type = #{chainType}</if>
             <if test="status != null and status != ''">and status = #{status}</if>
+            and del_flag = '0'
         </where>
         order by sort_order desc, min_market_cap desc, create_time desc
     </select>
     
     <select id="selectQuickMonitorTemplateById" parameterType="Long" resultMap="QuickMonitorTemplateResult">
         <include refid="selectQuickMonitorTemplateVo"/>
-        where id = #{id}
+        where id = #{id} and del_flag = '0'
     </select>
     
     <select id="selectQuickMonitorTemplateByChainType" parameterType="String" resultMap="QuickMonitorTemplateResult">
         <include refid="selectQuickMonitorTemplateVo"/>
-        where chain_type = #{chainType} and status = '1'
+        where chain_type = #{chainType} and status = '1' and del_flag = '0'
         order by sort_order desc, min_market_cap desc
     </select>
         
@@ -62,6 +64,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="triggerLogic != null">trigger_logic,</if>
             <if test="sortOrder != null">sort_order,</if>
             <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
             <if test="remark != null">remark,</if>
             <if test="createBy != null">create_by,</if>
             create_time
@@ -76,6 +79,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="triggerLogic != null">#{triggerLogic},</if>
             <if test="sortOrder != null">#{sortOrder},</if>
             <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
             <if test="remark != null">#{remark},</if>
             <if test="createBy != null">#{createBy},</if>
             sysdate()
@@ -94,6 +98,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="triggerLogic != null">trigger_logic = #{triggerLogic},</if>
             <if test="sortOrder != null">sort_order = #{sortOrder},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
             <if test="remark != null">remark = #{remark},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             update_time = sysdate()
@@ -101,24 +106,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
     </update>
 
-    <delete id="deleteQuickMonitorTemplateById" parameterType="Long">
-        delete from quick_monitor_template where id = #{id}
-    </delete>
+    <update id="deleteQuickMonitorTemplateById" parameterType="Long">
+        update quick_monitor_template set del_flag = '2' where id = #{id}
+    </update>
 
-    <delete id="deleteQuickMonitorTemplateByIds" parameterType="String">
-        delete from quick_monitor_template where id in 
+    <update id="deleteQuickMonitorTemplateByIds" parameterType="String">
+        update quick_monitor_template set del_flag = '2' where id in 
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id}
         </foreach>
-    </delete>
+    </update>
     
     <insert id="batchInsertQuickMonitorTemplate" parameterType="java.util.List">
         insert into quick_monitor_template
-        (user_id, chain_type, min_market_cap, config_name, events_config, notify_methods, trigger_logic, sort_order, status, remark, create_time)
+        (user_id, chain_type, min_market_cap, config_name, events_config, notify_methods, trigger_logic, sort_order, status, del_flag, remark, create_time)
         values
         <foreach collection="templates" item="item" separator=",">
             (#{item.userId}, #{item.chainType}, #{item.minMarketCap}, #{item.configName}, #{item.eventsConfig}, 
-             #{item.notifyMethods}, #{item.triggerLogic}, #{item.sortOrder}, #{item.status}, #{item.remark}, sysdate())
+             #{item.notifyMethods}, #{item.triggerLogic}, #{item.sortOrder}, #{item.status}, '0', #{item.remark}, sysdate())
         </foreach>
     </insert>
     

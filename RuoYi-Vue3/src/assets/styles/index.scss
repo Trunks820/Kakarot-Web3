@@ -7,6 +7,12 @@
 @import './btn.scss';
 @import './ruoyi.scss';
 
+// 首页Widget卡片统一高度配置
+:root {
+  --widget-card-min-height: 350px;
+  --widget-card-max-height: 450px;
+}
+
 body {
   height: 100%;
   margin: 0;

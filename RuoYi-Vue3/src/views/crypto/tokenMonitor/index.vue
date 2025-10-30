@@ -55,7 +55,7 @@
           <el-option label="≥ 100万" :value="1000000" />
           <el-option label="≥ 300万" :value="3000000" />
           <el-option label="≥ 500万" :value="5000000" />
-          <el-option label="≥ 1千万" :value="10000000" />
+          <el-option label="≥ 1000万" :value="10000000" />
         </el-select>
       </el-form-item>
       
@@ -182,7 +182,7 @@
                     Fourmeme
                   </el-tag>
                   <!-- 状态点：市值指示（仅高市值显示） -->
-                  <span v-if="scope.row.highestMarketCap >= 10000000" class="status-dot legendary" title="传奇 ≥ 1千万"></span>
+                  <span v-if="scope.row.highestMarketCap >= 10000000" class="status-dot legendary" title="传奇 ≥ 1000万"></span>
                   <span v-else-if="scope.row.highestMarketCap >= 5000000" class="status-dot epic" title="史诗 ≥ 500万"></span>
                   <span v-else-if="scope.row.highestMarketCap >= 3000000" class="status-dot rare" title="稀有 ≥ 300万"></span>
                   <span v-else-if="scope.row.highestMarketCap >= 1000000" class="status-dot hot" title="火热 ≥ 100万"></span>
@@ -1336,7 +1336,6 @@ const applyQuickMonitor = async () => {
 // 格式化市值（与首页组件保持一致）
 const formatMarketCap = (value) => {
   if (!value || value === 0) return '-'
-  if (value >= 10000000) return `${(value / 10000000).toFixed(1)}千万`
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`
   if (value >= 1000) return `${(value / 1000).toFixed(0)}K`
   return value.toString()

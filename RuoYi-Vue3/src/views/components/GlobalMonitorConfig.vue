@@ -8,13 +8,23 @@
             <el-icon class="widget-icon"><Bell /></el-icon>
             <span>链监控配置</span>
           </div>
-          <el-tag 
-            :type="activeConfigCount > 0 ? 'success' : 'info'" 
-            size="small"
-            effect="plain"
-          >
-            {{ activeConfigCount > 0 ? '运行中' : '未启用' }}
-          </el-tag>
+          <div class="header-actions">
+            <el-tag 
+              :type="activeConfigCount > 0 ? 'success' : 'info'" 
+              size="small"
+              effect="plain"
+            >
+              {{ activeConfigCount > 0 ? '运行中' : '未启用' }}
+            </el-tag>
+            <el-button 
+              size="small" 
+              text 
+              :icon="Refresh" 
+              :loading="loading"
+              @click="refreshData"
+              title="刷新数据"
+            />
+          </div>
         </div>
       </template>
 
@@ -80,22 +90,28 @@
               </div>
             </div>
 
-            <!-- 统计摘要 -->
-            <div class="summary-info">
-              <div class="summary-item">
-                <span class="label">活跃配置</span>
-                <span class="value">{{ activeConfigCount }}</span>
+             <!-- 统计概览 -->
+             <div class="overview-stats">
+              <div class="stat-item">
+                <div class="stat-value">{{ activeConfigCount }}</div>
+                <div class="stat-label">活跃配置</div>
               </div>
-              <div class="summary-divider"></div>
-              <div class="summary-item">
-                <span class="label">今日预警</span>
-                <span class="value">{{ todayAlertCount }}</span>
+              <div class="stat-item">
+                <div class="stat-value">{{ todayAlertCount }}</div>
+                <div class="stat-label">今日预警</div>
               </div>
-              <div class="summary-divider"></div>
-              <div class="summary-item">
-                <span class="label">监控事件</span>
-                <span class="value">{{ totalEvents }}</span>
+              <div class="stat-item">
+                <div class="stat-value">{{ totalEvents }}</div>
+                <div class="stat-label">监控事件</div>
               </div>
+            </div>
+
+            <!-- 最后更新时间 -->
+            <div class="last-update" v-if="lastUpdateTime">
+              <el-text size="small" type="info">
+                <el-icon><Clock /></el-icon>
+                最后更新: {{ lastUpdateTime }}
+              </el-text>
             </div>
           </div>
         </template>
@@ -447,7 +463,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, watch, getCurrentInstance } from 'vue'
-import { Bell, Setting, Check, Close, Document, Tools } from '@element-plus/icons-vue'
+import { Bell, Setting, Check, Close, Document, Tools, Refresh, Clock } from '@element-plus/icons-vue'
 import { 
   getGlobalMonitorByChain, 
   saveOrUpdateGlobalMonitor,
@@ -463,6 +479,9 @@ const loading = ref(true)
 
 // 今日预警数量
 const todayAlertCount = ref(0)
+
+// 最后更新时间
+const lastUpdateTime = ref('')
 
 // 配置数据结构：支持内盘和外盘
 const bscConfig = reactive({
@@ -706,7 +725,20 @@ const loadConfigs = async () => {
     console.error('加载配置失败:', error)
   } finally {
     loading.value = false
+    // 更新最后更新时间
+    lastUpdateTime.value = new Date().toLocaleString('zh-CN', { 
+      month: '2-digit', 
+      day: '2-digit', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    })
   }
+}
+
+// 刷新数据
+const refreshData = async () => {
+  await loadConfigs()
+  await loadTodayAlertCount()
 }
 
 // 加载今日预警数量
@@ -968,6 +1000,8 @@ onUnmounted(() => {
 // Widget卡片基础样式
 .widget-card {
   height: 100%;
+  min-height: var(--widget-card-min-height); // 使用全局变量统一管理
+  max-height: var(--widget-card-max-height); // 使用全局变量统一管理
   display: flex;
   flex-direction: column;
   
@@ -978,6 +1012,7 @@ onUnmounted(() => {
   
   :deep(.el-card__body) {
     flex: 1;
+    min-height: 0; // 关键：允许flex子元素正确收缩
     padding: 20px;
     overflow-y: auto;
   }
@@ -1001,17 +1036,51 @@ onUnmounted(() => {
     gap: 8px;
     font-size: 16px;
     font-weight: 600;
-    color: #303133;
+    color: var(--el-text-color-primary);
     
     .widget-icon {
       font-size: 20px;
       color: #409EFF;
     }
   }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 }
 
 // Widget Body
 .widget-body {
+  // 紫色统计概览卡片
+  .overview-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    color: white;
+    margin-bottom: 16px;
+
+    .stat-item {
+      text-align: center;
+      
+      .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      
+      .stat-label {
+        font-size: 13px;
+        opacity: 0.9;
+      }
+    }
+  }
+
   .config-stats {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -1063,37 +1132,18 @@ onUnmounted(() => {
       }
     }
   }
-  
-  .summary-info {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    padding: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 8px;
+
+  .last-update {
+    padding: 12px 0 0;
+    text-align: center;
+    margin-top: 12px;
+    border-top: 1px solid var(--el-border-color-lighter);
     
-    .summary-item {
+    :deep(.el-text) {
       display: flex;
-      flex-direction: column;
       align-items: center;
+      justify-content: center;
       gap: 4px;
-      
-      .label {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.8);
-      }
-      
-      .value {
-        font-size: 24px;
-        font-weight: 700;
-        color: #FFFFFF;
-      }
-    }
-    
-    .summary-divider {
-      width: 1px;
-      height: 40px;
-      background: rgba(255, 255, 255, 0.3);
     }
   }
 }
@@ -1160,6 +1210,39 @@ onUnmounted(() => {
 .required-mark {
   color: #F56C6C;
   margin-right: 4px;
+}
+
+// 暗黑模式适配
+:root[class~="dark"] {
+  .overview-stats {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  }
+}
+
+// 响应式优化
+@media (max-width: 768px) {
+  .widget-body {
+    .overview-stats {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 12px;
+
+      .stat-item {
+        .stat-value {
+          font-size: 20px;
+        }
+        
+        .stat-label {
+          font-size: 11px;
+        }
+      }
+    }
+
+    .config-stats {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+  }
 }
 </style>
 

@@ -71,3 +71,14 @@ export function getQuickMonitorStats(chainType) {
   })
 }
 
+// 预测配置的Token匹配数量（用于编辑时实时预测）
+export function predictTokenCounts(marketCapList) {
+  return request({
+    url: '/crypto/quickMonitor/predict',
+    method: 'post',
+    data: {
+      marketCapList: marketCapList
+    }
+  })
+}
+

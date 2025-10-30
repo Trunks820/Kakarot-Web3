@@ -538,13 +538,452 @@ html.dark button[class*="首页"] {
 
 /* 紧急修复特定位置的开关元素 */
 html.dark .el-card .card-header .el-switch .el-switch__core {
-  background-color: #141414 !important;
-  border-color: #434343 !important;
+  background-color: #434343 !important;
 }
 
 html.dark .el-card .card-header .el-switch.is-checked .el-switch__core {
   background-color: #409EFF !important;
   border-color: #409EFF !important;
+}
+
+/* ===================================
+   区块监控页面 (blockMonitor) 黑暗模式
+   =================================== */
+
+/* 页面标题卡片 */
+html.dark .app-container .el-card {
+  background-color: #1d1e1f !important;
+  border-color: #434343 !important;
+}
+
+html.dark .app-container .el-card__body {
+  background-color: #1d1e1f !important;
+  color: #d0d0d0 !important;
+}
+
+/* Token信息卡片 */
+html.dark .token-info-card {
+  background: rgba(64, 158, 255, 0.08) !important;
+}
+
+html.dark .token-info-card:hover {
+  background: rgba(64, 158, 255, 0.15) !important;
+}
+
+html.dark .token-info-card .token-symbol,
+html.dark .token-info-card .token-content {
+  color: #e8e8e8 !important;
+}
+
+html.dark .token-info-card .token-subtitle {
+  color: #a8a8a8 !important;
+}
+
+html.dark .token-info-card .token-ca {
+  color: #64a6f5 !important;
+  background: rgba(91, 143, 249, 0.15) !important;
+}
+
+html.dark .token-info-card .token-ca:hover {
+  background: rgba(91, 143, 249, 0.25) !important;
+  color: #7db8ff !important;
+}
+
+html.dark .copy-icon {
+  color: #a8a8a8 !important;
+}
+
+html.dark .copy-icon:hover {
+  color: #64a6f5 !important;
+}
+
+/* 详情对话框 */
+html.dark .el-dialog {
+  background-color: #1d1e1f !important;
+  border-color: #434343 !important;
+}
+
+html.dark .el-dialog__header {
+  background-color: #141414 !important;
+  color: #e8e8e8 !important;
+  border-bottom-color: #434343 !important;
+}
+
+html.dark .el-dialog__body {
+  background-color: #1d1e1f !important;
+  color: #d0d0d0 !important;
+}
+
+html.dark .el-dialog__footer {
+  background-color: #1d1e1f !important;
+  border-top-color: #434343 !important;
+}
+
+/* ===================================
+   Token监控页面 (tokenMonitor) 黑暗模式
+   =================================== */
+
+/* 链类型标签 */
+html.dark .el-tag {
+  background-color: rgba(64, 158, 255, 0.15) !important;
+  border-color: rgba(64, 158, 255, 0.3) !important;
+}
+
+/* Token信息现代化样式 */
+html.dark .token-info-modern .token-symbol {
+  color: #e8e8e8 !important;
+}
+
+html.dark .token-info-modern .token-name {
+  color: #a8a8a8 !important;
+}
+
+/* 市值显示 */
+html.dark .market-cap {
+  color: #e8e8e8 !important;
+}
+
+/* 时间单元格 */
+html.dark .time-cell {
+  color: #d0d0d0 !important;
+}
+
+html.dark .time-cell .time-sub {
+  color: #a8a8a8 !important;
+}
+
+/* Twitter操作区域 */
+html.dark .twitter-actions .action-btn {
+  border-color: #434343 !important;
+  color: #d0d0d0 !important;
+  background-color: #1d1e1f !important;
+}
+
+html.dark .twitter-actions .action-btn:hover {
+  border-color: #409eff !important;
+  color: #409eff !important;
+  background: rgba(64, 158, 255, 0.1) !important;
+}
+
+/* 监控配置对话框 */
+html.dark .event-card {
+  background-color: #1d1e1f !important;
+  border-color: #434343 !important;
+}
+
+html.dark .event-card .el-card__header {
+  background-color: #141414 !important;
+  color: #e8e8e8 !important;
+}
+
+html.dark .event-card.disabled {
+  opacity: 0.5 !important;
+}
+
+html.dark .event-tip {
+  color: #a8a8a8 !important;
+}
+
+html.dark .remark-tip {
+  color: #a8a8a8 !important;
+}
+
+/* 监控预览 */
+html.dark .monitor-preview {
+  background-color: rgba(64, 158, 255, 0.1) !important;
+  border-color: #409eff !important;
+}
+
+html.dark .monitor-preview .preview-title {
+  color: #64a6f5 !important;
+}
+
+html.dark .monitor-preview .preview-content {
+  color: #d0d0d0 !important;
+}
+
+/* ===================================
+   首页组件 (WelcomeHeader) 黑暗模式
+   =================================== */
+
+/* 欢迎卡片 */
+html.dark .welcome-header .welcome-card {
+  background-color: #1d1e1f !important;
+  border-color: #434343 !important;
+}
+
+html.dark .welcome-header .greeting-text {
+  color: #e8e8e8 !important;
+}
+
+html.dark .welcome-header .current-date {
+  color: #a8a8a8 !important;
+}
+
+/* 统计卡片 */
+html.dark .welcome-header .stat-card {
+  background: #141414 !important;
+  border-color: #434343 !important;
+}
+
+html.dark .welcome-header .stat-card:hover {
+  border-color: #409EFF !important;
+  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.25) !important;
+}
+
+html.dark .welcome-header .stat-label {
+  color: #a8a8a8 !important;
+}
+
+html.dark .welcome-header .stat-value {
+  color: #e8e8e8 !important;
+}
+
+html.dark .welcome-header .stat-unit {
+  color: #a8a8a8 !important;
+}
+
+/* 待处理详情 */
+html.dark .welcome-header .pending-item {
+  background: #141414 !important;
+}
+
+html.dark .welcome-header .pending-item:hover {
+  background: rgba(64, 158, 255, 0.15) !important;
+}
+
+html.dark .welcome-header .pending-label {
+  color: #d0d0d0 !important;
+}
+
+html.dark .welcome-header .pending-value {
+  color: #e8e8e8 !important;
+}
+
+/* ===================================
+   首页组件 (GlobalMonitorConfig) 黑暗模式
+   =================================== */
+
+/* Widget卡片 */
+html.dark .global-monitor-container .widget-card {
+  background-color: #1d1e1f !important;
+  border-color: #434343 !important;
+}
+
+html.dark .global-monitor-container .widget-card .el-card__header {
+  background-color: #141414 !important;
+  border-color: #434343 !important;
+}
+
+html.dark .global-monitor-container .widget-card .el-card__footer {
+  background-color: #141414 !important;
+  border-color: #434343 !important;
+}
+
+/* 配置统计卡片 */
+html.dark .global-monitor-container .stat-card {
+  background: #141414 !important;
+  border-color: #434343 !important;
+}
+
+html.dark .global-monitor-container .stat-card.active {
+  background: rgba(64, 158, 255, 0.1) !important;
+  border-color: #409EFF !important;
+}
+
+html.dark .global-monitor-container .stat-label {
+  color: #a8a8a8 !important;
+}
+
+html.dark .global-monitor-container .stat-value {
+  color: #e8e8e8 !important;
+}
+
+/* 统计摘要 */
+html.dark .global-monitor-container .summary-info {
+  background: linear-gradient(135deg, #4a5a8a 0%, #5a4a7a 100%) !important;
+}
+
+html.dark .global-monitor-container .summary-info .label {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+html.dark .global-monitor-container .summary-info .value {
+  color: #FFFFFF !important;
+}
+
+/* ===================================
+   首页组件 (NotificationCenter) 黑暗模式
+   =================================== */
+
+/* 通知中心卡片 */
+html.dark .notification-center .el-card {
+  background-color: #1d1e1f !important;
+  border-color: #434343 !important;
+}
+
+html.dark .notification-center .el-card__header {
+  background-color: #141414 !important;
+  border-color: #434343 !important;
+}
+
+/* 通知头部 */
+html.dark .notification-center .title {
+  color: #e8e8e8 !important;
+}
+
+/* 通知列表项 */
+html.dark .notification-center .notification-item .notification-right {
+  background: transparent !important;
+}
+
+html.dark .notification-center .notification-item:hover .notification-right {
+  background: #141414 !important;
+}
+
+html.dark .notification-center .notification-time span {
+  color: #a8a8a8 !important;
+}
+
+html.dark .notification-center .notification-title {
+  color: #d0d0d0 !important;
+}
+
+html.dark .notification-center .notification-content-text {
+  color: #a8a8a8 !important;
+}
+
+/* 通知额外信息 */
+html.dark .notification-center .notification-extra {
+  border-top-color: #434343 !important;
+}
+
+html.dark .notification-center .extra-label {
+  color: #a8a8a8 !important;
+}
+
+html.dark .notification-center .extra-value {
+  color: #d0d0d0 !important;
+}
+
+html.dark .notification-center .ca-address {
+  background: #141414 !important;
+  color: #64a6f5 !important;
+}
+
+html.dark .notification-center .ca-address:hover {
+  background: rgba(64, 158, 255, 0.15) !important;
+  color: #7db8ff !important;
+}
+
+/* 通知圆点类型 */
+html.dark .notification-center .notification-dot.type-alert {
+  background: rgba(245, 108, 108, 0.2) !important;
+}
+
+html.dark .notification-center .notification-dot.type-warning {
+  background: rgba(230, 162, 60, 0.2) !important;
+}
+
+html.dark .notification-center .notification-dot.type-success {
+  background: rgba(103, 194, 58, 0.2) !important;
+}
+
+html.dark .notification-center .notification-dot.type-info {
+  background: rgba(144, 147, 153, 0.2) !important;
+}
+
+/* 通知连接线 */
+html.dark .notification-center .notification-line {
+  background: #434343 !important;
+}
+
+/* ===================================
+   通用输入框和表单元素
+   =================================== */
+
+/* 输入框 */
+html.dark .el-input__wrapper {
+  background-color: #141414 !important;
+  border-color: #434343 !important;
+  box-shadow: 0 0 0 1px #434343 inset !important;
+}
+
+html.dark .el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px #606266 inset !important;
+}
+
+html.dark .el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px #409eff inset !important;
+}
+
+html.dark .el-input__inner {
+  color: #d0d0d0 !important;
+  background-color: transparent !important;
+}
+
+/* 文本域 */
+html.dark .el-textarea__inner {
+  background-color: #141414 !important;
+  border-color: #434343 !important;
+  color: #d0d0d0 !important;
+}
+
+/* 选择器 */
+html.dark .el-select .el-input__wrapper {
+  background-color: #141414 !important;
+}
+
+/* 下拉菜单 */
+html.dark .el-select-dropdown {
+  background-color: #1d1e1f !important;
+  border-color: #434343 !important;
+}
+
+html.dark .el-select-dropdown__item {
+  color: #d0d0d0 !important;
+}
+
+html.dark .el-select-dropdown__item:hover {
+  background-color: #141414 !important;
+}
+
+html.dark .el-select-dropdown__item.is-selected {
+  color: #409eff !important;
+  background-color: rgba(64, 158, 255, 0.1) !important;
+}
+
+/* 数字输入框 */
+html.dark .el-input-number .el-input__wrapper {
+  background-color: #141414 !important;
+}
+
+/* 单选按钮组 */
+html.dark .el-radio-button__inner {
+  background-color: #141414 !important;
+  border-color: #434343 !important;
+  color: #d0d0d0 !important;
+}
+
+html.dark .el-radio-button__input:checked + .el-radio-button__inner {
+  background-color: #409eff !important;
+  border-color: #409eff !important;
+  color: #ffffff !important;
+}
+
+/* 复选框组 */
+html.dark .el-checkbox__label {
+  color: #d0d0d0 !important;
+}
+
+html.dark .el-checkbox__inner {
+  background-color: #141414 !important;
+  border-color: #434343 !important;
+}
+
+html.dark .el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: #409eff !important;
+  border-color: #409eff !important;
 }
 
 /* 最高优先级选择器尝试匹配首页导航按钮 */

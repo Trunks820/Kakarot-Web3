@@ -43,6 +43,9 @@ public class QuickMonitorTemplate extends BaseEntity
     /** 状态 */
     private String status;
 
+    /** 删除标志（0代表存在 2代表删除） */
+    private String delFlag;
+
     public void setId(Long id) 
     {
         this.id = id;
@@ -143,6 +146,16 @@ public class QuickMonitorTemplate extends BaseEntity
         return status;
     }
 
+    public void setDelFlag(String delFlag) 
+    {
+        this.delFlag = delFlag;
+    }
+
+    public String getDelFlag() 
+    {
+        return delFlag;
+    }
+
     @Override
     public String toString() {
         return "QuickMonitorTemplate{" +
@@ -156,6 +169,7 @@ public class QuickMonitorTemplate extends BaseEntity
                 ", triggerLogic='" + triggerLogic + '\'' +
                 ", sortOrder=" + sortOrder +
                 ", status='" + status + '\'' +
+                ", delFlag='" + delFlag + '\'' +
                 '}';
     }
 }

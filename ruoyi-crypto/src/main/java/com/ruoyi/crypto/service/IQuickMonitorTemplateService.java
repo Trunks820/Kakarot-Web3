@@ -83,5 +83,13 @@ public interface IQuickMonitorTemplateService
      * @return 配置统计列表
      */
     public List<java.util.Map<String, Object>> getConfigStatsWithTokenCount(String chainType);
+
+    /**
+     * 预测配置的Token匹配数量（用于编辑时实时预测）
+     * 
+     * @param marketCapList 市值门槛列表
+     * @return 预测结果列表（每个市值门槛对应的Token数量）
+     */
+    public List<java.util.Map<String, Object>> predictTokenCounts(List<Long> marketCapList);
 }
 
