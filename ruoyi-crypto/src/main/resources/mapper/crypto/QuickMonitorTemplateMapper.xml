@@ -9,6 +9,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="userId"    column="user_id"    />
         <result property="chainType"    column="chain_type"    />
         <result property="minMarketCap"    column="min_market_cap"    />
+        <result property="hasTwitter"    column="has_twitter"    />
+        <result property="timeInterval"    column="time_interval"    />
+        <result property="topHoldersThreshold"    column="top_holders_threshold"    />
         <result property="configName"    column="config_name"    />
         <result property="eventsConfig"    column="events_config"    />
         <result property="notifyMethods"    column="notify_methods"    />
@@ -24,8 +27,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectQuickMonitorTemplateVo">
-        select id, user_id, chain_type, min_market_cap, config_name, events_config, 
-               notify_methods, trigger_logic, sort_order, status, del_flag, remark,
+        select id, user_id, chain_type, min_market_cap, has_twitter, time_interval, top_holders_threshold,
+               config_name, events_config, notify_methods, trigger_logic, sort_order, status, del_flag, remark,
                create_by, create_time, update_by, update_time
         from quick_monitor_template
     </sql>
@@ -58,6 +61,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="userId != null">user_id,</if>
             <if test="chainType != null and chainType != ''">chain_type,</if>
             <if test="minMarketCap != null">min_market_cap,</if>
+            <if test="hasTwitter != null">has_twitter,</if>
+            <if test="timeInterval != null">time_interval,</if>
+            <if test="topHoldersThreshold != null">top_holders_threshold,</if>
             <if test="configName != null">config_name,</if>
             <if test="eventsConfig != null">events_config,</if>
             <if test="notifyMethods != null">notify_methods,</if>
@@ -73,6 +79,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="userId != null">#{userId},</if>
             <if test="chainType != null and chainType != ''">#{chainType},</if>
             <if test="minMarketCap != null">#{minMarketCap},</if>
+            <if test="hasTwitter != null">#{hasTwitter},</if>
+            <if test="timeInterval != null">#{timeInterval},</if>
+            <if test="topHoldersThreshold != null">#{topHoldersThreshold},</if>
             <if test="configName != null">#{configName},</if>
             <if test="eventsConfig != null">#{eventsConfig},</if>
             <if test="notifyMethods != null">#{notifyMethods},</if>
@@ -92,6 +101,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="userId != null">user_id = #{userId},</if>
             <if test="chainType != null and chainType != ''">chain_type = #{chainType},</if>
             <if test="minMarketCap != null">min_market_cap = #{minMarketCap},</if>
+            <if test="hasTwitter != null">has_twitter = #{hasTwitter},</if>
+            <if test="timeInterval != null">time_interval = #{timeInterval},</if>
+            <if test="topHoldersThreshold != null">top_holders_threshold = #{topHoldersThreshold},</if>
             <if test="configName != null">config_name = #{configName},</if>
             <if test="eventsConfig != null">events_config = #{eventsConfig},</if>
             <if test="notifyMethods != null">notify_methods = #{notifyMethods},</if>
@@ -119,10 +131,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <insert id="batchInsertQuickMonitorTemplate" parameterType="java.util.List">
         insert into quick_monitor_template
-        (user_id, chain_type, min_market_cap, config_name, events_config, notify_methods, trigger_logic, sort_order, status, del_flag, remark, create_time)
+        (user_id, chain_type, min_market_cap, has_twitter, time_interval, top_holders_threshold, config_name, events_config, notify_methods, trigger_logic, sort_order, status, del_flag, remark, create_time)
         values
         <foreach collection="templates" item="item" separator=",">
-            (#{item.userId}, #{item.chainType}, #{item.minMarketCap}, #{item.configName}, #{item.eventsConfig}, 
+            (#{item.userId}, #{item.chainType}, #{item.minMarketCap}, #{item.hasTwitter}, #{item.timeInterval}, #{item.topHoldersThreshold}, #{item.configName}, #{item.eventsConfig}, 
              #{item.notifyMethods}, #{item.triggerLogic}, #{item.sortOrder}, #{item.status}, '0', #{item.remark}, sysdate())
         </foreach>
     </insert>

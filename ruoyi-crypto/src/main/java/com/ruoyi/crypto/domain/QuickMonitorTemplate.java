@@ -25,6 +25,15 @@ public class QuickMonitorTemplate extends BaseEntity
     /** 最低市值门槛 */
     private BigDecimal minMarketCap;
 
+    /** Twitter筛选条件 */
+    private String hasTwitter;
+
+    /** 时间周期：1m/5m/1h */
+    private String timeInterval;
+
+    /** 前十持仓过滤阈值(%) */
+    private java.math.BigDecimal topHoldersThreshold;
+
     /** 配置名称 */
     private String configName;
 
@@ -84,6 +93,36 @@ public class QuickMonitorTemplate extends BaseEntity
     public BigDecimal getMinMarketCap() 
     {
         return minMarketCap;
+    }
+
+    public void setHasTwitter(String hasTwitter) 
+    {
+        this.hasTwitter = hasTwitter;
+    }
+
+    public String getHasTwitter() 
+    {
+        return hasTwitter;
+    }
+
+    public void setTimeInterval(String timeInterval) 
+    {
+        this.timeInterval = timeInterval;
+    }
+
+    public String getTimeInterval() 
+    {
+        return timeInterval;
+    }
+
+    public void setTopHoldersThreshold(java.math.BigDecimal topHoldersThreshold) 
+    {
+        this.topHoldersThreshold = topHoldersThreshold;
+    }
+
+    public java.math.BigDecimal getTopHoldersThreshold() 
+    {
+        return topHoldersThreshold;
     }
 
     public void setConfigName(String configName) 
@@ -163,6 +202,9 @@ public class QuickMonitorTemplate extends BaseEntity
                 ", userId=" + userId +
                 ", chainType='" + chainType + '\'' +
                 ", minMarketCap=" + minMarketCap +
+                ", hasTwitter='" + hasTwitter + '\'' +
+                ", timeInterval='" + timeInterval + '\'' +
+                ", topHoldersThreshold=" + topHoldersThreshold +
                 ", configName='" + configName + '\'' +
                 ", eventsConfig='" + eventsConfig + '\'' +
                 ", notifyMethods='" + notifyMethods + '\'' +

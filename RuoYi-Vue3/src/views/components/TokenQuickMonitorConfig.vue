@@ -190,35 +190,98 @@
             <div class="config-card-header">
               <div class="config-number">{{ index + 1 }}</div>
               <div class="config-title">
-                <el-input-number
-                  v-model="config.minMarketCap"
-                  :min="300000"
-                  :step="100000"
-                  :precision="0"
-                  controls-position="right"
-                  style="width: 180px;"
-                  @change="handleConfigChange"
-                />
-                <span style="margin: 0 8px;">美元</span>
-                <el-tag size="small" type="info">
-                  {{ formatMarketCap(config.minMarketCap) }}
-                </el-tag>
-                <!-- 实时预览匹配数量 -->
-                <el-popover placement="top" :width="220" trigger="hover">
-                  <template #reference>
-                    <el-tag size="small" type="warning" effect="plain" style="margin-left: 8px;">
-                      <el-icon><View /></el-icon> 预计 {{ predictMatchCount(config) }} 个
+                <div class="config-row">
+                  <div class="config-item">
+                    <span class="config-label">市值门槛：</span>
+                    <el-input-number
+                      v-model="config.minMarketCap"
+                      :min="300000"
+                      :step="100000"
+                      :precision="0"
+                      controls-position="right"
+                      style="width: 160px;"
+                      @change="handleConfigChange"
+                    />
+                    <span style="margin: 0 8px;">美元</span>
+                    <el-tag size="small" type="info">
+                      {{ formatMarketCap(config.minMarketCap) }}
                     </el-tag>
-                  </template>
-                  <div style="font-size: 12px; line-height: 1.6;">
-                    根据当前市值门槛 <strong>{{ formatMarketCap(config.minMarketCap) }}</strong>，
-                    预计会匹配到 <strong style="color: #E6A23C;">{{ predictMatchCount(config) }}</strong> 个Token
                   </div>
-                </el-popover>
+                  <div class="config-item">
+                    <span class="config-label">Twitter筛选：</span>
+                    <el-select 
+                      v-model="config.hasTwitter" 
+                      placeholder="全部" 
+                      clearable 
+                      size="small"
+                      style="width: 130px;"
+                      @change="handleConfigChange"
+                    >
+                      <el-option label="全部" value="" />
+                      <el-option label="推特主页" value="profile" />
+                      <el-option label="推文" value="tweet" />
+                      <el-option label="社区" value="community" />
+                      <el-option label="无推特" value="none" />
+                    </el-select>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">时间周期：</span>
+                    <el-select 
+                      v-model="config.timeInterval" 
+                      placeholder="请选择" 
+                      size="small"
+                      style="width: 100px;"
+                      @change="handleConfigChange"
+                    >
+                      <el-option label="1分钟" value="1m" />
+                      <el-option label="5分钟" value="5m" />
+                      <el-option label="1小时" value="1h" />
+                      <el-option label="24小时" value="24h" />
+                    </el-select>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">前十过滤：</span>
+                    <el-input-number
+                      v-model="config.topHoldersThreshold"
+                      :min="0"
+                      :max="100"
+                      :precision="2"
+                      :step="5"
+                      size="small"
+                      style="width: 120px;"
+                      @change="handleConfigChange"
+                    />
+                    <span style="margin-left: 4px;">%</span>
+                  </div>
+                  <!-- 实时预览匹配数量 -->
+                  <el-popover placement="top" :width="220" trigger="hover">
+                    <template #reference>
+                      <el-tag size="small" type="warning" effect="plain" style="margin-left: 8px;">
+                        <el-icon><View /></el-icon> 预计 {{ predictMatchCount(config) }} 个
+                      </el-tag>
+                    </template>
+                    <div style="font-size: 12px; line-height: 1.6;">
+                      根据当前市值门槛 <strong>{{ formatMarketCap(config.minMarketCap) }}</strong>
+                      <span v-if="config.hasTwitter"> 和 Twitter 筛选 <strong>{{ getTwitterLabel(config.hasTwitter) }}</strong></span>，
+                      预计会匹配到 <strong style="color: #E6A23C;">{{ predictMatchCount(config) }}</strong> 个Token
+                    </div>
+                  </el-popover>
+                </div>
               </div>
-              <el-button type="danger" text icon="Delete" @click="removeConfig(index)">
-                删除
-              </el-button>
+              <div class="config-actions">
+                <el-button 
+                  type="primary" 
+                  text 
+                  icon="Document" 
+                  @click="applyToAll(index)"
+                  title="将此配置的事件设置和Twitter筛选应用到所有配置"
+                >
+                  应用到全部
+                </el-button>
+                <el-button type="danger" text icon="Delete" @click="removeConfig(index)">
+                  删除
+                </el-button>
+              </div>
             </div>
 
             <el-divider style="margin: 12px 0" />
@@ -396,6 +459,18 @@ const formatMarketCap = (value) => {
   return value.toString()
 }
 
+// 获取Twitter筛选标签
+const getTwitterLabel = (value) => {
+  const labels = {
+    'profile': '推特主页',
+    'tweet': '推文',
+    'community': '社区',
+    'none': '无推特',
+    '': '全部'
+  }
+  return labels[value] || '全部'
+}
+
 // 获取配置描述
 const getConfigDesc = (config) => {
   const parts = []
@@ -479,12 +554,20 @@ const loadConfigs = async () => {
     console.log('📊 统计接口响应:', response)
     
     if (response && response.code === 200 && response.data) {
-      configs.value = response.data.map(item => ({
-        id: item.id,
-        minMarketCap: parseFloat(item.minMarketCap),
-        events: JSON.parse(item.eventsConfig || '{}'),
-        tokenCount: item.tokenCount || 0
-      }))
+      configs.value = response.data.map(item => {
+        console.log('🔍 原始数据项:', item)
+        const config = {
+          id: item.id,
+          minMarketCap: parseFloat(item.minMarketCap),
+          hasTwitter: item.hasTwitter === null || item.hasTwitter === undefined ? '' : item.hasTwitter, // Twitter筛选
+          timeInterval: item.timeInterval || '5m', // 时间周期
+          topHoldersThreshold: item.topHoldersThreshold ? parseFloat(item.topHoldersThreshold) : 50, // 前十过滤
+          events: JSON.parse(item.eventsConfig || '{}'),
+          tokenCount: item.tokenCount || 0
+        }
+        console.log('📦 转换后配置:', config)
+        return config
+      })
       
       // 获取通知方式（从第一个配置）
       if (response.data.length > 0 && response.data[0].notifyMethods) {
@@ -518,7 +601,9 @@ const loadConfigs = async () => {
 
 // 打开配置弹窗
 const openConfigDialog = () => {
+  console.log('🔓 打开弹窗，原始配置:', configs.value)
   editConfigs.value = JSON.parse(JSON.stringify(configs.value))
+  console.log('✏️ 编辑配置:', editConfigs.value)
   dialogVisible.value = true
   // 注意：不需要手动调用 updateTokenPredictions()，watch 会自动触发
 }
@@ -528,6 +613,9 @@ const addConfig = () => {
   const newConfig = {
     id: Date.now(),
     minMarketCap: 300000,
+    hasTwitter: '', // Twitter筛选：全部
+    timeInterval: '5m', // 时间周期：默认5分钟
+    topHoldersThreshold: 50, // 前十过滤：默认50%
     events: {
       priceChange: { enabled: true, risePercent: 50, fallPercent: 30 },
       holders: { enabled: true, increasePercent: 30, decreasePercent: 20 },
@@ -547,11 +635,62 @@ const removeConfig = (index) => {
   // 注意：不需要手动调用 updateTokenPredictions()，watch 会自动触发
 }
 
+// 应用配置到全部
+const applyToAll = (sourceIndex) => {
+  if (editConfigs.value.length <= 1) {
+    ElMessage.warning('只有一个配置，无需应用')
+    return
+  }
+  
+  ElMessageBox.confirm(
+    `确定要将「配置${sourceIndex + 1}」的事件设置和Twitter筛选应用到其他所有配置吗？`,
+    '应用到全部',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+      distinguishCancelAndClose: true
+    }
+  ).then(() => {
+    const sourceConfig = editConfigs.value[sourceIndex]
+    
+    // 深拷贝事件配置、Twitter筛选、时间周期、前十过滤
+    const eventsTemplate = JSON.parse(JSON.stringify(sourceConfig.events))
+    const twitterFilter = sourceConfig.hasTwitter
+    const timeInterval = sourceConfig.timeInterval
+    const topHoldersThreshold = sourceConfig.topHoldersThreshold
+    
+    // 应用到所有其他配置（保留各自的市值门槛）
+    let appliedCount = 0
+    editConfigs.value.forEach((config, index) => {
+      if (index !== sourceIndex) {
+        config.events = JSON.parse(JSON.stringify(eventsTemplate))
+        config.hasTwitter = twitterFilter
+        config.timeInterval = timeInterval
+        config.topHoldersThreshold = topHoldersThreshold
+        appliedCount++
+      }
+    })
+    
+    // 触发验证
+    validateConfigs()
+    
+    ElMessage.success(`已将配置应用到 ${appliedCount} 个其他配置`)
+  }).catch((action) => {
+    if (action === 'cancel') {
+      ElMessage.info('已取消应用')
+    }
+  })
+}
+
 // 配置模板
 const configTemplates = {
   conservative: [
     {
       minMarketCap: 10000000,
+      hasTwitter: 'profile', // 保守：只监控有推特主页的
+      timeInterval: '1h', // 保守：1小时周期
+      topHoldersThreshold: 40, // 保守：前十持仓≤40%
       events: {
         priceChange: { enabled: true, risePercent: 100, fallPercent: 50 },
         holders: { enabled: true, increasePercent: 50, decreasePercent: 30 },
@@ -560,6 +699,9 @@ const configTemplates = {
     },
     {
       minMarketCap: 5000000,
+      hasTwitter: '',
+      timeInterval: '1h',
+      topHoldersThreshold: 40,
       events: {
         priceChange: { enabled: true, risePercent: 80, fallPercent: 40 },
         holders: { enabled: true, increasePercent: 40, decreasePercent: 25 },
@@ -568,6 +710,9 @@ const configTemplates = {
     },
     {
       minMarketCap: 1000000,
+      hasTwitter: '',
+      timeInterval: '1h',
+      topHoldersThreshold: 40,
       events: {
         priceChange: { enabled: true, risePercent: 60, fallPercent: 30 },
         holders: { enabled: false, increasePercent: 30, decreasePercent: 20 },
@@ -578,6 +723,9 @@ const configTemplates = {
   balanced: [
     {
       minMarketCap: 10000000,
+      hasTwitter: '',
+      timeInterval: '5m', // 均衡：5分钟周期
+      topHoldersThreshold: 50, // 均衡：前十持仓≤50%
       events: {
         priceChange: { enabled: true, risePercent: 50, fallPercent: 30 },
         holders: { enabled: true, increasePercent: 30, decreasePercent: 20 },
@@ -586,6 +734,9 @@ const configTemplates = {
     },
     {
       minMarketCap: 5000000,
+      hasTwitter: '',
+      timeInterval: '5m',
+      topHoldersThreshold: 50,
       events: {
         priceChange: { enabled: true, risePercent: 40, fallPercent: 25 },
         holders: { enabled: true, increasePercent: 25, decreasePercent: 15 },
@@ -594,6 +745,9 @@ const configTemplates = {
     },
     {
       minMarketCap: 1000000,
+      hasTwitter: '',
+      timeInterval: '5m',
+      topHoldersThreshold: 50,
       events: {
         priceChange: { enabled: true, risePercent: 30, fallPercent: 20 },
         holders: { enabled: true, increasePercent: 20, decreasePercent: 10 },
@@ -602,6 +756,9 @@ const configTemplates = {
     },
     {
       minMarketCap: 300000,
+      hasTwitter: '',
+      timeInterval: '5m',
+      topHoldersThreshold: 50,
       events: {
         priceChange: { enabled: true, risePercent: 50, fallPercent: 30 },
         holders: { enabled: false, increasePercent: 30, decreasePercent: 20 },
@@ -612,6 +769,9 @@ const configTemplates = {
   aggressive: [
     {
       minMarketCap: 10000000,
+      hasTwitter: '',
+      timeInterval: '1m', // 激进：1分钟周期
+      topHoldersThreshold: 60, // 激进：前十持仓≤60%（更宽松）
       events: {
         priceChange: { enabled: true, risePercent: 20, fallPercent: 15 },
         holders: { enabled: true, increasePercent: 15, decreasePercent: 10 },
@@ -620,6 +780,9 @@ const configTemplates = {
     },
     {
       minMarketCap: 5000000,
+      hasTwitter: '',
+      timeInterval: '1m',
+      topHoldersThreshold: 60,
       events: {
         priceChange: { enabled: true, risePercent: 15, fallPercent: 10 },
         holders: { enabled: true, increasePercent: 10, decreasePercent: 8 },
@@ -628,6 +791,9 @@ const configTemplates = {
     },
     {
       minMarketCap: 1000000,
+      hasTwitter: '',
+      timeInterval: '1m',
+      topHoldersThreshold: 60,
       events: {
         priceChange: { enabled: true, risePercent: 10, fallPercent: 8 },
         holders: { enabled: true, increasePercent: 8, decreasePercent: 5 },
@@ -636,6 +802,9 @@ const configTemplates = {
     },
     {
       minMarketCap: 300000,
+      hasTwitter: '',
+      timeInterval: '1m',
+      topHoldersThreshold: 60,
       events: {
         priceChange: { enabled: true, risePercent: 30, fallPercent: 20 },
         holders: { enabled: true, increasePercent: 20, decreasePercent: 10 },
@@ -653,6 +822,9 @@ const applyTemplate = (templateName) => {
   editConfigs.value = template.map((config, index) => ({
     id: Date.now() + index,
     minMarketCap: config.minMarketCap,
+    hasTwitter: config.hasTwitter || '', // 包含Twitter筛选
+    timeInterval: config.timeInterval || '5m', // 包含时间周期
+    topHoldersThreshold: config.topHoldersThreshold || 50, // 包含前十过滤
     events: JSON.parse(JSON.stringify(config.events)),
     tokenCount: 0
   }))
@@ -796,6 +968,9 @@ const saveConfigs = async () => {
     const templates = editConfigs.value.map((config, index) => ({
       chainType: currentChain.value,
       minMarketCap: config.minMarketCap,
+      hasTwitter: config.hasTwitter || '', // Twitter筛选
+      timeInterval: config.timeInterval || '5m', // 时间周期
+      topHoldersThreshold: config.topHoldersThreshold || 50, // 前十过滤
       configName: `配置${index + 1}`,
       eventsConfig: JSON.stringify(config.events),
       notifyMethods: notifyMethods.value.length > 0 ? notifyMethods.value.join(',') : '',
@@ -1132,6 +1307,33 @@ onMounted(() => {
       align-items: center;
       flex-wrap: wrap;
       gap: 8px;
+
+      .config-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+
+        .config-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .config-label {
+            font-size: 13px;
+            color: var(--el-text-color-secondary);
+            white-space: nowrap;
+          }
+        }
+      }
+    }
+
+    .config-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
     }
   }
 

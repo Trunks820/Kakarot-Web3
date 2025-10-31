@@ -205,6 +205,7 @@
             <el-radio-button label="1m">1分钟</el-radio-button>
             <el-radio-button label="5m">5分钟</el-radio-button>
             <el-radio-button label="1h">1小时</el-radio-button>
+            <el-radio-button label="24h">24小时</el-radio-button>
           </el-radio-group>
           <span style="margin-left: 12px; color: #909399; font-size: 13px;">
             💡 监控API选择该时间段的交易量和涨跌幅
