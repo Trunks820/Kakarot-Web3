@@ -1,11 +1,11 @@
 <template>
-  <div class="notification-center">
+  <div class="sol-notification-center">
     <el-card shadow="never">
       <template #header>
         <div class="notification-header">
           <div class="header-left">
             <el-icon class="bell-icon"><Bell /></el-icon>
-            <span class="title">BSC区块监控</span>
+            <span class="title">SOL智能监控动态</span>
             <el-badge 
               v-if="unreadCount > 0" 
               :value="unreadCount" 
@@ -36,11 +36,19 @@
       <div v-loading="loading" class="notification-content">
         <el-empty 
           v-if="notifications.length === 0" 
-          description="暂无通知"
-          :image-size="120"
+          description="暂无SOL智能监控告警"
+          :image-size="100"
         >
           <template #image>
-            <el-icon :size="120" color="#C0C4CC"><MessageBox /></el-icon>
+            <el-icon :size="100" color="#67C23A"><Bell /></el-icon>
+          </template>
+          <template #description>
+            <div style="color: #909399; font-size: 14px; margin-top: 8px;">
+              <p>当前没有告警记录</p>
+              <p style="font-size: 12px; color: #C0C4CC; margin-top: 4px;">
+                智能监控配置生效后将在此显示
+              </p>
+            </div>
           </template>
         </el-empty>
 
@@ -55,11 +63,10 @@
             <!-- 左侧图标和时间线 -->
             <div class="notification-left">
               <div 
-                class="notification-dot"
-                :class="`type-${item.type}`"
+                class="notification-dot type-sol"
               >
                 <el-icon :size="14">
-                  <component :is="getNotificationIcon(item.type)" />
+                  <Bell />
                 </el-icon>
               </div>
               <div v-if="!isLast(item)" class="notification-line"></div>
@@ -68,30 +75,30 @@
             <!-- 右侧内容 -->
             <div class="notification-right">
               <div class="notification-time">
-                <span>{{ formatExactTime(item.createTime) }}</span>
+                <span>{{ formatExactTime(item.alertTime) }}</span>
                 <div style="display: flex; gap: 4px; align-items: center;">
                   <el-tag 
-                    :type="getModuleTagType(item.module)" 
+                    type="success" 
                     size="small"
                     effect="plain"
                   >
-                    {{ item.moduleName }}
+                    ⚡ SOL
                   </el-tag>
                   <el-tag 
-                    v-if="item.notifyError === '冷静期内不播报'" 
+                    v-if="item.templateName" 
                     type="info" 
                     size="small"
                     effect="plain"
                   >
-                    🧊 冷静期
+                    {{ item.templateName }}
                   </el-tag>
                 </div>
               </div>
-              <div class="notification-title">{{ item.title }}</div>
-              <div class="notification-content-text">{{ item.content }}</div>
+              <div class="notification-title">{{ item.tokenSymbol || 'Unknown' }}</div>
+              <div class="notification-content-text">{{ formatAlertMessage(item) }}</div>
               
               <!-- Token监控专属信息：CA、市值、GMGN链接 -->
-              <div v-if="item.module === 'token-monitor' && item.ca" class="notification-extra">
+              <div class="notification-extra">
                 <div class="extra-item ca-item">
                   <span class="extra-label">CA:</span>
                   <span class="extra-value ca-address" @click.stop="handleCopyCA(item.ca)">
@@ -108,7 +115,7 @@
                     type="primary" 
                     size="small" 
                     link
-                    @click.stop="handleOpenGMGN(item.ca, item.chainType)"
+                    @click.stop="handleOpenGMGN(item.ca)"
                   >
                     <el-icon><Link /></el-icon>
                     在GMGN查看
@@ -129,90 +136,30 @@ import { useRouter } from 'vue-router'
 import { 
   Bell, 
   MessageBox,
-  WarningFilled,
-  SuccessFilled,
-  InfoFilled,
-  Warning,
   CopyDocument,
   Link
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import request from '@/utils/request'
-import { useNotificationStore } from '@/store/modules/notification'
+import { getRecentSolAlerts } from '@/api/crypto/solAlert'
 
 const router = useRouter()
-const notificationStore = useNotificationStore()
 
-// 获取最新通知（从token_monitor_alert_log表）
-const getRecentNotifications = (limit = 10) => {
-  return request({
-    url: '/crypto/monitorAlert/recent',
-    method: 'get',
-    params: { limit }
-  })
-}
-
-// 通知列表（从 Pinia store 获取）
+// 通知列表（本地状态，不使用 Pinia）
 const loading = ref(false)
-const notifications = computed(() => notificationStore.list.slice(0, 10))
+const notifications = ref([])
 
-// 已读ID集合（使用localStorage持久化）
-const readIds = ref(new Set(JSON.parse(localStorage.getItem('readNotificationIds') || '[]')))
+// 已读ID集合（使用localStorage持久化，独立的key）
+const readIds = ref(new Set(JSON.parse(localStorage.getItem('solReadNotificationIds') || '[]')))
 
 // 保存已读ID到localStorage
 const saveReadIds = () => {
-  localStorage.setItem('readNotificationIds', JSON.stringify([...readIds.value]))
+  localStorage.setItem('solReadNotificationIds', JSON.stringify([...readIds.value]))
 }
 
-// 未读数量（结合 store 和 localStorage）
+// 未读数量
 const unreadCount = computed(() => {
-  return notifications.value.filter(item => !item.isRead && !readIds.value.has(item.id)).length
+  return notifications.value.filter(item => !readIds.value.has(item.id)).length
 })
-
-// 获取通知图标
-const getNotificationIcon = (type) => {
-  const iconMap = {
-    'alert': WarningFilled,
-    'success': SuccessFilled,
-    'warning': Warning,
-    'info': InfoFilled,
-    'error': WarningFilled
-  }
-  return iconMap[type] || InfoFilled
-}
-
-// 获取模块标签类型
-const getModuleTagType = (module) => {
-  const typeMap = {
-    'token-monitor': 'warning',
-    'twitter': 'primary',
-    'system': 'info',
-    'wechat-bot': 'success',
-    'global-monitor': 'danger'
-  }
-  return typeMap[module] || 'info'
-}
-
-// 格式化时间（相对时间，保留用于tooltip）
-const formatTime = (timeStr) => {
-  if (!timeStr) return ''
-  
-  const time = new Date(timeStr)
-  const now = new Date()
-  const diff = Math.floor((now - time) / 1000) // 秒
-  
-  if (diff < 60) return '刚刚'
-  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
-  if (diff < 259200) return `${Math.floor(diff / 86400)}天前`
-  
-  // 超过3天显示具体日期
-  const month = time.getMonth() + 1
-  const date = time.getDate()
-  const hour = time.getHours().toString().padStart(2, '0')
-  const minute = time.getMinutes().toString().padStart(2, '0')
-  return `${month}月${date}日 ${hour}:${minute}`
-}
 
 // 格式化精确时间（用于显示）
 const formatExactTime = (timeStr) => {
@@ -238,6 +185,23 @@ const formatExactTime = (timeStr) => {
   }
 }
 
+// 格式化告警消息
+const formatAlertMessage = (item) => {
+  const parts = []
+  
+  if (item.priceChange1m) {
+    parts.push(`1分钟: ${item.priceChange1m > 0 ? '+' : ''}${item.priceChange1m.toFixed(2)}%`)
+  }
+  if (item.priceChange5m) {
+    parts.push(`5分钟: ${item.priceChange5m > 0 ? '+' : ''}${item.priceChange5m.toFixed(2)}%`)
+  }
+  if (item.priceChange1h) {
+    parts.push(`1小时: ${item.priceChange1h > 0 ? '+' : ''}${item.priceChange1h.toFixed(2)}%`)
+  }
+  
+  return parts.length > 0 ? parts.join(' | ') : '价格波动告警'
+}
+
 // 判断是否最后一项
 const isLast = (item) => {
   return notifications.value.indexOf(item) === notifications.value.length - 1
@@ -247,24 +211,15 @@ const isLast = (item) => {
 const loadNotifications = async () => {
   loading.value = true
   try {
-    // 调用真实API获取系统通知和预警记录
-    const response = await getRecentNotifications(10)
+    const response = await getRecentSolAlerts(10)
     if (response.code === 200 && response.data) {
-      // 将数据设置到 Pinia store
-      notificationStore.setNotifications(response.data)
-      
-      // 应用本地已读状态
-      notificationStore.list.forEach(item => {
-        if (readIds.value.has(item.id)) {
-          item.isRead = 1
-        }
-      })
+      notifications.value = response.data
     } else {
-      notificationStore.setNotifications([])
+      notifications.value = []
     }
   } catch (error) {
-    console.error('加载通知失败:', error)
-    notificationStore.setNotifications([])
+    console.error('加载SOL通知失败:', error)
+    notifications.value = []
   } finally {
     loading.value = false
   }
@@ -273,23 +228,15 @@ const loadNotifications = async () => {
 // 点击通知
 const handleNotificationClick = async (item) => {
   // 标记为已读（前端状态 + localStorage持久化）
-  if (!item.isRead) {
-    item.isRead = 1
+  if (!readIds.value.has(item.id)) {
     readIds.value.add(item.id)
     saveReadIds()
   }
-  
-  // 不跳转，只标记已读
-  // if (item.actionUrl) {
-  //   router.push(item.actionUrl)
-  // }
 }
 
 // 标记全部已读
 const handleMarkAllRead = async () => {
-  // 前端标记所有为已读 + localStorage持久化
   notifications.value.forEach(item => {
-    item.isRead = 1
     readIds.value.add(item.id)
   })
   saveReadIds()
@@ -298,19 +245,17 @@ const handleMarkAllRead = async () => {
 
 // 查看全部
 const handleViewAll = () => {
-  // 跳转到历史播报页面
+  // 跳转到SOL监控历史页面
   router.push('/crypto/blockMonitor')
 }
 
 // 复制 CA 地址
 const handleCopyCA = async (ca) => {
   try {
-    // 尝试使用 Clipboard API
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(ca)
       ElMessage.success('CA地址已复制')
     } else {
-      // 降级方案：使用 textarea
       const textarea = document.createElement('textarea')
       textarea.value = ca
       textarea.style.position = 'fixed'
@@ -342,11 +287,9 @@ const formatNumber = (num) => {
   return value.toFixed(2)
 }
 
-// 打开 GMGN 链接
-const handleOpenGMGN = (ca, chainType = 'sol') => {
-  // GMGN 链接格式：https://gmgn.ai/{chain}/token/{CA}
-  const chain = chainType ? chainType.toLowerCase() : 'sol'
-  const url = `https://gmgn.ai/${chain}/token/${ca}`
+// 打开 GMGN 链接（固定为 SOL）
+const handleOpenGMGN = (ca) => {
+  const url = `https://gmgn.ai/sol/token/${ca}`
   window.open(url, '_blank')
 }
 
@@ -356,12 +299,11 @@ let refreshTimer = null
 onMounted(() => {
   loadNotifications()
   
-  // 每30秒刷新（只刷新数据库的历史通知，WebSocket 会实时推送新通知）
+  // 每30秒刷新
   refreshTimer = setInterval(loadNotifications, 30000)
 })
 
 onUnmounted(() => {
-  // 清理定时器
   if (refreshTimer) {
     clearInterval(refreshTimer)
     refreshTimer = null
@@ -375,7 +317,7 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
-.notification-center {
+.sol-notification-center {
   :deep(.el-card__header) {
     padding: 16px 20px;
   }
@@ -397,7 +339,7 @@ defineExpose({
     
     .bell-icon {
       font-size: 20px;
-      color: #409EFF;
+      color: #67C23A; // SOL 用绿色
     }
     
     .title {
@@ -444,7 +386,7 @@ defineExpose({
         top: 8px;
         width: 6px;
         height: 6px;
-        background: #F56C6C;
+        background: #67C23A; // SOL 用绿色
         border-radius: 50%;
       }
     }
@@ -470,29 +412,9 @@ defineExpose({
         justify-content: center;
         flex-shrink: 0;
         
-        &.type-alert {
-          background: #FEF0F0;
-          color: #F56C6C;
-        }
-        
-        &.type-warning {
-          background: #FDF6EC;
-          color: #E6A23C;
-        }
-        
-        &.type-success {
-          background: #F0F9FF;
+        &.type-sol {
+          background: #f0f9ff; // SOL 专属绿色背景
           color: #67C23A;
-        }
-        
-        &.type-info {
-          background: #F4F4F5;
-          color: #909399;
-        }
-        
-        &.type-error {
-          background: #FEF0F0;
-          color: #F56C6C;
         }
       }
       

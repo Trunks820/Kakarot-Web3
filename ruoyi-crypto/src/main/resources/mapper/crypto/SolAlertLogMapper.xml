@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.SolAlertLogMapper">
+    
+    <resultMap type="SolAlertLog" id="SolAlertLogResult">
+        <result property="id"    column="id"    />
+        <result property="batchId"    column="batch_id"    />
+        <result property="ca"    column="ca"    />
+        <result property="tokenSymbol"    column="token_symbol"    />
+        <result property="tokenName"    column="token_name"    />
+        <result property="pairAddress"    column="pair_address"    />
+        <result property="templateId"    column="template_id"    />
+        <result property="templateName"    column="template_name"    />
+        <result property="price"    column="price"    />
+        <result property="marketCap"    column="market_cap"    />
+        <result property="priceChange"    column="price_change"    />
+        <result property="priceChange1m"    column="price_change_1m"    />
+        <result property="priceChange5m"    column="price_change_5m"    />
+        <result property="priceChange1h"    column="price_change_1h"    />
+        <result property="volume1h"    column="volume_1h"    />
+        <result property="buyVolume1h"    column="buy_volume_1h"    />
+        <result property="sellVolume1h"    column="sell_volume_1h"    />
+        <result property="txs1h"    column="txs_1h"    />
+        <result property="buyTxs1h"    column="buy_txs_1h"    />
+        <result property="sellTxs1h"    column="sell_txs_1h"    />
+        <result property="top10Percent"    column="top10_percent"    />
+        <result property="triggerReasons"    column="trigger_reasons"    />
+        <result property="triggerTimeInterval"    column="trigger_time_interval"    />
+        <result property="triggerLogic"    column="trigger_logic"    />
+        <result property="alertMessage"    column="alert_message"    />
+        <result property="telegramSent"    column="telegram_sent"    />
+        <result property="telegramSuccess"    column="telegram_success"    />
+        <result property="telegramMessageId"    column="telegram_message_id"    />
+        <result property="telegramError"    column="telegram_error"    />
+        <result property="wechatSent"    column="wechat_sent"    />
+        <result property="wechatSuccess"    column="wechat_success"    />
+        <result property="wechatMessageId"    column="wechat_message_id"    />
+        <result property="wechatError"    column="wechat_error"    />
+        <result property="responseTimeMs"    column="response_time_ms"    />
+        <result property="alertTime"    column="alert_time"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectSolAlertLogVo">
+        select id, batch_id, ca, token_symbol, token_name, pair_address, template_id, template_name,
+               price, market_cap, price_change, price_change_1m, price_change_5m, price_change_1h,
+               volume_1h, buy_volume_1h, sell_volume_1h, txs_1h, buy_txs_1h, sell_txs_1h,
+               top10_percent, trigger_reasons, trigger_time_interval, trigger_logic, alert_message,
+               telegram_sent, telegram_success, telegram_message_id, telegram_error,
+               wechat_sent, wechat_success, wechat_message_id, wechat_error,
+               response_time_ms, alert_time, create_time
+        from sol_ws_alert_log
+    </sql>
+
+    <select id="selectSolAlertLogList" parameterType="SolAlertLog" resultMap="SolAlertLogResult">
+        <include refid="selectSolAlertLogVo"/>
+        <where>  
+            <if test="batchId != null">and batch_id = #{batchId}</if>
+            <if test="ca != null and ca != ''">and ca = #{ca}</if>
+            <if test="tokenSymbol != null and tokenSymbol != ''">and token_symbol like concat('%', #{tokenSymbol}, '%')</if>
+            <if test="templateId != null">and template_id = #{templateId}</if>
+            <if test="params.beginAlertTime != null and params.beginAlertTime != ''">
+                and alert_time &gt;= #{params.beginAlertTime}
+            </if>
+            <if test="params.endAlertTime != null and params.endAlertTime != ''">
+                and alert_time &lt;= #{params.endAlertTime}
+            </if>
+        </where>
+        order by alert_time desc, id desc
+    </select>
+    
+    <select id="selectSolAlertLogById" parameterType="Long" resultMap="SolAlertLogResult">
+        <include refid="selectSolAlertLogVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectRecentSolAlerts" resultMap="SolAlertLogResult">
+        <include refid="selectSolAlertLogVo"/>
+        order by alert_time desc, id desc
+        limit #{limit}
+    </select>
+        
+    <insert id="insertSolAlertLog" parameterType="SolAlertLog" useGeneratedKeys="true" keyProperty="id">
+        insert into sol_ws_alert_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="batchId != null">batch_id,</if>
+            <if test="ca != null and ca != ''">ca,</if>
+            <if test="tokenSymbol != null">token_symbol,</if>
+            <if test="tokenName != null">token_name,</if>
+            <if test="pairAddress != null">pair_address,</if>
+            <if test="templateId != null">template_id,</if>
+            <if test="templateName != null">template_name,</if>
+            <if test="price != null">price,</if>
+            <if test="marketCap != null">market_cap,</if>
+            <if test="priceChange != null">price_change,</if>
+            <if test="priceChange1m != null">price_change_1m,</if>
+            <if test="priceChange5m != null">price_change_5m,</if>
+            <if test="priceChange1h != null">price_change_1h,</if>
+            <if test="volume1h != null">volume_1h,</if>
+            <if test="buyVolume1h != null">buy_volume_1h,</if>
+            <if test="sellVolume1h != null">sell_volume_1h,</if>
+            <if test="txs1h != null">txs_1h,</if>
+            <if test="buyTxs1h != null">buy_txs_1h,</if>
+            <if test="sellTxs1h != null">sell_txs_1h,</if>
+            <if test="top10Percent != null">top10_percent,</if>
+            <if test="triggerReasons != null">trigger_reasons,</if>
+            <if test="triggerTimeInterval != null">trigger_time_interval,</if>
+            <if test="triggerLogic != null">trigger_logic,</if>
+            <if test="alertMessage != null">alert_message,</if>
+            <if test="telegramSent != null">telegram_sent,</if>
+            <if test="telegramSuccess != null">telegram_success,</if>
+            <if test="telegramMessageId != null">telegram_message_id,</if>
+            <if test="telegramError != null">telegram_error,</if>
+            <if test="wechatSent != null">wechat_sent,</if>
+            <if test="wechatSuccess != null">wechat_success,</if>
+            <if test="wechatMessageId != null">wechat_message_id,</if>
+            <if test="wechatError != null">wechat_error,</if>
+            <if test="responseTimeMs != null">response_time_ms,</if>
+            <if test="alertTime != null">alert_time,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="batchId != null">#{batchId},</if>
+            <if test="ca != null and ca != ''">#{ca},</if>
+            <if test="tokenSymbol != null">#{tokenSymbol},</if>
+            <if test="tokenName != null">#{tokenName},</if>
+            <if test="pairAddress != null">#{pairAddress},</if>
+            <if test="templateId != null">#{templateId},</if>
+            <if test="templateName != null">#{templateName},</if>
+            <if test="price != null">#{price},</if>
+            <if test="marketCap != null">#{marketCap},</if>
+            <if test="priceChange != null">#{priceChange},</if>
+            <if test="priceChange1m != null">#{priceChange1m},</if>
+            <if test="priceChange5m != null">#{priceChange5m},</if>
+            <if test="priceChange1h != null">#{priceChange1h},</if>
+            <if test="volume1h != null">#{volume1h},</if>
+            <if test="buyVolume1h != null">#{buyVolume1h},</if>
+            <if test="sellVolume1h != null">#{sellVolume1h},</if>
+            <if test="txs1h != null">#{txs1h},</if>
+            <if test="buyTxs1h != null">#{buyTxs1h},</if>
+            <if test="sellTxs1h != null">#{sellTxs1h},</if>
+            <if test="top10Percent != null">#{top10Percent},</if>
+            <if test="triggerReasons != null">#{triggerReasons},</if>
+            <if test="triggerTimeInterval != null">#{triggerTimeInterval},</if>
+            <if test="triggerLogic != null">#{triggerLogic},</if>
+            <if test="alertMessage != null">#{alertMessage},</if>
+            <if test="telegramSent != null">#{telegramSent},</if>
+            <if test="telegramSuccess != null">#{telegramSuccess},</if>
+            <if test="telegramMessageId != null">#{telegramMessageId},</if>
+            <if test="telegramError != null">#{telegramError},</if>
+            <if test="wechatSent != null">#{wechatSent},</if>
+            <if test="wechatSuccess != null">#{wechatSuccess},</if>
+            <if test="wechatMessageId != null">#{wechatMessageId},</if>
+            <if test="wechatError != null">#{wechatError},</if>
+            <if test="responseTimeMs != null">#{responseTimeMs},</if>
+            <if test="alertTime != null">#{alertTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateSolAlertLog" parameterType="SolAlertLog">
+        update sol_ws_alert_log
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="batchId != null">batch_id = #{batchId},</if>
+            <if test="ca != null and ca != ''">ca = #{ca},</if>
+            <if test="tokenSymbol != null">token_symbol = #{tokenSymbol},</if>
+            <if test="tokenName != null">token_name = #{tokenName},</if>
+            <if test="pairAddress != null">pair_address = #{pairAddress},</if>
+            <if test="templateId != null">template_id = #{templateId},</if>
+            <if test="templateName != null">template_name = #{templateName},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="marketCap != null">market_cap = #{marketCap},</if>
+            <if test="priceChange != null">price_change = #{priceChange},</if>
+            <if test="priceChange1m != null">price_change_1m = #{priceChange1m},</if>
+            <if test="priceChange5m != null">price_change_5m = #{priceChange5m},</if>
+            <if test="priceChange1h != null">price_change_1h = #{priceChange1h},</if>
+            <if test="volume1h != null">volume_1h = #{volume1h},</if>
+            <if test="buyVolume1h != null">buy_volume_1h = #{buyVolume1h},</if>
+            <if test="sellVolume1h != null">sell_volume_1h = #{sellVolume1h},</if>
+            <if test="txs1h != null">txs_1h = #{txs1h},</if>
+            <if test="buyTxs1h != null">buy_txs_1h = #{buyTxs1h},</if>
+            <if test="sellTxs1h != null">sell_txs_1h = #{sellTxs1h},</if>
+            <if test="top10Percent != null">top10_percent = #{top10Percent},</if>
+            <if test="triggerReasons != null">trigger_reasons = #{triggerReasons},</if>
+            <if test="triggerTimeInterval != null">trigger_time_interval = #{triggerTimeInterval},</if>
+            <if test="triggerLogic != null">trigger_logic = #{triggerLogic},</if>
+            <if test="alertMessage != null">alert_message = #{alertMessage},</if>
+            <if test="telegramSent != null">telegram_sent = #{telegramSent},</if>
+            <if test="telegramSuccess != null">telegram_success = #{telegramSuccess},</if>
+            <if test="telegramMessageId != null">telegram_message_id = #{telegramMessageId},</if>
+            <if test="telegramError != null">telegram_error = #{telegramError},</if>
+            <if test="wechatSent != null">wechat_sent = #{wechatSent},</if>
+            <if test="wechatSuccess != null">wechat_success = #{wechatSuccess},</if>
+            <if test="wechatMessageId != null">wechat_message_id = #{wechatMessageId},</if>
+            <if test="wechatError != null">wechat_error = #{wechatError},</if>
+            <if test="responseTimeMs != null">response_time_ms = #{responseTimeMs},</if>
+            <if test="alertTime != null">alert_time = #{alertTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSolAlertLogById" parameterType="Long">
+        delete from sol_ws_alert_log where id = #{id}
+    </delete>
+
+    <delete id="deleteSolAlertLogByIds" parameterType="String">
+        delete from sol_ws_alert_log where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
+

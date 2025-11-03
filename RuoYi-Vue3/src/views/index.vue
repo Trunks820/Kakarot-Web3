@@ -49,10 +49,16 @@
       </el-col>
     </el-row>
 
-    <!-- 通知中心 -->
-    <el-row :gutter="16" class="mt20">
-      <el-col :span="24">
+    <!-- 通知中心 - 双流监控 -->
+    <el-row :gutter="16" class="mt20 notification-row">
+      <!-- BSC 全局监控动态 -->
+      <el-col :xs="24" :sm="24" :md="12" :lg="12">
         <NotificationCenter />
+      </el-col>
+      
+      <!-- SOL 智能监控动态 -->
+      <el-col :xs="24" :sm="24" :md="12" :lg="12">
+        <SolNotificationCenter />
       </el-col>
     </el-row>
 
@@ -71,6 +77,7 @@ import WelcomeHeader from '@/views/components/WelcomeHeader.vue'
 import GlobalMonitorConfig from '@/views/components/GlobalMonitorConfig.vue'
 import TokenQuickMonitorConfig from '@/views/components/TokenQuickMonitorConfig.vue'
 import NotificationCenter from '@/views/components/NotificationCenter.vue'
+import SolNotificationCenter from '@/views/components/SolNotificationCenter.vue'
 import WidgetConfigDialog from '@/views/components/WidgetConfigDialog.vue'
 
 // Widget配置对话框
@@ -108,6 +115,13 @@ onMounted(() => {
       margin-bottom: 20px;
       display: flex;
       flex-direction: column;
+    }
+  }
+  
+  // 通知中心行样式
+  .notification-row {
+    .el-col {
+      margin-bottom: 20px;
     }
   }
   
