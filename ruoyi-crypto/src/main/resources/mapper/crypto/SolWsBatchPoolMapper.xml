@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.SolWsBatchPoolMapper">
+    
+    <resultMap type="SolWsBatchPool" id="SolWsBatchPoolResult">
+        <result property="id"            column="id"            />
+        <result property="batchId"       column="batch_id"      />
+        <result property="sourceType"    column="source_type"   />
+        <result property="chainType"     column="chain_type"    />
+        <result property="ca"            column="ca"            />
+        <result property="tokenSymbol"   column="token_symbol"  />
+        <result property="tokenName"     column="token_name"    />
+        <result property="pairAddress"   column="pair_address"  />
+        <result property="marketCap"     column="market_cap"    />
+        <result property="twitterUrl"    column="twitter_url"   />
+        <result property="templateId"    column="template_id"   />
+        <result property="templateName"  column="template_name" />
+        <result property="timeInterval"  column="time_interval" />
+        <result property="eventsConfig"  column="events_config" />
+        <result property="triggerLogic"  column="trigger_logic" />
+        <result property="priority"      column="priority"      />
+        <result property="sortOrder"     column="sort_order"    />
+        <result property="isActive"      column="is_active"     />
+        <result property="createTime"    column="create_time"   />
+        <result property="updateTime"    column="update_time"   />
+    </resultMap>
+
+    <sql id="selectSolWsBatchPoolVo">
+        select id, batch_id, source_type, chain_type, ca, token_symbol, token_name, 
+               pair_address, market_cap, twitter_url, template_id, template_name, 
+               time_interval, events_config, trigger_logic, priority, sort_order, 
+               is_active, create_time, update_time
+        from sol_ws_batch_pool
+    </sql>
+
+    <select id="selectSolWsBatchPoolList" parameterType="SolWsBatchPool" resultMap="SolWsBatchPoolResult">
+        <include refid="selectSolWsBatchPoolVo"/>
+        <where>  
+            <if test="batchId != null">
+                and batch_id = #{batchId}
+            </if>
+            <if test="sourceType != null and sourceType != ''">
+                and source_type = #{sourceType}
+            </if>
+            <if test="chainType != null and chainType != ''">
+                and chain_type = #{chainType}
+            </if>
+            <if test="ca != null and ca != ''">
+                and ca = #{ca}
+            </if>
+            <if test="templateId != null">
+                and template_id = #{templateId}
+            </if>
+            <if test="isActive != null">
+                and is_active = #{isActive}
+            </if>
+        </where>
+        order by batch_id, sort_order
+    </select>
+
+    <insert id="insertSolWsBatchPool" parameterType="SolWsBatchPool" useGeneratedKeys="true" keyProperty="id">
+        insert into sol_ws_batch_pool
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="batchId != null">batch_id,</if>
+            <if test="sourceType != null">source_type,</if>
+            <if test="chainType != null">chain_type,</if>
+            <if test="ca != null">ca,</if>
+            <if test="tokenSymbol != null">token_symbol,</if>
+            <if test="tokenName != null">token_name,</if>
+            <if test="pairAddress != null">pair_address,</if>
+            <if test="marketCap != null">market_cap,</if>
+            <if test="twitterUrl != null">twitter_url,</if>
+            <if test="templateId != null">template_id,</if>
+            <if test="templateName != null">template_name,</if>
+            <if test="timeInterval != null">time_interval,</if>
+            <if test="eventsConfig != null">events_config,</if>
+            <if test="triggerLogic != null">trigger_logic,</if>
+            <if test="priority != null">priority,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="isActive != null">is_active,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="batchId != null">#{batchId},</if>
+            <if test="sourceType != null">#{sourceType},</if>
+            <if test="chainType != null">#{chainType},</if>
+            <if test="ca != null">#{ca},</if>
+            <if test="tokenSymbol != null">#{tokenSymbol},</if>
+            <if test="tokenName != null">#{tokenName},</if>
+            <if test="pairAddress != null">#{pairAddress},</if>
+            <if test="marketCap != null">#{marketCap},</if>
+            <if test="twitterUrl != null">#{twitterUrl},</if>
+            <if test="templateId != null">#{templateId},</if>
+            <if test="templateName != null">#{templateName},</if>
+            <if test="timeInterval != null">#{timeInterval},</if>
+            <if test="eventsConfig != null">#{eventsConfig},</if>
+            <if test="triggerLogic != null">#{triggerLogic},</if>
+            <if test="priority != null">#{priority},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="isActive != null">#{isActive},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <insert id="batchInsertSolWsBatchPool" parameterType="java.util.List">
+        insert into sol_ws_batch_pool (batch_id, source_type, chain_type, ca, token_symbol, token_name,
+                                        pair_address, market_cap, twitter_url, template_id, template_name,
+                                        time_interval, events_config, trigger_logic, priority, sort_order, is_active,
+                                        create_time, update_time)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.batchId}, #{item.sourceType}, #{item.chainType}, #{item.ca}, #{item.tokenSymbol}, #{item.tokenName},
+             #{item.pairAddress}, #{item.marketCap}, #{item.twitterUrl}, #{item.templateId}, #{item.templateName},
+             #{item.timeInterval}, #{item.eventsConfig}, #{item.triggerLogic}, #{item.priority}, #{item.sortOrder}, 
+             #{item.isActive}, now(), now())
+        </foreach>
+    </insert>
+
+    <update id="updateSolWsBatchPool" parameterType="SolWsBatchPool">
+        update sol_ws_batch_pool
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="batchId != null">batch_id = #{batchId},</if>
+            <if test="sourceType != null">source_type = #{sourceType},</if>
+            <if test="chainType != null">chain_type = #{chainType},</if>
+            <if test="ca != null">ca = #{ca},</if>
+            <if test="tokenSymbol != null">token_symbol = #{tokenSymbol},</if>
+            <if test="tokenName != null">token_name = #{tokenName},</if>
+            <if test="pairAddress != null">pair_address = #{pairAddress},</if>
+            <if test="marketCap != null">market_cap = #{marketCap},</if>
+            <if test="twitterUrl != null">twitter_url = #{twitterUrl},</if>
+            <if test="templateId != null">template_id = #{templateId},</if>
+            <if test="templateName != null">template_name = #{templateName},</if>
+            <if test="timeInterval != null">time_interval = #{timeInterval},</if>
+            <if test="eventsConfig != null">events_config = #{eventsConfig},</if>
+            <if test="triggerLogic != null">trigger_logic = #{triggerLogic},</if>
+            <if test="priority != null">priority = #{priority},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="isActive != null">is_active = #{isActive},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSolWsBatchPoolById" parameterType="Long">
+        delete from sol_ws_batch_pool where id = #{id}
+    </delete>
+
+    <delete id="deleteSolWsBatchPoolByIds" parameterType="Long">
+        delete from sol_ws_batch_pool where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteSolWsBatchPoolByBatchId">
+        delete from sol_ws_batch_pool 
+        where batch_id = #{batchId}
+        <if test="sourceType != null and sourceType != ''">
+            and source_type = #{sourceType}
+        </if>
+        <if test="chainType != null and chainType != ''">
+            and chain_type = #{chainType}
+        </if>
+    </delete>
+
+    <select id="selectUsedBatchIds" resultType="java.lang.Integer">
+        select distinct batch_id 
+        from sol_ws_batch_pool 
+        where is_active = 1
+        <if test="chainType != null and chainType != ''">
+            and chain_type = #{chainType}
+        </if>
+        <if test="sourceType != null and sourceType != ''">
+            and source_type = #{sourceType}
+        </if>
+        order by batch_id
+    </select>
+
+    <select id="findLastUnfilledBatch" parameterType="map" resultType="map">
+        select batch_id as batchId, 
+               template_id as templateId, 
+               count(*) as currentCount
+        from sol_ws_batch_pool
+        where source_type = #{sourceType}
+          and chain_type = #{chainType}
+          and is_active = 1
+          and events_config = #{eventsConfig}
+          and trigger_logic = #{triggerLogic}
+        group by batch_id, template_id
+        having count(*) &lt; 99
+        order by batch_id desc
+        limit 1
+    </select>
+
+    <select id="countTokensInBatch" resultType="int">
+        select count(*) 
+        from sol_ws_batch_pool 
+        where batch_id = #{batchId}
+          and source_type = #{sourceType}
+          and chain_type = #{chainType}
+          and is_active = 1
+    </select>
+
+    <select id="selectBatchListWithStats" parameterType="SolWsBatchPool" resultType="map">
+        select 
+            batch_id as batchId,
+            source_type as sourceType,
+            chain_type as chainType,
+            template_id as templateId,
+            template_name as templateName,
+            time_interval as timeInterval,
+            events_config as eventsConfig,
+            trigger_logic as triggerLogic,
+            count(*) as batchCount,
+            min(create_time) as createTime,
+            max(update_time) as updateTime
+        from sol_ws_batch_pool
+        <where>
+            is_active = 1
+            <if test="sourceType != null and sourceType != ''">
+                and source_type = #{sourceType}
+            </if>
+            <if test="chainType != null and chainType != ''">
+                and chain_type = #{chainType}
+            </if>
+            <if test="batchId != null">
+                and batch_id = #{batchId}
+            </if>
+        </where>
+        group by batch_id, source_type, chain_type, template_id, template_name,
+                 time_interval, events_config, trigger_logic
+        order by batch_id
+    </select>
+
+</mapper>
+
