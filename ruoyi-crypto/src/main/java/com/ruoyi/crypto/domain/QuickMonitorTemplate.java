@@ -16,6 +16,9 @@ public class QuickMonitorTemplate extends BaseEntity
     /** 主键ID */
     private Long id;
 
+    /** 配置类型：smart智能模板/batch批量配置 */
+    private String sourceType;
+
     /** 用户ID */
     private Long userId;
 
@@ -63,6 +66,16 @@ public class QuickMonitorTemplate extends BaseEntity
     public Long getId() 
     {
         return id;
+    }
+
+    public void setSourceType(String sourceType) 
+    {
+        this.sourceType = sourceType;
+    }
+
+    public String getSourceType() 
+    {
+        return sourceType;
     }
 
     public void setUserId(Long userId) 
@@ -199,6 +212,7 @@ public class QuickMonitorTemplate extends BaseEntity
     public String toString() {
         return "QuickMonitorTemplate{" +
                 "id=" + id +
+                ", sourceType='" + sourceType + '\'' +
                 ", userId=" + userId +
                 ", chainType='" + chainType + '\'' +
                 ", minMarketCap=" + minMarketCap +

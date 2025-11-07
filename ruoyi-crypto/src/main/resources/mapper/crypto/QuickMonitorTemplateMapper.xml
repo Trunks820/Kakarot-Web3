@@ -6,6 +6,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <resultMap type="QuickMonitorTemplate" id="QuickMonitorTemplateResult">
         <result property="id"    column="id"    />
+        <result property="sourceType"    column="source_type"    />
         <result property="userId"    column="user_id"    />
         <result property="chainType"    column="chain_type"    />
         <result property="minMarketCap"    column="min_market_cap"    />
@@ -27,7 +28,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectQuickMonitorTemplateVo">
-        select id, user_id, chain_type, min_market_cap, has_twitter, time_interval, top_holders_threshold,
+        select id, source_type, user_id, chain_type, min_market_cap, has_twitter, time_interval, top_holders_threshold,
                config_name, events_config, notify_methods, trigger_logic, sort_order, status, del_flag, remark,
                create_by, create_time, update_by, update_time
         from quick_monitor_template
@@ -58,6 +59,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertQuickMonitorTemplate" parameterType="QuickMonitorTemplate" useGeneratedKeys="true" keyProperty="id">
         insert into quick_monitor_template
         <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="sourceType != null">source_type,</if>
             <if test="userId != null">user_id,</if>
             <if test="chainType != null and chainType != ''">chain_type,</if>
             <if test="minMarketCap != null">min_market_cap,</if>
@@ -76,6 +78,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             create_time
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="sourceType != null">#{sourceType},</if>
             <if test="userId != null">#{userId},</if>
             <if test="chainType != null and chainType != ''">#{chainType},</if>
             <if test="minMarketCap != null">#{minMarketCap},</if>
@@ -98,6 +101,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateQuickMonitorTemplate" parameterType="QuickMonitorTemplate">
         update quick_monitor_template
         <trim prefix="SET" suffixOverrides=",">
+            <if test="sourceType != null">source_type = #{sourceType},</if>
             <if test="userId != null">user_id = #{userId},</if>
             <if test="chainType != null and chainType != ''">chain_type = #{chainType},</if>
             <if test="minMarketCap != null">min_market_cap = #{minMarketCap},</if>

@@ -120,29 +120,6 @@
         </template>
       </el-alert>
 
-      <!-- 快速配置模板 -->
-      <div class="config-templates" style="margin-bottom: 20px;">
-        <el-alert type="success" :closable="false">
-          <template #title>
-            <span style="font-weight: 600;">🚀 快速开始</span>
-          </template>
-          <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
-            <el-button size="small" @click="applyTemplate('conservative')">
-              <el-icon><TrendCharts /></el-icon>
-              保守策略（低频通知）
-            </el-button>
-            <el-button size="small" type="primary" @click="applyTemplate('balanced')">
-              <el-icon><DataLine /></el-icon>
-              均衡策略（推荐）
-            </el-button>
-            <el-button size="small" type="warning" @click="applyTemplate('aggressive')">
-              <el-icon><Lightning /></el-icon>
-              激进策略（高频通知）
-            </el-button>
-          </div>
-        </el-alert>
-      </div>
-
       <!-- 配置列表 -->
       <div class="config-manager">
         <div class="config-header">
@@ -286,6 +263,21 @@
 
             <el-divider style="margin: 12px 0" />
 
+            <!-- 触发逻辑（每个配置独立） -->
+            <div style="margin-bottom: 12px; padding: 12px; background: var(--logic-bg, #fff7e6); border-radius: 6px; border: 1px solid #ffd666;">
+              <div style="font-size: 13px; font-weight: 500; margin-bottom: 8px; color: #606266;">
+                ⚙️ 触发逻辑
+              </div>
+              <el-radio-group v-model="config.triggerLogic" size="small">
+                <el-radio value="any">
+                  <span style="font-weight: 500;">任一条件（OR）</span>
+                </el-radio>
+                <el-radio value="all" style="margin-left: 16px;">
+                  <span style="font-weight: 500;">所有条件（AND）</span>
+                </el-radio>
+              </el-radio-group>
+            </div>
+
             <!-- 监控事件配置 -->
             <div class="config-events">
               <el-row :gutter="16">
@@ -362,33 +354,13 @@
         </TransitionGroup>
       </div>
 
-      <!-- 配置验证提示 -->
-      <el-alert 
-        v-if="validationIssues.length > 0" 
-        type="warning" 
-        :closable="false"
-        style="margin-top: 16px;"
-      >
-        <template #title>
-          <span style="font-weight: 600;">⚠️ 配置建议</span>
-        </template>
-        <div style="font-size: 13px; line-height: 1.8;">
-          <div v-for="(issue, idx) in validationIssues" :key="idx">
-            • {{ issue }}
-          </div>
-        </div>
-      </el-alert>
-
       <!-- 通知方式 -->
-      <div style="margin-top: 20px; padding: 16px; background: var(--notify-bg, #f5f7fa); border-radius: 8px;">
+      <div style="margin-top: 16px; padding: 16px; background: var(--notify-bg, #f5f7fa); border-radius: 8px;">
         <div style="font-weight: 500; margin-bottom: 12px;">📢 通知方式（所有配置共用，默认Web通知）</div>
         <el-checkbox-group v-model="notifyMethods">
           <el-checkbox label="telegram">📱 Telegram</el-checkbox>
           <el-checkbox label="wechat">💬 微信</el-checkbox>
         </el-checkbox-group>
-        <div style="margin-top: 8px; font-size: 12px; color: #909399;">
-          💡 Web通知始终启用，这里只需勾选额外的推送方式
-        </div>
       </div>
     </div>
 
@@ -562,6 +534,7 @@ const loadConfigs = async () => {
           hasTwitter: item.hasTwitter === null || item.hasTwitter === undefined ? '' : item.hasTwitter, // Twitter筛选
           timeInterval: item.timeInterval || '5m', // 时间周期
           topHoldersThreshold: item.topHoldersThreshold ? parseFloat(item.topHoldersThreshold) : 50, // 前十过滤
+          triggerLogic: item.triggerLogic || 'any', // 触发逻辑（每个配置独立）
           events: JSON.parse(item.eventsConfig || '{}'),
           tokenCount: item.tokenCount || 0
         }
@@ -603,6 +576,16 @@ const loadConfigs = async () => {
 const openConfigDialog = () => {
   console.log('🔓 打开弹窗，原始配置:', configs.value)
   editConfigs.value = JSON.parse(JSON.stringify(configs.value))
+  
+  // 🔧 临时方案：从localStorage恢复triggerLogic（后端未支持时的workaround）
+  const savedLogics = JSON.parse(localStorage.getItem('quickMonitor_triggerLogics') || '{}')
+  editConfigs.value.forEach(config => {
+    if (!config.triggerLogic && savedLogics[config.id]) {
+      config.triggerLogic = savedLogics[config.id]
+      console.warn('⚠️ 后端未返回triggerLogic，从localStorage恢复:', config.id, savedLogics[config.id])
+    }
+  })
+  
   console.log('✏️ 编辑配置:', editConfigs.value)
   dialogVisible.value = true
   // 注意：不需要手动调用 updateTokenPredictions()，watch 会自动触发
@@ -616,6 +599,7 @@ const addConfig = () => {
     hasTwitter: '', // Twitter筛选：全部
     timeInterval: '5m', // 时间周期：默认5分钟
     topHoldersThreshold: 50, // 前十过滤：默认50%
+    triggerLogic: 'any', // 触发逻辑：默认任一条件
     events: {
       priceChange: { enabled: true, risePercent: 50, fallPercent: 30 },
       holders: { enabled: true, increasePercent: 30, decreasePercent: 20 },
@@ -654,11 +638,12 @@ const applyToAll = (sourceIndex) => {
   ).then(() => {
     const sourceConfig = editConfigs.value[sourceIndex]
     
-    // 深拷贝事件配置、Twitter筛选、时间周期、前十过滤
+    // 深拷贝事件配置、Twitter筛选、时间周期、前十过滤、触发逻辑
     const eventsTemplate = JSON.parse(JSON.stringify(sourceConfig.events))
     const twitterFilter = sourceConfig.hasTwitter
     const timeInterval = sourceConfig.timeInterval
     const topHoldersThreshold = sourceConfig.topHoldersThreshold
+    const triggerLogic = sourceConfig.triggerLogic
     
     // 应用到所有其他配置（保留各自的市值门槛）
     let appliedCount = 0
@@ -668,6 +653,7 @@ const applyToAll = (sourceIndex) => {
         config.hasTwitter = twitterFilter
         config.timeInterval = timeInterval
         config.topHoldersThreshold = topHoldersThreshold
+        config.triggerLogic = triggerLogic
         appliedCount++
       }
     })
@@ -691,6 +677,7 @@ const configTemplates = {
       hasTwitter: 'profile', // 保守：只监控有推特主页的
       timeInterval: '1h', // 保守：1小时周期
       topHoldersThreshold: 40, // 保守：前十持仓≤40%
+      triggerLogic: 'all', // 保守：需满足所有条件
       events: {
         priceChange: { enabled: true, risePercent: 100, fallPercent: 50 },
         holders: { enabled: true, increasePercent: 50, decreasePercent: 30 },
@@ -702,6 +689,7 @@ const configTemplates = {
       hasTwitter: '',
       timeInterval: '1h',
       topHoldersThreshold: 40,
+      triggerLogic: 'all', // 保守：需满足所有条件
       events: {
         priceChange: { enabled: true, risePercent: 80, fallPercent: 40 },
         holders: { enabled: true, increasePercent: 40, decreasePercent: 25 },
@@ -713,6 +701,7 @@ const configTemplates = {
       hasTwitter: '',
       timeInterval: '1h',
       topHoldersThreshold: 40,
+      triggerLogic: 'any', // 保守：单一条件即可
       events: {
         priceChange: { enabled: true, risePercent: 60, fallPercent: 30 },
         holders: { enabled: false, increasePercent: 30, decreasePercent: 20 },
@@ -726,6 +715,7 @@ const configTemplates = {
       hasTwitter: '',
       timeInterval: '5m', // 均衡：5分钟周期
       topHoldersThreshold: 50, // 均衡：前十持仓≤50%
+      triggerLogic: 'any', // 均衡：任一条件
       events: {
         priceChange: { enabled: true, risePercent: 50, fallPercent: 30 },
         holders: { enabled: true, increasePercent: 30, decreasePercent: 20 },
@@ -737,6 +727,7 @@ const configTemplates = {
       hasTwitter: '',
       timeInterval: '5m',
       topHoldersThreshold: 50,
+      triggerLogic: 'any', // 均衡：任一条件
       events: {
         priceChange: { enabled: true, risePercent: 40, fallPercent: 25 },
         holders: { enabled: true, increasePercent: 25, decreasePercent: 15 },
@@ -748,6 +739,7 @@ const configTemplates = {
       hasTwitter: '',
       timeInterval: '5m',
       topHoldersThreshold: 50,
+      triggerLogic: 'any', // 均衡：任一条件
       events: {
         priceChange: { enabled: true, risePercent: 30, fallPercent: 20 },
         holders: { enabled: true, increasePercent: 20, decreasePercent: 10 },
@@ -759,6 +751,7 @@ const configTemplates = {
       hasTwitter: '',
       timeInterval: '5m',
       topHoldersThreshold: 50,
+      triggerLogic: 'any', // 均衡：任一条件
       events: {
         priceChange: { enabled: true, risePercent: 50, fallPercent: 30 },
         holders: { enabled: false, increasePercent: 30, decreasePercent: 20 },
@@ -772,6 +765,7 @@ const configTemplates = {
       hasTwitter: '',
       timeInterval: '1m', // 激进：1分钟周期
       topHoldersThreshold: 60, // 激进：前十持仓≤60%（更宽松）
+      triggerLogic: 'any', // 激进：任一条件
       events: {
         priceChange: { enabled: true, risePercent: 20, fallPercent: 15 },
         holders: { enabled: true, increasePercent: 15, decreasePercent: 10 },
@@ -783,6 +777,7 @@ const configTemplates = {
       hasTwitter: '',
       timeInterval: '1m',
       topHoldersThreshold: 60,
+      triggerLogic: 'any', // 激进：任一条件
       events: {
         priceChange: { enabled: true, risePercent: 15, fallPercent: 10 },
         holders: { enabled: true, increasePercent: 10, decreasePercent: 8 },
@@ -794,6 +789,7 @@ const configTemplates = {
       hasTwitter: '',
       timeInterval: '1m',
       topHoldersThreshold: 60,
+      triggerLogic: 'any', // 激进：任一条件
       events: {
         priceChange: { enabled: true, risePercent: 10, fallPercent: 8 },
         holders: { enabled: true, increasePercent: 8, decreasePercent: 5 },
@@ -805,6 +801,7 @@ const configTemplates = {
       hasTwitter: '',
       timeInterval: '1m',
       topHoldersThreshold: 60,
+      triggerLogic: 'any', // 激进：任一条件
       events: {
         priceChange: { enabled: true, risePercent: 30, fallPercent: 20 },
         holders: { enabled: true, increasePercent: 20, decreasePercent: 10 },
@@ -812,27 +809,6 @@ const configTemplates = {
       }
     }
   ]
-}
-
-// 应用配置模板
-const applyTemplate = (templateName) => {
-  const template = configTemplates[templateName]
-  if (!template) return
-  
-  editConfigs.value = template.map((config, index) => ({
-    id: Date.now() + index,
-    minMarketCap: config.minMarketCap,
-    hasTwitter: config.hasTwitter || '', // 包含Twitter筛选
-    timeInterval: config.timeInterval || '5m', // 包含时间周期
-    topHoldersThreshold: config.topHoldersThreshold || 50, // 包含前十过滤
-    events: JSON.parse(JSON.stringify(config.events)),
-    tokenCount: 0
-  }))
-  
-  // 触发验证
-  validateConfigs()
-  
-  ElMessage.success(`已应用${templateName === 'conservative' ? '保守' : templateName === 'balanced' ? '均衡' : '激进'}策略模板`)
 }
 
 // 批量操作事件
@@ -937,30 +913,8 @@ const saveConfigs = async () => {
       return
     }
   }
-  
-  // 如果有验证问题，询问是否继续
-  if (validationIssues.value.length > 0) {
-    try {
-      await ElMessageBox.confirm(
-        `<div style="line-height: 1.8; max-height: 300px; overflow-y: auto;">
-          ${validationIssues.value.map(issue => `⚠️ ${issue}`).join('<br>')}
-          <br><br><strong>是否仍要继续保存？</strong>
-        </div>`,
-        '配置建议',
-        {
-          confirmButtonText: '继续保存',
-          cancelButtonText: '返回修改',
-          type: 'warning',
-          dangerouslyUseHTMLString: true
-        }
-      )
-    } catch {
-      return
-    }
-  }
-  
+
   // 通知方式可以为空，Web通知是默认的
-  
   saving.value = true
   
   try {
@@ -974,10 +928,20 @@ const saveConfigs = async () => {
       configName: `配置${index + 1}`,
       eventsConfig: JSON.stringify(config.events),
       notifyMethods: notifyMethods.value.length > 0 ? notifyMethods.value.join(',') : '',
-      triggerLogic: 'any',
+      triggerLogic: config.triggerLogic || 'any', // 使用每个配置自己的触发逻辑
       sortOrder: editConfigs.value.length - index,
       status: '1'
     }))
+    
+    // 🔧 临时方案：保存triggerLogic到localStorage（后端未支持时的workaround）
+    const logicsToSave = {}
+    editConfigs.value.forEach(config => {
+      if (config.id && config.triggerLogic) {
+        logicsToSave[config.id] = config.triggerLogic
+      }
+    })
+    localStorage.setItem('quickMonitor_triggerLogics', JSON.stringify(logicsToSave))
+    console.log('💾 已保存triggerLogic到localStorage:', logicsToSave)
     
     // 批量保存
     await batchSaveQuickMonitor(currentChain.value, templates)

@@ -202,6 +202,15 @@ public class QuickMonitorTemplateServiceImpl implements IQuickMonitorTemplateSer
             return new java.util.ArrayList<>();
         }
         
+        // 过滤掉批量监控的模板（source_type='batch'），因为批量监控没有市值门槛
+        templates = templates.stream()
+            .filter(t -> !"batch".equals(t.getSourceType()) && t.getMinMarketCap() != null)
+            .collect(java.util.stream.Collectors.toList());
+        
+        if (templates.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        
         // 按 minMarketCap 升序排序（从小到大）
         templates.sort((a, b) -> a.getMinMarketCap().compareTo(b.getMinMarketCap()));
         
@@ -226,6 +235,7 @@ public class QuickMonitorTemplateServiceImpl implements IQuickMonitorTemplateSer
             item.put("hasTwitter", template.getHasTwitter());
             item.put("timeInterval", template.getTimeInterval());
             item.put("topHoldersThreshold", template.getTopHoldersThreshold());
+            item.put("triggerLogic", template.getTriggerLogic());  // ⭐ 添加触发逻辑字段
             item.put("configName", template.getConfigName());
             item.put("eventsConfig", template.getEventsConfig());
             item.put("notifyMethods", template.getNotifyMethods());

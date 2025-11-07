@@ -15,37 +15,9 @@
         <TokenQuickMonitorConfig />
       </el-col>
       
-      <!-- Widget 3: 微信机器人（占位） -->
+      <!-- Widget 3: 批量添加监控 -->
       <el-col :xs="24" :sm="24" :md="8" :lg="8" class="widget-col">
-        <el-card class="widget-card placeholder-widget" shadow="hover">
-          <template #header>
-            <div class="widget-header">
-              <div class="widget-title">
-                <el-icon class="widget-icon"><ChatDotRound /></el-icon>
-                <span>微信机器人</span>
-              </div>
-              <el-tag type="info" size="small" effect="plain">开发中</el-tag>
-            </div>
-          </template>
-          
-          <div class="placeholder-body">
-            <el-empty description="功能开发中">
-              <template #image>
-                <el-icon :size="80" color="#909399"><Setting /></el-icon>
-              </template>
-              <el-button type="primary" plain disabled>即将上线</el-button>
-            </el-empty>
-          </div>
-          
-          <template #footer>
-            <div class="widget-footer">
-              <el-button size="small" disabled style="width: 100%;">
-                <el-icon><Setting /></el-icon>
-                <span>敬请期待</span>
-              </el-button>
-            </div>
-          </template>
-        </el-card>
+        <BatchMonitorCard />
       </el-col>
     </el-row>
 
@@ -72,10 +44,10 @@
 
 <script setup name="Index">
 import { ref, onMounted } from 'vue'
-import { ChatDotRound, Setting } from '@element-plus/icons-vue'
 import WelcomeHeader from '@/views/components/WelcomeHeader.vue'
 import GlobalMonitorConfig from '@/views/components/GlobalMonitorConfig.vue'
 import TokenQuickMonitorConfig from '@/views/components/TokenQuickMonitorConfig.vue'
+import BatchMonitorCard from '@/views/components/BatchMonitorCard.vue'
 import NotificationCenter from '@/views/components/NotificationCenter.vue'
 import SolNotificationCenter from '@/views/components/SolNotificationCenter.vue'
 import WidgetConfigDialog from '@/views/components/WidgetConfigDialog.vue'
