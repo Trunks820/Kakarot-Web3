@@ -207,33 +207,39 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectBatchListWithStats" parameterType="SolWsBatchPool" resultType="map">
         select 
-            batch_id as batchId,
-            source_type as sourceType,
-            chain_type as chainType,
-            template_id as templateId,
-            template_name as templateName,
-            time_interval as timeInterval,
-            events_config as eventsConfig,
-            trigger_logic as triggerLogic,
-            count(*) as batchCount,
-            min(create_time) as createTime,
-            max(update_time) as updateTime
-        from sol_ws_batch_pool
+            p.batch_id as batchId,
+            p.source_type as sourceType,
+            p.chain_type as chainType,
+            min(p.template_id) as templateId,
+            min(t.config_name) as configName,
+            min(t.time_interval) as timeInterval,
+            min(t.top_holders_threshold) as topHoldersThreshold,
+            min(t.events_config) as eventsConfig,
+            min(t.trigger_logic) as triggerLogic,
+            min(t.notify_methods) as notifyMethods,
+            max(p.is_active) as isActive,
+            count(*) as tokenCount,
+            min(p.create_time) as createTime,
+            max(p.update_time) as updateTime
+        from sol_ws_batch_pool p
+        left join quick_monitor_template t on p.template_id = t.id
         <where>
-            is_active = 1
+            1=1
+            <if test="isActive != null">
+                and p.is_active = #{isActive}
+            </if>
             <if test="sourceType != null and sourceType != ''">
-                and source_type = #{sourceType}
+                and p.source_type = #{sourceType}
             </if>
             <if test="chainType != null and chainType != ''">
-                and chain_type = #{chainType}
+                and p.chain_type = #{chainType}
             </if>
             <if test="batchId != null">
-                and batch_id = #{batchId}
+                and p.batch_id = #{batchId}
             </if>
         </where>
-        group by batch_id, source_type, chain_type, template_id, template_name,
-                 time_interval, events_config, trigger_logic
-        order by batch_id
+        group by p.batch_id, p.source_type, p.chain_type
+        order by p.batch_id desc
     </select>
 
 </mapper>

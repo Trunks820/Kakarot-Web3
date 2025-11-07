@@ -142,11 +142,11 @@ public class BatchMonitorController extends BaseController
         
         // 计算总数
         int solTokenCount = solList.stream()
-            .mapToInt(m -> ((Number) m.get("batchCount")).intValue())
+            .mapToInt(m -> ((Number) m.get("tokenCount")).intValue())
             .sum();
         
         int bscTokenCount = bscList.stream()
-            .mapToInt(m -> ((Number) m.get("batchCount")).intValue())
+            .mapToInt(m -> ((Number) m.get("tokenCount")).intValue())
             .sum();
         
         Map<String, Object> stats = new java.util.HashMap<>();
@@ -157,6 +157,47 @@ public class BatchMonitorController extends BaseController
         stats.put("totalTokenCount", solTokenCount + bscTokenCount);
         
         return AjaxResult.success(stats);
+    }
+
+    /**
+     * 查询指定批次的Token列表（统一参数）
+     */
+    @PreAuthorize("@ss.hasPermi('crypto:batch:query')")
+    @GetMapping("/tokens")
+    public AjaxResult getTokens(@RequestParam Integer batchId,
+                               @RequestParam String chainType)
+    {
+        List<Map<String, Object>> list = batchMonitorService.getTokensInBatch(batchId, "batch", chainType);
+        return AjaxResult.success(list);
+    }
+
+    /**
+     * 删除批次（统一参数）
+     */
+    @PreAuthorize("@ss.hasPermi('crypto:batch:remove')")
+    @Log(title = "批量监控", businessType = BusinessType.DELETE)
+    @DeleteMapping("/delete")
+    public AjaxResult deleteBatchByParams(@RequestParam Integer batchId,
+                                          @RequestParam String chainType)
+    {
+        int count = batchMonitorService.deleteBatch(batchId, "batch", chainType);
+        return toAjax(count);
+    }
+
+    /**
+     * 启用/停用批次（统一参数）
+     */
+    @PreAuthorize("@ss.hasPermi('crypto:batch:edit')")
+    @Log(title = "批量监控", businessType = BusinessType.UPDATE)
+    @PutMapping("/toggleStatus")
+    public AjaxResult toggleStatus(@RequestBody Map<String, Object> params)
+    {
+        Integer batchId = (Integer) params.get("batchId");
+        String chainType = (String) params.get("chainType");
+        Integer isActive = (Integer) params.get("isActive");
+        
+        int count = batchMonitorService.toggleBatchStatus(batchId, "batch", chainType, isActive);
+        return toAjax(count);
     }
 }
 

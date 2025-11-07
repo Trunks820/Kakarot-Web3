@@ -255,7 +255,8 @@ public class BatchMonitorServiceImpl implements IBatchMonitorService
         SolWsBatchPool query = new SolWsBatchPool();
         query.setSourceType(sourceType);
         query.setChainType(chainType);
-        query.setIsActive(1);
+        // 不设置 isActive，查询所有状态的批次
+        // query.setIsActive(1);
         
         return batchPoolMapper.selectBatchListWithStats(query);
     }
@@ -270,7 +271,8 @@ public class BatchMonitorServiceImpl implements IBatchMonitorService
         query.setBatchId(batchId);
         query.setSourceType(sourceType);
         query.setChainType(chainType);
-        query.setIsActive(1);
+        // 注释掉 isActive 过滤，显示所有状态的token
+        // query.setIsActive(1);
         
         List<SolWsBatchPool> list = batchPoolMapper.selectSolWsBatchPoolList(query);
         
@@ -282,6 +284,8 @@ public class BatchMonitorServiceImpl implements IBatchMonitorService
             item.put("tokenSymbol", pool.getTokenSymbol());
             item.put("tokenName", pool.getTokenName());
             item.put("marketCap", pool.getMarketCap());
+            item.put("priority", pool.getPriority());
+            item.put("isActive", pool.getIsActive());
             item.put("createTime", pool.getCreateTime());
             result.add(item);
         }

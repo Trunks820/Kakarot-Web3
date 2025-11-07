@@ -140,7 +140,7 @@ const handleSuccess = () => {
 
 // 跳转到管理页面
 const goToManagePage = () => {
-  router.push('/crypto/monitor')
+  router.push('/crypto/token-monitor')
 }
 
 // 初始化加载统计

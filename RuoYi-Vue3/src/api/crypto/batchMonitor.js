@@ -18,6 +18,11 @@ export function listBatchMonitor(query) {
   })
 }
 
+// 查询批量监控列表（别名）
+export function getBatchList(query) {
+  return listBatchMonitor(query)
+}
+
 // 查询指定批次的Token列表
 export function getTokensInBatch(batchId, query) {
   return request({
@@ -27,21 +32,30 @@ export function getTokensInBatch(batchId, query) {
   })
 }
 
-// 删除批次
-export function deleteBatch(batchId, query) {
+// 查询指定批次的Token列表（统一参数）
+export function getBatchTokens(params) {
   return request({
-    url: `/crypto/batch/${batchId}`,
+    url: '/crypto/batch/tokens',
+    method: 'get',
+    params: params
+  })
+}
+
+// 删除批次
+export function deleteBatch(params) {
+  return request({
+    url: '/crypto/batch/delete',
     method: 'delete',
-    params: query
+    params: params
   })
 }
 
 // 启用/停用批次
-export function toggleBatchStatus(batchId, data) {
+export function toggleBatchStatus(data) {
   return request({
-    url: `/crypto/batch/status/${batchId}`,
+    url: '/crypto/batch/toggleStatus',
     method: 'put',
-    params: data
+    data: data
   })
 }
 
