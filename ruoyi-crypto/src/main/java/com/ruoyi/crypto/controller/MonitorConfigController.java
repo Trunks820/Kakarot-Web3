@@ -6,6 +6,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.crypto.domain.MonitorConfig;
+import com.ruoyi.crypto.mapper.MonitorConfigMapper;
 import com.ruoyi.crypto.service.IMonitorConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +26,9 @@ public class MonitorConfigController extends BaseController
 {
     @Autowired
     private IMonitorConfigService monitorConfigService;
+    
+    @Autowired
+    private MonitorConfigMapper monitorConfigMapper;
 
     /**
      * 查询监控配置列表
@@ -105,11 +109,32 @@ public class MonitorConfigController extends BaseController
      * 统计配置数量（用于首页卡片）
      */
     @GetMapping("/stats")
-    public AjaxResult getStats(@RequestParam(required = false) String chainType,
-                                @RequestParam(required = false) Integer status)
+    public AjaxResult getStats()
     {
-        int count = monitorConfigService.countMonitorConfig(chainType, status);
-        return success(count);
+        // 统计各种状态的配置数量
+        int total = monitorConfigService.countMonitorConfig(null, null);
+        int enabled = monitorConfigService.countMonitorConfig(null, 1);
+        int disabled = monitorConfigService.countMonitorConfig(null, 0);
+        
+        // 按配置类别统计
+        MonitorConfig presetCondition = new MonitorConfig();
+        presetCondition.setConfigType("preset");
+        int preset = monitorConfigMapper.selectMonitorConfigList(presetCondition).size();
+        
+        MonitorConfig customCondition = new MonitorConfig();
+        customCondition.setConfigType("custom");
+        int custom = monitorConfigMapper.selectMonitorConfigList(customCondition).size();
+        
+        // 组装返回数据
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("total", total);
+        stats.put("enabled", enabled);
+        stats.put("disabled", disabled);
+        stats.put("preset", preset);
+        stats.put("custom", custom);
+        stats.put("lastUpdate", new java.util.Date());
+        
+        return success(stats);
     }
 }
 

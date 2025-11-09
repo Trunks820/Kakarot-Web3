@@ -144,12 +144,31 @@ public class MonitorTaskController extends BaseController
      * 统计任务数量（用于首页卡片）
      */
     @GetMapping("/stats")
-    public AjaxResult getStats(@RequestParam(required = false) String taskType,
-                                @RequestParam(required = false) String chainType,
-                                @RequestParam(required = false) Integer status)
+    public AjaxResult getStats()
     {
-        int count = monitorTaskService.countMonitorTask(taskType, chainType, status);
-        return success(count);
+        // 统计总数和状态
+        int total = monitorTaskService.countMonitorTask(null, null, null);
+        int running = monitorTaskService.countMonitorTask(null, null, 1);
+        int paused = monitorTaskService.countMonitorTask(null, null, 0);
+        int error = monitorTaskService.countMonitorTask(null, null, 2);
+        
+        // 按任务类型统计
+        int smart = monitorTaskService.countMonitorTask("smart", null, null);
+        int batch = monitorTaskService.countMonitorTask("batch", null, null);
+        int block = monitorTaskService.countMonitorTask("block", null, null);
+        
+        // 组装返回数据
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("total", total);
+        stats.put("running", running);
+        stats.put("paused", paused);
+        stats.put("error", error);
+        stats.put("smart", smart);
+        stats.put("batch", batch);
+        stats.put("block", block);
+        stats.put("lastUpdate", new java.util.Date());
+        
+        return success(stats);
     }
 }
 
