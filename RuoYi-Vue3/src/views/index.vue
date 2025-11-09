@@ -1,23 +1,35 @@
 <template>
   <div class="app-container home">
-    <!-- 欢迎头部 -->
-    <WelcomeHeader @config-click="showConfigDialog = true" />
+    <!-- 监控系统 V2.0 头部 -->
+    <div class="dashboard-header">
+      <div class="header-left">
+        <h1>监控系统</h1>
+        <el-tag class="version-tag" type="primary">V2.0</el-tag>
+      </div>
+      
+      <div class="header-right">
+        <el-button icon="Refresh" @click="refreshAll" :loading="loading">刷新数据</el-button>
+        <el-badge :value="pendingAlerts" :hidden="pendingAlerts === 0">
+          <el-button icon="Bell" @click="goToAlerts">告警中心</el-button>
+        </el-badge>
+      </div>
+    </div>
 
-    <!-- Widget展示区域 - 3列网格布局 -->
-    <el-row :gutter="16" class="mt20 widget-row" align="stretch">
-      <!-- Widget 1: 链监控配置 -->
+    <!-- 三个核心卡片 - 简洁版 -->
+    <el-row :gutter="20" class="mt20 widget-row">
+      <!-- 卡片1：监控配置 -->
       <el-col :xs="24" :sm="24" :md="8" :lg="8" class="widget-col">
-        <GlobalMonitorConfig />
+        <ConfigCard :stats="configStats" :loading="loading" @refresh="loadConfigStats" />
       </el-col>
       
-      <!-- Widget 2: Token监控 -->
+      <!-- 卡片2：监控任务 -->
       <el-col :xs="24" :sm="24" :md="8" :lg="8" class="widget-col">
-        <TokenQuickMonitorConfig />
+        <TaskCard :stats="taskStats" :loading="loading" @refresh="loadTaskStats" />
       </el-col>
       
-      <!-- Widget 3: 批量添加监控 -->
+      <!-- 卡片3：批次执行 -->
       <el-col :xs="24" :sm="24" :md="8" :lg="8" class="widget-col">
-        <BatchMonitorCard />
+        <BatchCard :stats="batchStats" :loading="loading" @refresh="loadBatchStats" />
       </el-col>
     </el-row>
 
@@ -33,37 +45,122 @@
         <SolNotificationCenter />
       </el-col>
     </el-row>
-
-    <!-- Widget配置对话框 -->
-    <WidgetConfigDialog 
-      v-model="showConfigDialog"
-      @refresh="handleConfigRefresh"
-    />
   </div>
 </template>
 
 <script setup name="Index">
-import { ref, onMounted } from 'vue'
-import WelcomeHeader from '@/views/components/WelcomeHeader.vue'
-import GlobalMonitorConfig from '@/views/components/GlobalMonitorConfig.vue'
-import TokenQuickMonitorConfig from '@/views/components/TokenQuickMonitorConfig.vue'
-import BatchMonitorCard from '@/views/components/BatchMonitorCard.vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import ConfigCard from '@/views/components/monitor/ConfigCard.vue'
+import TaskCard from '@/views/components/monitor/TaskCard.vue'
+import BatchCard from '@/views/components/monitor/BatchCard.vue'
 import NotificationCenter from '@/views/components/NotificationCenter.vue'
 import SolNotificationCenter from '@/views/components/SolNotificationCenter.vue'
-import WidgetConfigDialog from '@/views/components/WidgetConfigDialog.vue'
 
-// Widget配置对话框
-const showConfigDialog = ref(false)
+const router = useRouter()
+const loading = ref(false)
+const configStats = ref({})
+const taskStats = ref({})
+const batchStats = ref({})
+const pendingAlerts = ref(28)
 
-// 配置刷新
-const handleConfigRefresh = () => {
-  console.log('配置已更新，刷新页面Widget')
-  // TODO: 根据配置重新渲染Widget
+// 加载所有数据
+const loadAllData = async () => {
+  loading.value = true
+  try {
+    await Promise.all([
+      loadConfigStats(),
+      loadTaskStats(),
+      loadBatchStats()
+    ])
+  } finally {
+    loading.value = false
+  }
 }
 
-// 首页初始化
+// 加载配置统计
+const loadConfigStats = async () => {
+  // TODO: 替换为实际API调用
+  // const res = await axios.get('/api/v2/monitor/config/stats')
+  
+  // Mock数据
+  await new Promise(resolve => setTimeout(resolve, 300))
+  configStats.value = {
+    total: 15,
+    preset: 3,
+    custom: 12,
+    lastUpdate: new Date().toISOString()
+  }
+}
+
+// 加载任务统计
+const loadTaskStats = async () => {
+  // TODO: 替换为实际API调用
+  // const res = await axios.get('/api/v2/monitor/task/stats')
+  
+  // Mock数据
+  await new Promise(resolve => setTimeout(resolve, 300))
+  taskStats.value = {
+    total: 32,
+    running: 28,
+    paused: 2,
+    error: 2,
+    smart: 18,
+    batch: 14
+  }
+}
+
+// 加载批次统计
+const loadBatchStats = async () => {
+  // TODO: 替换为实际API调用
+  // const res = await axios.get('/api/v2/monitor/batch/stats')
+  
+  // Mock数据
+  await new Promise(resolve => setTimeout(resolve, 300))
+  batchStats.value = {
+    active: 312,
+    normal: 285,
+    delayed: 20,
+    timeout: 7,
+    lastUpdate: new Date().toISOString()
+  }
+}
+
+// 刷新所有数据
+const refreshAll = () => {
+  loadAllData()
+}
+
+// 跳转到告警中心
+const goToAlerts = () => {
+  router.push('/monitor/alert/list')
+}
+
+// 模拟实时更新
+let updateTimer = null
+const setupRealtimeUpdate = () => {
+  updateTimer = setInterval(() => {
+    // 随机更新一些数据
+    if (Math.random() > 0.7) {
+      pendingAlerts.value = Math.floor(Math.random() * 50)
+    }
+  }, 5000)
+}
+
 onMounted(() => {
-  console.log('首页加载完成 - Widget模式')
+  console.log('监控系统 V2.0 首页加载完成')
+  loadAllData()
+  setupRealtimeUpdate()
+  
+  // 定时刷新
+  const refreshTimer = setInterval(() => {
+    loadAllData()
+  }, 30000)
+  
+  onUnmounted(() => {
+    clearInterval(refreshTimer)
+    if (updateTimer) clearInterval(updateTimer)
+  })
 })
 </script>
 
@@ -81,12 +178,45 @@ onMounted(() => {
     margin-left: 20px;
   }
   
+  // Dashboard头部
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #303133;
+      margin: 0;
+    }
+  }
+
+  .version-tag {
+    font-weight: 600;
+  }
+
+  .header-right {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  
   // Widget行样式
   .widget-row {
     .widget-col {
       margin-bottom: 20px;
-      display: flex;
-      flex-direction: column;
     }
   }
   
@@ -94,86 +224,6 @@ onMounted(() => {
   .notification-row {
     .el-col {
       margin-bottom: 20px;
-    }
-  }
-  
-  // Widget卡片通用样式
-  .widget-card {
-    height: 100%;
-    min-height: var(--widget-card-min-height); // 使用全局变量统一管理
-    max-height: var(--widget-card-max-height); // 使用全局变量统一管理
-    display: flex;
-    flex-direction: column;
-    transition: all 0.3s;
-    
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    :deep(.el-card__header) {
-      padding: 16px 20px;
-      border-bottom: 1px solid #EBEEF5;
-      background: #FAFAFA;
-    }
-    
-    :deep(.el-card__body) {
-      flex: 1;
-      min-height: 0; // 关键：允许flex子元素正确收缩
-      padding: 20px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    :deep(.el-card__footer) {
-      padding: 12px 20px;
-      border-top: 1px solid #EBEEF5;
-    }
-    
-    // Widget Header样式
-    .widget-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      
-      .widget-title {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 16px;
-        font-weight: 600;
-        color: #303133;
-        
-        .widget-icon {
-          font-size: 20px;
-        }
-      }
-    }
-    
-    // 占位Widget样式
-    &.placeholder-widget {
-      .placeholder-body {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        
-        :deep(.el-empty) {
-          padding: 40px 0;
-        }
-      }
-    }
-    
-    // Widget Footer样式
-    .widget-footer {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      
-      .el-button {
-        flex: 1;
-      }
     }
   }
 }
@@ -195,22 +245,25 @@ onMounted(() => {
     .mt20 {
       margin-top: 16px;
     }
+
+    .dashboard-header {
+      flex-direction: column;
+      gap: 16px;
+      padding: 16px;
+
+      .header-left {
+        width: 100%;
+      }
+
+      .header-right {
+        width: 100%;
+        justify-content: center;
+      }
+    }
     
     .widget-row {
       .widget-col {
         margin-bottom: 16px;
-        
-        &:last-child {
-          margin-bottom: 0;
-        }
-      }
-    }
-    
-    .widget-card {
-      min-height: 280px;
-      
-      &:hover {
-        transform: none;
       }
     }
   }
@@ -224,11 +277,12 @@ onMounted(() => {
     .mt20 {
       margin-top: 12px;
     }
-    
-    .widget-card {
-      min-height: 250px;
+
+    .dashboard-header {
+      .header-left h1 {
+        font-size: 20px;
+      }
     }
   }
 }
 </style>
-
