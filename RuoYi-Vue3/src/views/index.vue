@@ -51,6 +51,9 @@
 <script setup name="Index">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getConfigStats } from '@/api/crypto/monitor-v2'
+import { getTaskStats } from '@/api/crypto/monitor-v2'
+import { getBatchStats } from '@/api/crypto/monitor-v2'
 import ConfigCard from '@/views/components/monitor/ConfigCard.vue'
 import TaskCard from '@/views/components/monitor/TaskCard.vue'
 import BatchCard from '@/views/components/monitor/BatchCard.vue'
@@ -80,49 +83,31 @@ const loadAllData = async () => {
 
 // 加载配置统计
 const loadConfigStats = async () => {
-  // TODO: 替换为实际API调用
-  // const res = await axios.get('/api/v2/monitor/config/stats')
-  
-  // Mock数据
-  await new Promise(resolve => setTimeout(resolve, 300))
-  configStats.value = {
-    total: 15,
-    preset: 3,
-    custom: 12,
-    lastUpdate: new Date().toISOString()
+  try {
+    const response = await getConfigStats()
+    configStats.value = response.data || {}
+  } catch (error) {
+    console.error('加载配置统计失败:', error)
   }
 }
 
 // 加载任务统计
 const loadTaskStats = async () => {
-  // TODO: 替换为实际API调用
-  // const res = await axios.get('/api/v2/monitor/task/stats')
-  
-  // Mock数据
-  await new Promise(resolve => setTimeout(resolve, 300))
-  taskStats.value = {
-    total: 32,
-    running: 28,
-    paused: 2,
-    error: 2,
-    smart: 18,
-    batch: 14
+  try {
+    const response = await getTaskStats()
+    taskStats.value = response.data || {}
+  } catch (error) {
+    console.error('加载任务统计失败:', error)
   }
 }
 
 // 加载批次统计
 const loadBatchStats = async () => {
-  // TODO: 替换为实际API调用
-  // const res = await axios.get('/api/v2/monitor/batch/stats')
-  
-  // Mock数据
-  await new Promise(resolve => setTimeout(resolve, 300))
-  batchStats.value = {
-    active: 312,
-    normal: 285,
-    delayed: 20,
-    timeout: 7,
-    lastUpdate: new Date().toISOString()
+  try {
+    const response = await getBatchStats()
+    batchStats.value = response.data || {}
+  } catch (error) {
+    console.error('加载批次统计失败:', error)
   }
 }
 

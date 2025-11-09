@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.MonitorTaskTargetMapper">
+    
+    <insert id="insertTaskTarget">
+        insert into monitor_task_target_v2 (task_id, chain_type, target_type, target_value, create_time)
+        values (#{taskId}, #{chainType}, 'ca', #{targetAddress}, sysdate())
+    </insert>
+
+    <delete id="deleteTaskTargetByTaskId" parameterType="Long">
+        delete from monitor_task_target_v2 where task_id = #{taskId}
+    </delete>
+
+</mapper>
+

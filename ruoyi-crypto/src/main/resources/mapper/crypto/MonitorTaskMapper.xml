@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.MonitorTaskMapper">
+    
+    <resultMap type="MonitorTask" id="MonitorTaskResult">
+        <result property="id"    column="id"    />
+        <result property="taskName"    column="task_name"    />
+        <result property="taskType"    column="task_type"    />
+        <result property="chainType"    column="chain_type"    />
+        <result property="minMarketCap"    column="min_market_cap"    />
+        <result property="maxMarketCap"    column="max_market_cap"    />
+        <result property="hasTwitter"    column="has_twitter"    />
+        <result property="autoSyncTargets"    column="auto_sync_targets"    />
+        <result property="syncIntervalMinutes"    column="sync_interval_minutes"    />
+        <result property="targetCount"    column="target_count"    />
+        <result property="scheduleCron"    column="schedule_cron"    />
+        <result property="status"    column="status"    />
+        <result property="lastRunTime"    column="last_run_time"    />
+        <result property="nextRunTime"    column="next_run_time"    />
+        <result property="description"    column="description"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectMonitorTaskVo">
+        select t.id, t.task_name, t.task_type, t.chain_type, 
+               t.min_market_cap, t.max_market_cap, t.has_twitter,
+               t.auto_sync_targets, t.sync_interval_minutes, t.target_count,
+               t.schedule_cron, t.status, t.last_run_time, t.next_run_time,
+               t.description, t.create_by, t.create_time, t.update_by, t.update_time,
+               (select count(*) from monitor_task_target_v2 where task_id = t.id) as target_count,
+               (select count(*) from monitor_task_config_v2 where task_id = t.id) as config_count
+        from monitor_task_v2 t
+    </sql>
+
+    <select id="selectMonitorTaskList" parameterType="MonitorTask" resultMap="MonitorTaskResult">
+        <include refid="selectMonitorTaskVo"/>
+        <where>
+            <if test="taskName != null and taskName != ''">
+                and t.task_name like concat('%', #{taskName}, '%')
+            </if>
+            <if test="taskType != null and taskType != ''">
+                and t.task_type = #{taskType}
+            </if>
+            <if test="chainType != null and chainType != ''">
+                and t.chain_type = #{chainType}
+            </if>
+            <if test="status != null">
+                and t.status = #{status}
+            </if>
+        </where>
+        order by t.create_time desc
+    </select>
+    
+    <select id="selectMonitorTaskById" parameterType="Long" resultMap="MonitorTaskResult">
+        <include refid="selectMonitorTaskVo"/>
+        where t.id = #{id}
+    </select>
+
+    <select id="selectMonitorTaskByChainType" parameterType="String" resultMap="MonitorTaskResult">
+        <include refid="selectMonitorTaskVo"/>
+        where t.chain_type = #{chainType} and t.status = 1
+        order by t.create_time desc
+    </select>
+
+    <select id="countMonitorTask" parameterType="MonitorTask" resultType="int">
+        select count(*) from monitor_task_v2
+        <where>
+            <if test="taskType != null and taskType != ''">
+                and task_type = #{taskType}
+            </if>
+            <if test="chainType != null and chainType != ''">
+                and chain_type = #{chainType}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+        
+    <insert id="insertMonitorTask" parameterType="MonitorTask" useGeneratedKeys="true" keyProperty="id">
+        insert into monitor_task_v2
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="taskName != null and taskName != ''">task_name,</if>
+            <if test="taskType != null and taskType != ''">task_type,</if>
+            <if test="chainType != null and chainType != ''">chain_type,</if>
+            <if test="minMarketCap != null">min_market_cap,</if>
+            <if test="maxMarketCap != null">max_market_cap,</if>
+            <if test="hasTwitter != null">has_twitter,</if>
+            <if test="autoSyncTargets != null">auto_sync_targets,</if>
+            <if test="syncIntervalMinutes != null">sync_interval_minutes,</if>
+            <if test="targetCount != null">target_count,</if>
+            <if test="scheduleCron != null">schedule_cron,</if>
+            <if test="status != null">status,</if>
+            <if test="lastRunTime != null">last_run_time,</if>
+            <if test="nextRunTime != null">next_run_time,</if>
+            <if test="description != null">description,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="taskName != null and taskName != ''">#{taskName},</if>
+            <if test="taskType != null and taskType != ''">#{taskType},</if>
+            <if test="chainType != null and chainType != ''">#{chainType},</if>
+            <if test="minMarketCap != null">#{minMarketCap},</if>
+            <if test="maxMarketCap != null">#{maxMarketCap},</if>
+            <if test="hasTwitter != null">#{hasTwitter},</if>
+            <if test="autoSyncTargets != null">#{autoSyncTargets},</if>
+            <if test="syncIntervalMinutes != null">#{syncIntervalMinutes},</if>
+            <if test="targetCount != null">#{targetCount},</if>
+            <if test="scheduleCron != null">#{scheduleCron},</if>
+            <if test="status != null">#{status},</if>
+            <if test="lastRunTime != null">#{lastRunTime},</if>
+            <if test="nextRunTime != null">#{nextRunTime},</if>
+            <if test="description != null">#{description},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <update id="updateMonitorTask" parameterType="MonitorTask">
+        update monitor_task_v2
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="taskName != null and taskName != ''">task_name = #{taskName},</if>
+            <if test="taskType != null and taskType != ''">task_type = #{taskType},</if>
+            <if test="chainType != null and chainType != ''">chain_type = #{chainType},</if>
+            <if test="minMarketCap != null">min_market_cap = #{minMarketCap},</if>
+            <if test="maxMarketCap != null">max_market_cap = #{maxMarketCap},</if>
+            <if test="hasTwitter != null">has_twitter = #{hasTwitter},</if>
+            <if test="autoSyncTargets != null">auto_sync_targets = #{autoSyncTargets},</if>
+            <if test="syncIntervalMinutes != null">sync_interval_minutes = #{syncIntervalMinutes},</if>
+            <if test="targetCount != null">target_count = #{targetCount},</if>
+            <if test="scheduleCron != null">schedule_cron = #{scheduleCron},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="lastRunTime != null">last_run_time = #{lastRunTime},</if>
+            <if test="nextRunTime != null">next_run_time = #{nextRunTime},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteMonitorTaskById" parameterType="Long">
+        delete from monitor_task_v2 where id = #{id}
+    </delete>
+
+    <delete id="deleteMonitorTaskByIds" parameterType="Long">
+        delete from monitor_task_v2 where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>
+

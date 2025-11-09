@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.MonitorConfigMapper">
+    
+    <resultMap type="MonitorConfig" id="MonitorConfigResult">
+        <result property="id"    column="id"    />
+        <result property="configName"    column="config_name"    />
+        <result property="configType"    column="config_category"    />
+        <result property="chainType"    column="chain_type"    />
+        <result property="source"    column="source"    />
+        <result property="marketType"    column="market_type"    />
+        <result property="minTransactionUsd"    column="min_transaction_usd"    />
+        <result property="cumulativeMinAmountUsd"    column="cumulative_min_amount_usd"    />
+        <result property="timeInterval"    column="time_interval"    />
+        <result property="topHoldersThreshold"    column="top_holders_threshold"    />
+        <result property="eventsConfig"    column="events_config"    />
+        <result property="triggerLogic"    column="trigger_logic"    />
+        <result property="notifyMethods"    column="notify_methods"    />
+        <result property="version"    column="version"    />
+        <result property="description"    column="description"    />
+        <result property="status"    column="status"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <sql id="selectMonitorConfigVo">
+        select id, config_name, config_category, chain_type, source, market_type, 
+               min_transaction_usd, cumulative_min_amount_usd, time_interval, 
+               top_holders_threshold, events_config, trigger_logic, notify_methods, 
+               version, description, status, create_by, create_time, update_by, update_time, del_flag
+        from monitor_config_v2
+    </sql>
+
+    <select id="selectMonitorConfigList" parameterType="MonitorConfig" resultMap="MonitorConfigResult">
+        <include refid="selectMonitorConfigVo"/>
+        <where>
+            del_flag = 0
+            <if test="configName != null and configName != ''">
+                and config_name like concat('%', #{configName}, '%')
+            </if>
+            <if test="configType != null and configType != ''">
+                and config_category = #{configType}
+            </if>
+            <if test="chainType != null and chainType != ''">
+                and chain_type = #{chainType}
+            </if>
+            <if test="source != null and source != ''">
+                and source = #{source}
+            </if>
+            <if test="marketType != null and marketType != ''">
+                and market_type = #{marketType}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+    
+    <select id="selectMonitorConfigById" parameterType="Long" resultMap="MonitorConfigResult">
+        <include refid="selectMonitorConfigVo"/>
+        where id = #{id} and del_flag = 0
+    </select>
+
+    <select id="selectMonitorConfigByChainType" parameterType="String" resultMap="MonitorConfigResult">
+        <include refid="selectMonitorConfigVo"/>
+        where chain_type = #{chainType} and status = 1 and del_flag = 0
+        order by create_time desc
+    </select>
+
+    <select id="countMonitorConfig" parameterType="MonitorConfig" resultType="int">
+        select count(*) from monitor_config_v2
+        <where>
+            del_flag = 0
+            <if test="chainType != null and chainType != ''">
+                and chain_type = #{chainType}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+        
+    <insert id="insertMonitorConfig" parameterType="MonitorConfig" useGeneratedKeys="true" keyProperty="id">
+        insert into monitor_config_v2
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="configName != null and configName != ''">config_name,</if>
+            <if test="configType != null">config_category,</if>
+            <if test="chainType != null and chainType != ''">chain_type,</if>
+            <if test="source != null">source,</if>
+            <if test="marketType != null">market_type,</if>
+            <if test="minTransactionUsd != null">min_transaction_usd,</if>
+            <if test="cumulativeMinAmountUsd != null">cumulative_min_amount_usd,</if>
+            <if test="timeInterval != null">time_interval,</if>
+            <if test="topHoldersThreshold != null">top_holders_threshold,</if>
+            <if test="eventsConfig != null">events_config,</if>
+            <if test="triggerLogic != null">trigger_logic,</if>
+            <if test="notifyMethods != null">notify_methods,</if>
+            <if test="version != null">version,</if>
+            <if test="description != null">description,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time,
+            del_flag
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="configName != null and configName != ''">#{configName},</if>
+            <if test="configType != null">#{configType},</if>
+            <if test="chainType != null and chainType != ''">#{chainType},</if>
+            <if test="source != null">#{source},</if>
+            <if test="marketType != null">#{marketType},</if>
+            <if test="minTransactionUsd != null">#{minTransactionUsd},</if>
+            <if test="cumulativeMinAmountUsd != null">#{cumulativeMinAmountUsd},</if>
+            <if test="timeInterval != null">#{timeInterval},</if>
+            <if test="topHoldersThreshold != null">#{topHoldersThreshold},</if>
+            <if test="eventsConfig != null">#{eventsConfig},</if>
+            <if test="triggerLogic != null">#{triggerLogic},</if>
+            <if test="notifyMethods != null">#{notifyMethods},</if>
+            <if test="version != null">#{version},</if>
+            <if test="description != null">#{description},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate(),
+            0
+         </trim>
+    </insert>
+
+    <update id="updateMonitorConfig" parameterType="MonitorConfig">
+        update monitor_config_v2
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="configName != null and configName != ''">config_name = #{configName},</if>
+            <if test="configType != null">config_category = #{configType},</if>
+            <if test="chainType != null and chainType != ''">chain_type = #{chainType},</if>
+            <if test="source != null">source = #{source},</if>
+            <if test="marketType != null">market_type = #{marketType},</if>
+            <if test="minTransactionUsd != null">min_transaction_usd = #{minTransactionUsd},</if>
+            <if test="cumulativeMinAmountUsd != null">cumulative_min_amount_usd = #{cumulativeMinAmountUsd},</if>
+            <if test="timeInterval != null">time_interval = #{timeInterval},</if>
+            <if test="topHoldersThreshold != null">top_holders_threshold = #{topHoldersThreshold},</if>
+            <if test="eventsConfig != null">events_config = #{eventsConfig},</if>
+            <if test="triggerLogic != null">trigger_logic = #{triggerLogic},</if>
+            <if test="notifyMethods != null">notify_methods = #{notifyMethods},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate(),
+            version = version + 1
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="deleteMonitorConfigById" parameterType="Long">
+        update monitor_config_v2 set del_flag = 1, update_time = sysdate() where id = #{id}
+    </update>
+
+    <update id="deleteMonitorConfigByIds" parameterType="Long">
+        update monitor_config_v2 set del_flag = 1, update_time = sysdate() where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>
+

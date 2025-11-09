@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.MonitorTaskConfigMapper">
+    
+    <insert id="insertTaskConfig">
+        insert into monitor_task_config_v2 (task_id, config_id, create_time)
+        values (#{taskId}, #{configId}, sysdate())
+    </insert>
+
+    <delete id="deleteTaskConfigByTaskId" parameterType="Long">
+        delete from monitor_task_config_v2 where task_id = #{taskId}
+    </delete>
+
+    <delete id="deleteTaskConfigByConfigId" parameterType="Long">
+        delete from monitor_task_config_v2 where config_id = #{configId}
+    </delete>
+
+</mapper>
+
