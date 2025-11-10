@@ -74,5 +74,20 @@ public interface MonitorTaskMapper
      * @return 任务数量
      */
     public int countMonitorTask(MonitorTask monitorTask);
+    
+    /**
+     * 获取任务统计数据
+     * 
+     * @return 统计数据Map
+     */
+    public java.util.Map<String, Object> getTaskStats();
+    
+    /**
+     * 查询任务关联的配置ID列表
+     * 
+     * @param taskId 任务ID
+     * @return 配置ID列表
+     */
+    public List<Long> selectConfigIdsByTaskId(Long taskId);
 }
 

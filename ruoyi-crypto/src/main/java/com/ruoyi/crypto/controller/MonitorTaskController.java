@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -77,10 +78,33 @@ public class MonitorTaskController extends BaseController
     @PostMapping("/batch")
     public AjaxResult addBatch(@RequestBody Map<String, Object> params)
     {
-        // 解析任务信息和目标地址列表
+        // 解析任务信息
         MonitorTask monitorTask = new MonitorTask();
-        // TODO: 从params中提取任务信息
-        List<String> targetAddresses = (List<String>) params.get("targetAddresses");
+        monitorTask.setTaskName((String) params.get("taskName"));
+        monitorTask.setTaskType("batch");
+        monitorTask.setChainType((String) params.get("chainType"));
+        monitorTask.setDescription((String) params.get("description"));
+        
+        // 解析 configIds
+        Object configIdsObj = params.get("configIds");
+        if (configIdsObj instanceof List) {
+            List<Long> configIds = new ArrayList<>();
+            for (Object id : (List<?>) configIdsObj) {
+                if (id instanceof Number) {
+                    configIds.add(((Number) id).longValue());
+                }
+            }
+            monitorTask.setConfigIds(configIds);
+        }
+        
+        // 解析目标地址列表
+        List<String> targetAddresses = (List<String>) params.get("targetList");
+        
+        // 解析状态
+        Object statusObj = params.get("status");
+        if (statusObj instanceof Number) {
+            monitorTask.setStatus(((Number) statusObj).intValue());
+        }
         
         return toAjax(monitorTaskService.insertBatchTask(monitorTask, targetAddresses));
     }

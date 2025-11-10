@@ -137,8 +137,10 @@ export function getTaskDetail(id) {
  * 新增任务（通用）
  */
 export function addTask(data) {
+  // 根据任务类型调用不同的接口
+  const taskType = data.taskType || 'smart'
   return request({
-    url: '/crypto/monitor-v2/task',
+    url: `/crypto/monitor-v2/task/${taskType}`,
     method: 'post',
     data: data
   })
@@ -512,6 +514,30 @@ export function listConfigTemplates(chainType) {
     url: '/crypto/monitor-v2/tool/config-templates',
     method: 'get',
     params: { chainType }
+  })
+}
+
+// ========================================
+// Dashboard 监控总览
+// ========================================
+
+/**
+ * 获取配置-任务-批次关系数据（用于Sankey图）
+ */
+export function getDashboardRelation() {
+  return request({
+    url: '/crypto/monitor-v2/dashboard/relation',
+    method: 'get'
+  })
+}
+
+/**
+ * 获取Dashboard综合统计数据
+ */
+export function getDashboardSummary() {
+  return request({
+    url: '/crypto/monitor-v2/dashboard/summary',
+    method: 'get'
   })
 }
 

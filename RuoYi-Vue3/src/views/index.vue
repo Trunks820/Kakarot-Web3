@@ -169,7 +169,7 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 20px 24px;
-    background: white;
+    background: var(--el-bg-color);
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
@@ -183,7 +183,7 @@ onMounted(() => {
     h1 {
       font-size: 24px;
       font-weight: 600;
-      color: #303133;
+      color: var(--el-text-color-primary);
       margin: 0;
     }
   }

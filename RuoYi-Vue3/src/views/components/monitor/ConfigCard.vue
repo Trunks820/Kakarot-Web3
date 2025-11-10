@@ -41,10 +41,19 @@
     </div>
     
     <div class="card-footer">
-      <el-button type="primary" icon="Plus" @click="openCreateDialog">
+      <el-button 
+        v-hasPermi="['crypto:monitor-v2:config:add']"
+        type="primary" 
+        icon="Plus" 
+        @click="openCreateDialog"
+      >
         新建配置
       </el-button>
-      <el-button icon="List" @click="openManageDialog">
+      <el-button 
+        v-hasPermi="['crypto:monitor-v2:config:list']"
+        icon="List" 
+        @click="openManageDialog"
+      >
         管理配置
       </el-button>
     </div>
@@ -346,12 +355,33 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="120" align="center" fixed="right">
+        <el-table-column label="操作" width="180" align="center" fixed="right">
           <template #default="scope">
-            <el-button text type="primary" size="small" @click="handleEdit(scope.row)">
+            <el-button 
+              v-hasPermi="['crypto:monitor-v2:config:query']"
+              text 
+              type="primary" 
+              size="small" 
+              @click="handleDetail(scope.row)"
+            >
+              详情
+            </el-button>
+            <el-button 
+              v-hasPermi="['crypto:monitor-v2:config:edit']"
+              text 
+              type="primary" 
+              size="small" 
+              @click="handleEdit(scope.row)"
+            >
               编辑
             </el-button>
-            <el-button text type="danger" size="small" @click="handleDelete(scope.row)">
+            <el-button 
+              v-hasPermi="['crypto:monitor-v2:config:remove']"
+              text 
+              type="danger" 
+              size="small" 
+              @click="handleDelete(scope.row)"
+            >
               删除
             </el-button>
           </template>
@@ -360,6 +390,61 @@
       
       <template #footer>
         <el-button @click="manageDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 配置详情弹窗 -->
+    <el-dialog
+      v-model="detailDialogVisible"
+      title="配置详情"
+      width="800px"
+      append-to-body
+    >
+      <el-descriptions v-if="configDetail" :column="2" border>
+        <el-descriptions-item label="配置ID">{{ configDetail.id }}</el-descriptions-item>
+        <el-descriptions-item label="配置名称">{{ configDetail.configName }}</el-descriptions-item>
+        <el-descriptions-item label="链类型">
+          <el-tag size="small">{{ configDetail.chainType?.toUpperCase() }}</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="时间周期">{{ configDetail.timeInterval }}</el-descriptions-item>
+        <el-descriptions-item label="市场类型">
+          <el-tag v-if="configDetail.marketType === 'external'" size="small">🌍 外盘</el-tag>
+          <el-tag v-else-if="configDetail.marketType === 'internal'" size="small">🏠 内盘</el-tag>
+          <el-tag v-else size="small" type="info">不限</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="状态">
+          <el-tag :type="configDetail.status === 1 ? 'success' : 'info'" size="small">
+            {{ configDetail.status === 1 ? '启用' : '停用' }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="创建时间" :span="2">{{ configDetail.createTime }}</el-descriptions-item>
+        <el-descriptions-item label="更新时间" :span="2">{{ configDetail.updateTime }}</el-descriptions-item>
+        <el-descriptions-item label="监控规则" :span="2">
+          <div v-if="configDetail.eventsConfig">
+            <el-tag 
+              v-for="(event, index) in parseEventsConfig(configDetail.eventsConfig)" 
+              :key="index"
+              style="margin-right: 8px; margin-bottom: 8px;"
+            >
+              {{ event }}
+            </el-tag>
+          </div>
+          <span v-else style="color: #909399;">无</span>
+        </el-descriptions-item>
+        <el-descriptions-item label="描述" :span="2">
+          {{ configDetail.description || '无' }}
+        </el-descriptions-item>
+      </el-descriptions>
+      
+      <template #footer>
+        <el-button @click="detailDialogVisible = false">关闭</el-button>
+        <el-button 
+          v-hasPermi="['crypto:monitor-v2:config:edit']"
+          type="primary" 
+          @click="handleEdit(configDetail)"
+        >
+          编辑
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -583,6 +668,39 @@ const openManageDialog = async () => {
   }
 }
 
+// 详情弹窗
+const detailDialogVisible = ref(false)
+const configDetail = ref(null)
+
+// 查看详情
+const handleDetail = (row) => {
+  console.log('查看配置详情:', row)
+  configDetail.value = row
+  detailDialogVisible.value = true
+}
+
+// 解析监控规则为可读文本
+const parseEventsConfig = (eventsConfigStr) => {
+  try {
+    const events = JSON.parse(eventsConfigStr)
+    const rules = []
+    
+    if (events.price?.enabled) {
+      rules.push(`价格监控: ${events.price.threshold}%`)
+    }
+    if (events.holder?.enabled) {
+      rules.push(`持仓监控: 前${events.holder.topCount}名 > ${events.holder.threshold}%`)
+    }
+    if (events.volume?.enabled) {
+      rules.push(`交易量监控: ${events.volume.threshold}`)
+    }
+    
+    return rules.length > 0 ? rules : ['无监控规则']
+  } catch (e) {
+    return ['解析失败']
+  }
+}
+
 const handleEdit = async (row) => {
   try {
     console.log('编辑配置:', row)
@@ -762,9 +880,9 @@ const resetForm = () => {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .monitor-card {
-  background: white;
+  background: var(--el-bg-color);
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -800,7 +918,7 @@ const resetForm = () => {
   font-size: 16px;
   font-weight: 600;
   margin: 0;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .card-body {
@@ -825,7 +943,7 @@ const resetForm = () => {
 
 .count-label {
   font-size: 14px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin-top: 8px;
 }
 
@@ -840,14 +958,14 @@ const resetForm = () => {
 .stat-item {
   text-align: center;
   padding: 12px;
-  background: #F5F7FA;
+  background: var(--el-fill-color-light);
   border-radius: 6px;
 }
 
 .stat-item .label {
   display: block;
   font-size: 12px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin-bottom: 4px;
 }
 
@@ -855,12 +973,12 @@ const resetForm = () => {
   display: block;
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .last-update {
   font-size: 12px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   text-align: center;
 }
 
@@ -888,13 +1006,13 @@ const resetForm = () => {
 
 .event-card.disabled {
   opacity: 0.6;
-  background: #F5F7FA;
+  background: var(--el-fill-color-light);
 }
 
 .event-card :deep(.el-card__header) {
   padding: 12px 16px;
-  background: #F5F7FA;
-  border-bottom: 1px solid #EBEEF5;
+  background: var(--el-fill-color-light);
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .event-title {
@@ -917,13 +1035,13 @@ const resetForm = () => {
 .event-tip {
   margin-top: 8px;
   font-size: 12px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   line-height: 1.5;
 }
 
 .form-tip {
   font-size: 12px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin-top: 4px;
   line-height: 1.5;
 }

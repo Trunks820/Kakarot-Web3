@@ -50,7 +50,12 @@
     </div>
     
     <div class="card-footer">
-      <el-dropdown split-button type="primary" @click="openTaskDialog('smart')">
+      <el-dropdown 
+        v-hasPermi="['crypto:monitor-v2:task:add']"
+        split-button 
+        type="primary" 
+        @click="openTaskDialog('smart')"
+      >
         <el-icon><Plus /></el-icon>
         新建任务
         <template #dropdown>
@@ -70,7 +75,11 @@
           </el-dropdown-menu>
         </template>
       </el-dropdown>
-      <el-button icon="Management" @click="openManageDialog">
+      <el-button 
+        v-hasPermi="['crypto:monitor-v2:task:list']"
+        icon="Management" 
+        @click="openManageDialog"
+      >
         任务列表
       </el-button>
     </div>
@@ -266,15 +275,33 @@
         </el-table-column>
         <el-table-column label="最后运行" prop="lastRunTime" width="150" />
         <el-table-column label="描述" prop="description" min-width="150" show-overflow-tooltip />
-        <el-table-column label="操作" width="150" align="center" fixed="right">
+        <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="scope">
-            <el-button text type="primary" size="small" @click="handleTaskDetail(scope.row)">
+            <el-button 
+              v-hasPermi="['crypto:monitor-v2:task:query']"
+              text 
+              type="primary" 
+              size="small" 
+              @click="handleTaskDetail(scope.row)"
+            >
               详情
             </el-button>
-            <el-button text :type="scope.row.status === 1 ? 'warning' : 'success'" size="small" @click="handleTaskToggle(scope.row)">
+            <el-button 
+              v-hasPermi="['crypto:monitor-v2:task:start', 'crypto:monitor-v2:task:stop']"
+              text 
+              :type="scope.row.status === 1 ? 'warning' : 'success'" 
+              size="small" 
+              @click="handleTaskToggle(scope.row)"
+            >
               {{ scope.row.status === 1 ? '暂停' : '启动' }}
             </el-button>
-            <el-button text type="danger" size="small" @click="handleTaskDelete(scope.row)">
+            <el-button 
+              v-hasPermi="['crypto:monitor-v2:task:remove']"
+              text 
+              type="danger" 
+              size="small" 
+              @click="handleTaskDelete(scope.row)"
+            >
               删除
             </el-button>
           </template>
@@ -550,7 +577,7 @@ const handleSubmit = () => {
           hasTwitter: form.hasTwitter,
           autoSyncTargets: form.autoSyncTargets ? 1 : 0,
           syncIntervalMinutes: form.syncIntervalMinutes,
-          configId: form.configId,
+          configIds: form.configId ? [form.configId] : [], // 转换为数组
           description: form.description,
           status: 1
         }
@@ -573,7 +600,7 @@ const handleSubmit = () => {
           taskName: form.taskName,
           taskType: 'batch',
           chainType: form.chainType,
-          configId: form.configId,
+          configIds: form.configId ? [form.configId] : [], // 转换为数组
           targetList: caArray,
           description: form.description,
           status: 1
@@ -592,7 +619,7 @@ const handleSubmit = () => {
           taskName: form.taskName,
           taskType: 'block',
           chainType: form.chainType,
-          configId: form.configId, // 单个配置ID
+          configIds: form.configId ? [form.configId] : [], // 转换为数组
           description: form.description,
           status: 1
         }
@@ -626,9 +653,9 @@ const resetForm = () => {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .monitor-card {
-  background: white;
+  background: var(--el-bg-color);
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -664,7 +691,7 @@ const resetForm = () => {
   font-size: 16px;
   font-weight: 600;
   margin: 0;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .card-body {
@@ -689,7 +716,7 @@ const resetForm = () => {
 
 .count-label {
   font-size: 14px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   margin-top: 8px;
 }
 
@@ -708,7 +735,7 @@ const resetForm = () => {
 }
 
 .stat-row:hover {
-  background: #F5F7FA;
+  background: var(--el-fill-color-light);
 }
 
 .status-dot {
@@ -732,13 +759,13 @@ const resetForm = () => {
 .stat-row .label {
   flex: 1;
   font-size: 13px;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 
 .stat-row .value {
   font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
 }
 
 .stat-row .value.error-text {
@@ -766,7 +793,7 @@ const resetForm = () => {
 .form-tip {
   margin-left: 10px;
   font-size: 12px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 </style>
 

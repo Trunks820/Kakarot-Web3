@@ -85,9 +85,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertMonitorTask" parameterType="MonitorTask" useGeneratedKeys="true" keyProperty="id">
         insert into monitor_task_v2
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="taskName != null and taskName != ''">task_name,</if>
-            <if test="taskType != null and taskType != ''">task_type,</if>
-            <if test="chainType != null and chainType != ''">chain_type,</if>
+            task_name,
+            task_type,
+            chain_type,
             <if test="minMarketCap != null">min_market_cap,</if>
             <if test="maxMarketCap != null">max_market_cap,</if>
             <if test="hasTwitter != null">has_twitter,</if>
@@ -103,9 +103,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             create_time
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="taskName != null and taskName != ''">#{taskName},</if>
-            <if test="taskType != null and taskType != ''">#{taskType},</if>
-            <if test="chainType != null and chainType != ''">#{chainType},</if>
+            #{taskName},
+            #{taskType},
+            #{chainType},
             <if test="minMarketCap != null">#{minMarketCap},</if>
             <if test="maxMarketCap != null">#{maxMarketCap},</if>
             <if test="hasTwitter != null">#{hasTwitter},</if>
@@ -155,6 +155,25 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <select id="getTaskStats" resultType="map">
+        select 
+            count(*) as total,
+            sum(case when status = 1 then 1 else 0 end) as running,
+            sum(case when status = 0 then 1 else 0 end) as stopped,
+            sum(case when status = 2 then 1 else 0 end) as paused,
+            sum(case when task_type = 'smart' then 1 else 0 end) as smartCount,
+            sum(case when task_type = 'batch' then 1 else 0 end) as batchCount,
+            sum(case when task_type = 'block' then 1 else 0 end) as blockCount
+        from monitor_task_v2
+    </select>
+
+    <select id="selectConfigIdsByTaskId" parameterType="Long" resultType="Long">
+        select config_id 
+        from monitor_task_config_v2 
+        where task_id = #{taskId}
+        order by config_id
+    </select>
 
 </mapper>
 

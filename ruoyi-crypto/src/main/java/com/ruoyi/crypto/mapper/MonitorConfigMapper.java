@@ -74,5 +74,12 @@ public interface MonitorConfigMapper
      * @return 配置数量
      */
     public int countMonitorConfig(MonitorConfig monitorConfig);
+    
+    /**
+     * 获取配置统计数据
+     * 
+     * @return 统计数据Map
+     */
+    public java.util.Map<String, Object> getConfigStats();
 }
 

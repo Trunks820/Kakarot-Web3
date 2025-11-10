@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.MonitorBatchMapper">
+    
+    <resultMap type="MonitorBatch" id="MonitorBatchResult">
+        <result property="id"              column="id"    />
+        <result property="taskId"          column="task_id"    />
+        <result property="batchNo"         column="batch_no"    />
+        <result property="itemCount"       column="item_count"    />
+        <result property="status"          column="status"    />
+        <result property="workerId"        column="worker_id"    />
+        <result property="workerPid"       column="worker_pid"    />
+        <result property="lastHeartbeat"   column="last_heartbeat"    />
+        <result property="totalAlerts"     column="total_alerts"    />
+        <result property="lastAlertTime"   column="last_alert_time"    />
+        <result property="errorCount"      column="error_count"    />
+        <result property="lastError"       column="last_error"    />
+        <result property="createTime"      column="create_time"    />
+        <result property="updateTime"      column="update_time"    />
+        <result property="taskName"        column="task_name"    />
+        <result property="taskType"        column="task_type"    />
+        <result property="chainType"       column="chain_type"    />
+    </resultMap>
+
+    <resultMap type="MonitorBatchItem" id="MonitorBatchItemResult">
+        <result property="id"              column="id"    />
+        <result property="batchId"         column="batch_id"    />
+        <result property="targetId"        column="target_id"    />
+        <result property="itemOrder"       column="item_order"    />
+        <result property="ca"              column="ca"    />
+        <result property="tokenName"       column="token_name"    />
+        <result property="tokenSymbol"     column="token_symbol"    />
+        <result property="marketCap"       column="market_cap"    />
+        <result property="taskId"          column="task_id"    />
+        <result property="batchNo"         column="batch_no"    />
+        <result property="createTime"      column="create_time"    />
+    </resultMap>
+
+    <sql id="selectMonitorBatchVo">
+        select 
+            b.id, b.task_id, b.batch_no, b.item_count, b.status, 
+            b.worker_id, b.worker_pid, b.last_heartbeat, 
+            b.total_alerts, b.last_alert_time, b.error_count, b.last_error,
+            b.create_time, b.update_time,
+            t.task_name, t.task_type, t.chain_type
+        from monitor_batch_v2 b
+        left join monitor_task_v2 t on b.task_id = t.id
+    </sql>
+
+    <sql id="selectBatchItemVo">
+        select 
+            bi.id, bi.batch_id, bi.target_id, bi.item_order, 
+            bi.ca, bi.token_name, bi.token_symbol, bi.market_cap,
+            bi.task_id, bi.batch_no, bi.create_time
+        from monitor_batch_item_v2 bi
+    </sql>
+
+    <!-- 统计查询 -->
+    <select id="countTotal" resultType="int">
+        select count(*) from monitor_batch_v2
+    </select>
+
+    <select id="countByStatus" resultType="int">
+        select count(*) from monitor_batch_v2 where status = #{status}
+    </select>
+
+    <select id="countTotalTargets" resultType="int">
+        select COALESCE(sum(item_count), 0) from monitor_batch_v2
+    </select>
+
+    <select id="countHeartbeatNormal" resultType="int">
+        select count(*) from monitor_batch_v2 
+        where status = 'running' 
+        and last_heartbeat is not null 
+        and last_heartbeat >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+    </select>
+
+    <select id="selectErrorBatches" resultType="map">
+        select 
+            b.id as batchId,
+            b.task_id as taskId,
+            t.task_name as taskName,
+            b.last_error as error,
+            b.last_heartbeat as lastHeartbeat
+        from monitor_batch_v2 b
+        left join monitor_task_v2 t on b.task_id = t.id
+        where b.status = 'error' or b.error_count > 0
+        order by b.update_time desc
+        limit 10
+    </select>
+
+    <!-- 查询批次详情 -->
+    <select id="selectMonitorBatchById" parameterType="Long" resultMap="MonitorBatchResult">
+        <include refid="selectMonitorBatchVo"/>
+        where b.id = #{id}
+    </select>
+
+    <!-- 查询批次列表 -->
+    <select id="selectMonitorBatchList" parameterType="MonitorBatch" resultMap="MonitorBatchResult">
+        <include refid="selectMonitorBatchVo"/>
+        <where>  
+            <if test="taskId != null "> and b.task_id = #{taskId}</if>
+            <if test="batchNo != null "> and b.batch_no = #{batchNo}</if>
+            <if test="status != null  and status != ''"> and b.status = #{status}</if>
+            <if test="workerId != null  and workerId != ''"> and b.worker_id = #{workerId}</if>
+        </where>
+        order by b.create_time desc
+    </select>
+
+    <!-- 查询批次项列表 -->
+    <select id="selectBatchItems" parameterType="Long" resultMap="MonitorBatchItemResult">
+        <include refid="selectBatchItemVo"/>
+        where bi.batch_id = #{batchId}
+        order by bi.item_order
+    </select>
+    
+    <!-- 新增批次 -->
+    <insert id="insertMonitorBatch" parameterType="MonitorBatch" useGeneratedKeys="true" keyProperty="id">
+        insert into monitor_batch_v2
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="taskId != null">task_id,</if>
+            <if test="batchNo != null">batch_no,</if>
+            <if test="itemCount != null">item_count,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="workerId != null and workerId != ''">worker_id,</if>
+            <if test="workerPid != null">worker_pid,</if>
+            <if test="lastHeartbeat != null">last_heartbeat,</if>
+            <if test="totalAlerts != null">total_alerts,</if>
+            <if test="lastAlertTime != null">last_alert_time,</if>
+            <if test="errorCount != null">error_count,</if>
+            <if test="lastError != null">last_error,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="taskId != null">#{taskId},</if>
+            <if test="batchNo != null">#{batchNo},</if>
+            <if test="itemCount != null">#{itemCount},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="workerId != null and workerId != ''">#{workerId},</if>
+            <if test="workerPid != null">#{workerPid},</if>
+            <if test="lastHeartbeat != null">#{lastHeartbeat},</if>
+            <if test="totalAlerts != null">#{totalAlerts},</if>
+            <if test="lastAlertTime != null">#{lastAlertTime},</if>
+            <if test="errorCount != null">#{errorCount},</if>
+            <if test="lastError != null">#{lastError},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <!-- 修改批次 -->
+    <update id="updateMonitorBatch" parameterType="MonitorBatch">
+        update monitor_batch_v2
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="taskId != null">task_id = #{taskId},</if>
+            <if test="batchNo != null">batch_no = #{batchNo},</if>
+            <if test="itemCount != null">item_count = #{itemCount},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="workerId != null">worker_id = #{workerId},</if>
+            <if test="workerPid != null">worker_pid = #{workerPid},</if>
+            <if test="lastHeartbeat != null">last_heartbeat = #{lastHeartbeat},</if>
+            <if test="totalAlerts != null">total_alerts = #{totalAlerts},</if>
+            <if test="lastAlertTime != null">last_alert_time = #{lastAlertTime},</if>
+            <if test="errorCount != null">error_count = #{errorCount},</if>
+            <if test="lastError != null">last_error = #{lastError},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <!-- 删除批次 -->
+    <delete id="deleteMonitorBatchById" parameterType="Long">
+        delete from monitor_batch_v2 where id = #{id}
+    </delete>
+
+    <!-- 批量删除批次 -->
+    <delete id="deleteMonitorBatchByIds" parameterType="String">
+        delete from monitor_batch_v2 where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 获取批次统计数据 -->
+    <select id="getBatchStats" resultType="map">
+        select 
+            count(*) as total,
+            sum(case when status = 'running' then 1 else 0 end) as running,
+            sum(case when status = 'completed' then 1 else 0 end) as completed,
+            sum(case when status = 'error' then 1 else 0 end) as error,
+            sum(case when status = 'stopped' then 1 else 0 end) as stopped,
+            COALESCE(sum(item_count), 0) as totalTargets,
+            COALESCE(sum(total_alerts), 0) as totalAlerts
+        from monitor_batch_v2
+    </select>
+</mapper>
+

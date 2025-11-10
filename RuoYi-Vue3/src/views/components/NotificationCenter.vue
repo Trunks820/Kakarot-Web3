@@ -403,7 +403,7 @@ defineExpose({
     .title {
       font-size: 16px;
       font-weight: 600;
-      color: #303133;
+      color: var(--el-text-color-primary);
     }
   }
   
@@ -433,7 +433,7 @@ defineExpose({
       .notification-right {
         .notification-title {
           font-weight: 600;
-          color: #303133;
+          color: var(--el-text-color-primary);
         }
       }
       
@@ -451,7 +451,7 @@ defineExpose({
     
     &:hover {
       .notification-right {
-        background: #F5F7FA;
+        background: var(--el-fill-color-light);
       }
     }
     
@@ -499,7 +499,7 @@ defineExpose({
       .notification-line {
         flex: 1;
         width: 2px;
-        background: #DCDFE6;
+        background: var(--el-border-color);
         min-height: 40px;
       }
     }
@@ -518,19 +518,19 @@ defineExpose({
         
         span {
           font-size: 12px;
-          color: #909399;
+          color: var(--el-text-color-secondary);
         }
       }
       
       .notification-title {
         font-size: 14px;
-        color: #606266;
+        color: var(--el-text-color-regular);
         margin-bottom: 4px;
       }
       
       .notification-content-text {
         font-size: 13px;
-        color: #909399;
+        color: var(--el-text-color-secondary);
         line-height: 1.6;
         margin-bottom: 8px;
       }
@@ -541,7 +541,7 @@ defineExpose({
         gap: 12px;
         align-items: center;
         padding-top: 8px;
-        border-top: 1px solid #EBEEF5;
+        border-top: 1px solid var(--el-border-color-lighter);
         margin-top: 8px;
         
         .extra-item {
@@ -551,25 +551,25 @@ defineExpose({
           font-size: 12px;
           
           .extra-label {
-            color: #909399;
+            color: var(--el-text-color-secondary);
             font-weight: 500;
           }
           
           .extra-value {
-            color: #606266;
+            color: var(--el-text-color-regular);
             
             &.ca-address {
               display: inline-flex;
               align-items: center;
               gap: 4px;
               padding: 2px 8px;
-              background: #F5F7FA;
+              background: var(--el-fill-color-light);
               border-radius: 4px;
               cursor: pointer;
               transition: all 0.3s;
               
               &:hover {
-                background: #E6E8EB;
+                background: var(--el-fill-color);
                 color: #409EFF;
                 
                 .copy-icon {
