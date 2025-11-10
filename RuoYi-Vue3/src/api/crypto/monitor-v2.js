@@ -405,10 +405,11 @@ export function getAlert(id) {
 /**
  * 标记告警已处理
  */
-export function markAlertHandled(id) {
+export function markAlertHandled(id, data) {
   return request({
     url: `/crypto/monitor-v2/alert/${id}/handle`,
-    method: 'put'
+    method: 'put',
+    data: data
   })
 }
 

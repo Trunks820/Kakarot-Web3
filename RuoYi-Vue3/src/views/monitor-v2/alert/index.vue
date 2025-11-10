@@ -105,12 +105,84 @@
         @pagination="getList"
       />
     </el-card>
+
+    <!-- 详情对话框 -->
+    <el-dialog
+      v-model="detailDialog.visible"
+      title="告警详情"
+      width="800px"
+      :close-on-click-modal="false"
+      @close="closeDetailDialog"
+    >
+      <el-descriptions v-loading="detailDialog.loading" :column="2" border>
+        <el-descriptions-item label="Token符号">
+          {{ detailDialog.data.tokenSymbol }}
+        </el-descriptions-item>
+        <el-descriptions-item label="Token名称">
+          {{ detailDialog.data.tokenName }}
+        </el-descriptions-item>
+        <el-descriptions-item label="CA地址" :span="2">
+          {{ detailDialog.data.ca }}
+        </el-descriptions-item>
+        <el-descriptions-item label="告警类型">
+          <el-tag size="small">{{ detailDialog.data.alertType }}</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="告警级别">
+          <el-tag v-if="detailDialog.data.level === 'high'" type="danger" size="small">高级别</el-tag>
+          <el-tag v-else-if="detailDialog.data.level === 'medium'" type="warning" size="small">中级别</el-tag>
+          <el-tag v-else type="info" size="small">低级别</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="告警标题" :span="2">
+          {{ detailDialog.data.alertTitle }}
+        </el-descriptions-item>
+        <el-descriptions-item label="触发值">
+          {{ detailDialog.data.triggerValue }}
+        </el-descriptions-item>
+        <el-descriptions-item label="市值">
+          {{ detailDialog.data.marketCap }}
+        </el-descriptions-item>
+        <el-descriptions-item label="通知状态">
+          <el-tag :type="detailDialog.data.notifyStatus === 'sent' ? 'success' : 'info'" size="small">
+            {{ detailDialog.data.notifyStatus }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="通知渠道">
+          {{ detailDialog.data.notifyChannels }}
+        </el-descriptions-item>
+        <el-descriptions-item label="告警时间" :span="2">
+          {{ detailDialog.data.createTime }}
+        </el-descriptions-item>
+        <el-descriptions-item label="处理状态">
+          <el-tag v-if="detailDialog.data.status === 'unread'" type="danger" size="small">未读</el-tag>
+          <el-tag v-else-if="detailDialog.data.status === 'read'" type="warning" size="small">已读</el-tag>
+          <el-tag v-else type="success" size="small">已处理</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="处理人" v-if="detailDialog.data.handleBy">
+          {{ detailDialog.data.handleBy }}
+        </el-descriptions-item>
+        <el-descriptions-item label="处理时间" v-if="detailDialog.data.handleTime" :span="2">
+          {{ detailDialog.data.handleTime }}
+        </el-descriptions-item>
+        <el-descriptions-item label="处理备注" v-if="detailDialog.data.handleRemark" :span="2">
+          {{ detailDialog.data.handleRemark }}
+        </el-descriptions-item>
+        <el-descriptions-item label="告警内容" :span="2">
+          <pre style="margin: 0; white-space: pre-wrap;">{{ detailDialog.data.alertContent }}</pre>
+        </el-descriptions-item>
+      </el-descriptions>
+      
+      <template #footer>
+        <el-button @click="closeDetailDialog">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { listAlert, getAlert, markAlertHandled } from '@/api/crypto/monitor-v2'
+import Pagination from '@/components/Pagination'
 
 const loading = ref(false)
 const alertList = ref([])
@@ -124,21 +196,22 @@ const queryParams = ref({
   status: undefined
 })
 
+// 详情对话框
+const detailDialog = ref({
+  visible: false,
+  loading: false,
+  data: {}
+})
+
 // 查询列表
 const getList = async () => {
   loading.value = true
   try {
-    // TODO: 调用告警列表API
-    // const response = await listAlert(queryParams.value)
-    // alertList.value = response.rows
-    // total.value = response.total
-    
-    // 模拟数据
-    alertList.value = []
-    total.value = 0
-    ElMessage.info('告警日志功能待开发')
+    const response = await listAlert(queryParams.value)
+    alertList.value = response.rows
+    total.value = response.total
   } catch (error) {
-    ElMessage.error('查询失败：' + error.message)
+    ElMessage.error('查询失败：' + (error.message || '未知错误'))
   } finally {
     loading.value = false
   }
@@ -163,15 +236,44 @@ const resetQuery = () => {
 }
 
 // 详情
-const handleDetail = (row) => {
-  ElMessage.info('查看详情功能待实现')
-  console.log('查看告警详情:', row)
+const handleDetail = async (row) => {
+  detailDialog.value.visible = true
+  detailDialog.value.loading = true
+  try {
+    const response = await getAlert(row.id)
+    detailDialog.value.data = response.data
+  } catch (error) {
+    ElMessage.error('获取详情失败：' + (error.message || '未知错误'))
+    detailDialog.value.visible = false
+  } finally {
+    detailDialog.value.loading = false
+  }
+}
+
+// 关闭详情对话框
+const closeDetailDialog = () => {
+  detailDialog.value.visible = false
+  detailDialog.value.data = {}
 }
 
 // 标记处理
 const handleMark = (row) => {
-  ElMessage.info('标记处理功能待实现')
-  console.log('标记处理:', row)
+  ElMessageBox.prompt('请输入处理备注（可选）', '标记为已处理', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputPattern: /.*/,
+    inputType: 'textarea'
+  }).then(async ({ value }) => {
+    try {
+      await markAlertHandled(row.id, { handleRemark: value || '' })
+      ElMessage.success('标记成功')
+      getList()
+    } catch (error) {
+      ElMessage.error('标记失败：' + (error.message || '未知错误'))
+    }
+  }).catch(() => {
+    // 取消操作
+  })
 }
 
 onMounted(() => {

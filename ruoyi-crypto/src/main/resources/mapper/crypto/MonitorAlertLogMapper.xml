@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.crypto.mapper.MonitorAlertLogMapper">
+    
+    <resultMap type="MonitorAlertLog" id="MonitorAlertLogResult">
+        <result property="id"    column="id"    />
+        <result property="taskId"    column="task_id"    />
+        <result property="configId"    column="config_id"    />
+        <result property="alertKey"    column="alert_key"    />
+        <result property="taskType"    column="task_type"    />
+        <result property="chainType"    column="chain_type"    />
+        <result property="ca"    column="ca"    />
+        <result property="tokenName"    column="token_name"    />
+        <result property="tokenSymbol"    column="token_symbol"    />
+        <result property="marketCap"    column="market_cap"    />
+        <result property="alertType"    column="alert_type"    />
+        <result property="alertTitle"    column="alert_title"    />
+        <result property="alertContent"    column="alert_content"    />
+        <result property="triggerValue"    column="trigger_value"    />
+        <result property="notifyStatus"    column="notify_status"    />
+        <result property="notifyChannels"    column="notify_channels"    />
+        <result property="notifyTime"    column="notify_time"    />
+        <result property="notifyError"    column="notify_error"    />
+        <result property="detectLatencyMs"    column="detect_latency_ms"    />
+        <result property="notifyLatencyMs"    column="notify_latency_ms"    />
+        <result property="level"    column="level"    />
+        <result property="status"    column="status"    />
+        <result property="handleRemark"    column="handle_remark"    />
+        <result property="handleBy"    column="handle_by"    />
+        <result property="handleTime"    column="handle_time"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectMonitorAlertLogVo">
+        select id, task_id, config_id, alert_key, task_type, chain_type, ca, token_name, token_symbol, 
+               market_cap, alert_type, alert_title, alert_content, trigger_value, notify_status, 
+               notify_channels, notify_time, notify_error, detect_latency_ms, notify_latency_ms,
+               level, status, handle_remark, handle_by, handle_time, create_time
+        from monitor_alert_log_v2
+    </sql>
+
+    <select id="selectMonitorAlertLogList" parameterType="MonitorAlertLog" resultMap="MonitorAlertLogResult">
+        <include refid="selectMonitorAlertLogVo"/>
+        <where>  
+            <if test="taskId != null "> and task_id = #{taskId}</if>
+            <if test="configId != null "> and config_id = #{configId}</if>
+            <if test="taskType != null  and taskType != ''"> and task_type = #{taskType}</if>
+            <if test="chainType != null  and chainType != ''"> and chain_type = #{chainType}</if>
+            <if test="ca != null  and ca != ''"> and ca = #{ca}</if>
+            <if test="tokenSymbol != null  and tokenSymbol != ''"> and token_symbol like concat('%', #{tokenSymbol}, '%')</if>
+            <if test="alertType != null  and alertType != ''"> and alert_type = #{alertType}</if>
+            <if test="notifyStatus != null  and notifyStatus != ''"> and notify_status = #{notifyStatus}</if>
+            <if test="level != null  and level != ''"> and level = #{level}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+                and date_format(create_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+                and date_format(create_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+    
+    <select id="selectMonitorAlertLogById" parameterType="Long" resultMap="MonitorAlertLogResult">
+        <include refid="selectMonitorAlertLogVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertMonitorAlertLog" parameterType="MonitorAlertLog" useGeneratedKeys="true" keyProperty="id">
+        insert into monitor_alert_log_v2
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="taskId != null">task_id,</if>
+            <if test="configId != null">config_id,</if>
+            <if test="alertKey != null and alertKey != ''">alert_key,</if>
+            <if test="taskType != null and taskType != ''">task_type,</if>
+            <if test="chainType != null and chainType != ''">chain_type,</if>
+            <if test="ca != null and ca != ''">ca,</if>
+            <if test="tokenName != null and tokenName != ''">token_name,</if>
+            <if test="tokenSymbol != null and tokenSymbol != ''">token_symbol,</if>
+            <if test="marketCap != null">market_cap,</if>
+            <if test="alertType != null and alertType != ''">alert_type,</if>
+            <if test="alertTitle != null and alertTitle != ''">alert_title,</if>
+            <if test="alertContent != null">alert_content,</if>
+            <if test="triggerValue != null">trigger_value,</if>
+            <if test="notifyStatus != null and notifyStatus != ''">notify_status,</if>
+            <if test="notifyChannels != null and notifyChannels != ''">notify_channels,</if>
+            <if test="notifyTime != null">notify_time,</if>
+            <if test="notifyError != null">notify_error,</if>
+            <if test="detectLatencyMs != null">detect_latency_ms,</if>
+            <if test="notifyLatencyMs != null">notify_latency_ms,</if>
+            <if test="level != null and level != ''">level,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="taskId != null">#{taskId},</if>
+            <if test="configId != null">#{configId},</if>
+            <if test="alertKey != null and alertKey != ''">#{alertKey},</if>
+            <if test="taskType != null and taskType != ''">#{taskType},</if>
+            <if test="chainType != null and chainType != ''">#{chainType},</if>
+            <if test="ca != null and ca != ''">#{ca},</if>
+            <if test="tokenName != null and tokenName != ''">#{tokenName},</if>
+            <if test="tokenSymbol != null and tokenSymbol != ''">#{tokenSymbol},</if>
+            <if test="marketCap != null">#{marketCap},</if>
+            <if test="alertType != null and alertType != ''">#{alertType},</if>
+            <if test="alertTitle != null and alertTitle != ''">#{alertTitle},</if>
+            <if test="alertContent != null">#{alertContent},</if>
+            <if test="triggerValue != null">#{triggerValue},</if>
+            <if test="notifyStatus != null and notifyStatus != ''">#{notifyStatus},</if>
+            <if test="notifyChannels != null and notifyChannels != ''">#{notifyChannels},</if>
+            <if test="notifyTime != null">#{notifyTime},</if>
+            <if test="notifyError != null">#{notifyError},</if>
+            <if test="detectLatencyMs != null">#{detectLatencyMs},</if>
+            <if test="notifyLatencyMs != null">#{notifyLatencyMs},</if>
+            <if test="level != null and level != ''">#{level},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateMonitorAlertLog" parameterType="MonitorAlertLog">
+        update monitor_alert_log_v2
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="notifyStatus != null and notifyStatus != ''">notify_status = #{notifyStatus},</if>
+            <if test="notifyTime != null">notify_time = #{notifyTime},</if>
+            <if test="notifyError != null">notify_error = #{notifyError},</if>
+            <if test="notifyLatencyMs != null">notify_latency_ms = #{notifyLatencyMs},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="handleRemark != null">handle_remark = #{handleRemark},</if>
+            <if test="handleBy != null">handle_by = #{handleBy},</if>
+            <if test="handleTime != null">handle_time = #{handleTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="markAsRead">
+        update monitor_alert_log_v2
+        set status = 'read'
+        where id = #{id}
+    </update>
+
+    <update id="markAsHandled">
+        update monitor_alert_log_v2
+        set status = 'handled',
+            handle_by = #{handleBy},
+            handle_remark = #{handleRemark},
+            handle_time = sysdate()
+        where id = #{id}
+    </update>
+
+    <update id="batchMarkAsHandled">
+        update monitor_alert_log_v2
+        set status = 'handled',
+            handle_by = #{handleBy},
+            handle_time = sysdate()
+        where id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <delete id="deleteMonitorAlertLogById" parameterType="Long">
+        delete from monitor_alert_log_v2 where id = #{id}
+    </delete>
+
+    <delete id="deleteMonitorAlertLogByIds" parameterType="String">
+        delete from monitor_alert_log_v2 where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectAlertStats" resultType="map">
+        select 
+            count(*) as total,
+            sum(case when status = 'unread' then 1 else 0 end) as unread,
+            sum(case when status = 'read' then 1 else 0 end) as read,
+            sum(case when status = 'handled' then 1 else 0 end) as handled,
+            sum(case when level = 'high' then 1 else 0 end) as highLevel,
+            sum(case when level = 'medium' then 1 else 0 end) as mediumLevel,
+            sum(case when level = 'low' then 1 else 0 end) as lowLevel,
+            sum(case when date(create_time) = curdate() then 1 else 0 end) as today
+        from monitor_alert_log_v2
+    </select>
+
+</mapper>
+
