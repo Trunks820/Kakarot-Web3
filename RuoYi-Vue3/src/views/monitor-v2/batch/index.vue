@@ -152,7 +152,7 @@
         <el-table-column label="序号" prop="itemOrder" width="80" />
         <el-table-column label="代币地址" prop="ca" min-width="200" show-overflow-tooltip>
           <template #default="scope">
-            <el-link :href="`https://solscan.io/token/${scope.row.ca}`" target="_blank" type="primary">
+            <el-link :href="`https://gmgn.ai/sol/token/${scope.row.ca}`" target="_blank" type="primary">
               {{ scope.row.ca }}
             </el-link>
           </template>

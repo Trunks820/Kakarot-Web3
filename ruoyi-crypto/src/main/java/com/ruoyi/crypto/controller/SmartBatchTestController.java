@@ -7,6 +7,7 @@ import com.ruoyi.crypto.util.ConsistentHashUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -22,10 +23,10 @@ import java.util.Map;
 @RequestMapping("/crypto/test/smart-batch")
 public class SmartBatchTestController extends BaseController {
     
-    @Autowired
+    @Resource
     private ISmartBatchService smartBatchService;
     
-    @Autowired
+    @Resource
     private ConsistentHashUtil consistentHashUtil;
     
     /**

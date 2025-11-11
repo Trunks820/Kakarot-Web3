@@ -1,5 +1,6 @@
 package com.ruoyi.crypto.service.impl;
 
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.crypto.domain.MonitorBatch;
 import com.ruoyi.crypto.domain.MonitorBatchItem;
 import com.ruoyi.crypto.domain.MonitorTask;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -124,6 +126,8 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
             // 5. 使用分布式锁保护批次分配
             String lockKey = "smart_batch:task:" + taskId;
             String requestId = UUID.randomUUID().toString();
+
+
             
             boolean locked = redisLockUtil.tryLockWithDynamicTimeout(lockKey, requestId, latestCAs.size());
             if (!locked) {
@@ -131,38 +135,73 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
                 result.put("message", "获取分布式锁失败，可能有其他同步任务正在执行");
                 return result;
             }
-            
+
             try {
                 // 6. 更新monitor_task_target_v2
                 int addedCount = 0;
                 int removedCount = 0;
-                
+
+                // 建立CA到Token信息的映射
+                Map<String, TokenLaunchHistory> caToTokenMap = new HashMap<>();
+                for (TokenLaunchHistory token : latestTokens) {
+                    caToTokenMap.put(token.getCa(), token);
+                }
+
                 if (!toAdd.isEmpty()) {
+                    // 批量插入目标（每500条一批）
+                    List<MonitorTaskTarget> targetsToInsert = new ArrayList<>();
+                    Date now = new Date();
+
                     for (String ca : toAdd) {
+                        TokenLaunchHistory tokenInfo = caToTokenMap.get(ca);
+
                         MonitorTaskTarget target = new MonitorTaskTarget();
                         target.setTaskId(taskId);
                         target.setCa(ca);
                         target.setChainType(task.getChainType());
+
+                        // 从 TokenLaunchHistory 中获取 token 信息
+                        if (tokenInfo != null) {
+                            target.setTokenName(tokenInfo.getTokenName());
+                            target.setTokenSymbol(tokenInfo.getTokenSymbol());
+                            target.setMarketCap(BigDecimal.valueOf(tokenInfo.getHighestMarketCap()));
+                        }
+
                         // status字段是tinyint类型：1=活跃, 0=已移除
                         // 注意：不设置status，让数据库使用默认值1
-                        target.setCreateTime(new Date());
-                        monitorTaskTargetMapper.insertMonitorTaskTarget(target);
-                        addedCount++;
+                        target.setCreateTime(now);
+
+                        targetsToInsert.add(target);
+
+                        // 每500条批量插入一次
+                        if (targetsToInsert.size() >= 500) {
+                            monitorTaskTargetMapper.insertBatchTargets(targetsToInsert);
+                            addedCount += targetsToInsert.size();
+                            targetsToInsert.clear();
+                            logger.info("已批量插入{}个目标", addedCount);
+                        }
+                    }
+
+                    // 插入剩余的目标
+                    if (!targetsToInsert.isEmpty()) {
+                        monitorTaskTargetMapper.insertBatchTargets(targetsToInsert);
+                        addedCount += targetsToInsert.size();
+                        logger.info("最终插入目标总数：{}", addedCount);
                     }
                 }
-                
+
                 if (!toRemove.isEmpty()) {
                     for (String ca : toRemove) {
                         monitorTaskTargetMapper.deleteByTaskIdAndCa(taskId, ca);
                         removedCount++;
                     }
                 }
-                
+
                 logger.info("目标更新完成：新增={}, 删除={}", addedCount, removedCount);
-                
+
                 // 7. 重新分配批次（Epoch版本递增）
                 Integer newEpoch = (task.getCurrentEpoch() != null ? task.getCurrentEpoch() : 0) + 1;
-                
+
                 // 7.1 删除旧批次数据（避免唯一索引冲突）
                 // 由于 uk_task_batch(task_id, batch_no) 唯一索引限制，需要先删除旧批次
                 if (task.getCurrentEpoch() != null && task.getCurrentEpoch() > 0) {
@@ -172,19 +211,19 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
                     // 再删除批次
                     monitorBatchMapper.deleteBatchesByTaskId(taskId);
                 }
-                
+
                 int allocatedCount = allocateBatches(taskId, newEpoch, new ArrayList<>(latestCAs));
-                
+
                 // 8. 更新任务的current_epoch
                 MonitorTask updateTask = new MonitorTask();
                 updateTask.setId(taskId);
                 updateTask.setCurrentEpoch(newEpoch);
                 updateTask.setUpdateTime(new Date());
                 monitorTaskMapper.updateMonitorTask(updateTask);
-                
+
                 // 9. 通知Python端（通过WebSocket或Redis Pub/Sub）
                 notifyPythonClient(taskId, newEpoch);
-                
+
                 // 11. 返回结果
                 long duration = System.currentTimeMillis() - startTime;
                 result.put("success", true);
@@ -194,9 +233,9 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
                 result.put("allocatedBatches", allocatedCount);
                 result.put("newEpoch", newEpoch);
                 result.put("duration", duration + "ms");
-                
+
                 logger.info("智能目标同步完成：taskId={}, epoch={}, 耗时={}ms", taskId, newEpoch, duration);
-                
+
             } finally {
                 // 释放锁
                 redisLockUtil.releaseLock(lockKey, requestId);
@@ -217,13 +256,21 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
     private List<TokenLaunchHistory> fetchLatestTokens(MonitorTask task) {
         Map<String, Object> conditions = new HashMap<>();
         conditions.put("chainType", task.getChainType());
-        conditions.put("maxTargets", maxTargets);
-        
+        conditions.put("maxTargets", 20000);
+
         // 从任务的智能条件中解析参数（如果有）
-        // TODO: 这里可以根据任务配置动态设置筛选条件
-        // conditions.put("minMarketCap", task.getMinMarketCap());
-        // conditions.put("requireTwitter", task.getRequireTwitter());
-        
+        if(StringUtils.isNotNull(task.getMinMarketCap())) {
+            conditions.put("minMarketCap", task.getMinMarketCap());
+        }
+
+        if(StringUtils.isNotNull(task.getMaxMarketCap())) {
+            conditions.put("maxMarketCap", task.getMaxMarketCap());
+        }
+
+        if(StringUtils.isNotNull(task.getHasTwitter())) {
+            conditions.put("requireTwitter", true);
+        }
+
         return tokenLaunchHistoryMapper.selectBySmartConditions(conditions);
     }
     
@@ -283,15 +330,35 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
                 
                 // ⭐ 批量创建批次项（每500条一批）
                 List<MonitorBatchItem> itemsToInsert = new ArrayList<>();
+                int itemOrder = 0; // 批次内序号
                 for (String ca : batchCAs) {
-                    // 从映射中获取 target_id
+                    // 从映射中获取 target_id 和对应的 target 信息
                     Long targetId = caToTargetIdMap.get(ca);
+                    MonitorTaskTarget target = null;
+                    if (targetId != null) {
+                        for (MonitorTaskTarget t : allTargets) {
+                            if (t.getId().equals(targetId)) {
+                                target = t;
+                                break;
+                            }
+                        }
+                    }
                     
                     MonitorBatchItem item = new MonitorBatchItem();
                     item.setBatchId(batch.getId());
                     item.setTaskId(taskId);
+                    item.setBatchNo(batch.getBatchNo()); // 设置批次编号
                     item.setTargetId(targetId != null ? targetId : 0L); // 设置target_id
+                    item.setItemOrder(itemOrder++); // 设置批次内序号
                     item.setCa(ca);
+                    
+                    // 从 target 中获取 token 信息（如果有）
+                    if (target != null) {
+                        item.setTokenName(target.getTokenName());
+                        item.setTokenSymbol(target.getTokenSymbol());
+                        item.setMarketCap(target.getMarketCap());
+                    }
+                    
                     // status字段不设置，使用数据库默认值
                     item.setCreateTime(new Date());
                     

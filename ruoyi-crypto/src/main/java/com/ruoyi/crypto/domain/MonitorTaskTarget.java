@@ -2,9 +2,11 @@ package com.ruoyi.crypto.domain;
 
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
+import lombok.Data;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -13,6 +15,7 @@ import java.util.Date;
  * @author ruoyi
  * @date 2025-11-11
  */
+@Data
 public class MonitorTaskTarget extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -32,6 +35,15 @@ public class MonitorTaskTarget extends BaseEntity
     @Excel(name = "链类型")
     private String chainType;
 
+    @Excel(name = "合约名称")
+    private String tokenName;
+
+    @Excel(name = "名称缩写")
+    private String tokenSymbol;
+
+    @Excel(name = "合约市值")
+    private BigDecimal marketCap;
+
     /** 状态：active-活跃, removed-已移除 */
     @Excel(name = "状态")
     private String status;
@@ -42,87 +54,5 @@ public class MonitorTaskTarget extends BaseEntity
     /** 更新时间 */
     private Date updateTime;
 
-    public void setId(Long id) 
-    {
-        this.id = id;
-    }
-
-    public Long getId() 
-    {
-        return id;
-    }
-
-    public void setTaskId(Long taskId) 
-    {
-        this.taskId = taskId;
-    }
-
-    public Long getTaskId() 
-    {
-        return taskId;
-    }
-
-    public void setCa(String ca) 
-    {
-        this.ca = ca;
-    }
-
-    public String getCa() 
-    {
-        return ca;
-    }
-
-    public void setChainType(String chainType) 
-    {
-        this.chainType = chainType;
-    }
-
-    public String getChainType() 
-    {
-        return chainType;
-    }
-
-    public void setStatus(String status) 
-    {
-        this.status = status;
-    }
-
-    public String getStatus() 
-    {
-        return status;
-    }
-
-    public void setCreateTime(Date createTime) 
-    {
-        this.createTime = createTime;
-    }
-
-    public Date getCreateTime() 
-    {
-        return createTime;
-    }
-
-    public void setUpdateTime(Date updateTime) 
-    {
-        this.updateTime = updateTime;
-    }
-
-    public Date getUpdateTime() 
-    {
-        return updateTime;
-    }
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
-            .append("id", getId())
-            .append("taskId", getTaskId())
-            .append("ca", getCa())
-            .append("chainType", getChainType())
-            .append("status", getStatus())
-            .append("createTime", getCreateTime())
-            .append("updateTime", getUpdateTime())
-            .toString();
-    }
 }
 

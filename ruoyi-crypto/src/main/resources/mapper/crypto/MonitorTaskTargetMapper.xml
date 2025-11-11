@@ -9,6 +9,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="taskId" column="task_id"/>
         <result property="ca" column="ca"/>
         <result property="chainType" column="chain_type"/>
+        <result property="tokenName" column="token_name"/>
+        <result property="tokenSymbol" column="token_symbol"/>
+        <result property="marketCap" column="market_cap"/>
         <result property="status" column="status"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
@@ -25,6 +28,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="taskId != null">task_id,</if>
             <if test="ca != null and ca != ''">ca,</if>
             <if test="chainType != null and chainType != ''">chain_type,</if>
+            <if test="tokenName != null">token_name,</if>
+            <if test="tokenSymbol != null">token_symbol,</if>
+            <if test="marketCap != null">market_cap,</if>
             target_type,
             <if test="ca != null and ca != ''">target_value,</if>
             <if test="createTime != null">create_time,</if>
@@ -33,14 +39,27 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="taskId != null">#{taskId},</if>
             <if test="ca != null and ca != ''">#{ca},</if>
             <if test="chainType != null and chainType != ''">#{chainType},</if>
+            <if test="tokenName != null">#{tokenName},</if>
+            <if test="tokenSymbol != null">#{tokenSymbol},</if>
+            <if test="marketCap != null">#{marketCap},</if>
             'ca',
             <if test="ca != null and ca != ''">#{ca},</if>
             <if test="createTime != null">#{createTime},</if>
         </trim>
     </insert>
+    
+    <insert id="insertBatchTargets" parameterType="java.util.List">
+        insert into monitor_task_target_v2 
+        (task_id, ca, chain_type, token_name, token_symbol, market_cap, target_type, target_value, create_time)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.taskId}, #{item.ca}, #{item.chainType}, #{item.tokenName}, #{item.tokenSymbol}, 
+             #{item.marketCap}, 'ca', #{item.ca}, #{item.createTime})
+        </foreach>
+    </insert>
 
     <select id="selectByTaskId" parameterType="Long" resultMap="MonitorTaskTargetResult">
-        select id, task_id, ca, chain_type, status, create_time, update_time
+        select id, task_id, ca, chain_type, token_name, token_symbol, market_cap, status, create_time, update_time
         from monitor_task_target_v2
         where task_id = #{taskId}
         order by create_time desc

@@ -30,6 +30,14 @@ public interface MonitorTaskTargetMapper
      * @return 结果
      */
     public int insertMonitorTaskTarget(MonitorTaskTarget target);
+    
+    /**
+     * 批量新增监控任务目标
+     * 
+     * @param targets 目标列表
+     * @return 结果
+     */
+    public int insertBatchTargets(List<MonitorTaskTarget> targets);
 
     /**
      * 查询任务的所有目标

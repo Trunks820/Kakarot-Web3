@@ -2,6 +2,7 @@ package com.ruoyi.crypto.domain;
 
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
+import lombok.Data;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -13,6 +14,7 @@ import java.util.Date;
  * @author ruoyi
  * @date 2025-11-11
  */
+@Data
 public class MonitorBatchItem extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -35,6 +37,26 @@ public class MonitorBatchItem extends BaseEntity
     /** 合约地址/目标标识 */
     @Excel(name = "合约地址")
     private String ca;
+    
+    /** 批次内序号(0-98) */
+    @Excel(name = "批次内序号")
+    private Integer itemOrder;
+    
+    /** 批次编号 */
+    @Excel(name = "批次编号")
+    private Integer batchNo;
+    
+    /** Token名称 */
+    @Excel(name = "Token名称")
+    private String tokenName;
+    
+    /** Token符号 */
+    @Excel(name = "Token符号")
+    private String tokenSymbol;
+    
+    /** 市值(USD) */
+    @Excel(name = "市值")
+    private java.math.BigDecimal marketCap;
 
     /** 状态：pending-待处理, processing-处理中, completed-已完成, failed-失败 */
     @Excel(name = "状态")
@@ -45,97 +67,4 @@ public class MonitorBatchItem extends BaseEntity
 
     /** 更新时间 */
     private Date updateTime;
-
-    public void setId(Long id) 
-    {
-        this.id = id;
-    }
-
-    public Long getId() 
-    {
-        return id;
-    }
-
-    public void setBatchId(Long batchId) 
-    {
-        this.batchId = batchId;
-    }
-
-    public Long getBatchId() 
-    {
-        return batchId;
-    }
-
-    public void setTaskId(Long taskId) 
-    {
-        this.taskId = taskId;
-    }
-
-    public Long getTaskId() 
-    {
-        return taskId;
-    }
-
-    public void setTargetId(Long targetId) 
-    {
-        this.targetId = targetId;
-    }
-
-    public Long getTargetId() 
-    {
-        return targetId;
-    }
-
-    public void setCa(String ca) 
-    {
-        this.ca = ca;
-    }
-
-    public String getCa() 
-    {
-        return ca;
-    }
-
-    public void setStatus(String status) 
-    {
-        this.status = status;
-    }
-
-    public String getStatus() 
-    {
-        return status;
-    }
-
-    public void setCreateTime(Date createTime) 
-    {
-        this.createTime = createTime;
-    }
-
-    public Date getCreateTime() 
-    {
-        return createTime;
-    }
-
-    public void setUpdateTime(Date updateTime) 
-    {
-        this.updateTime = updateTime;
-    }
-
-    public Date getUpdateTime() 
-    {
-        return updateTime;
-    }
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("id", getId())
-            .append("batchId", getBatchId())
-            .append("taskId", getTaskId())
-            .append("ca", getCa())
-            .append("status", getStatus())
-            .append("createTime", getCreateTime())
-            .append("updateTime", getUpdateTime())
-            .toString();
-    }
 }
