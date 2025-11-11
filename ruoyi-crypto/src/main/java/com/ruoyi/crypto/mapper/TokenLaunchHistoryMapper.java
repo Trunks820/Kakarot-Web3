@@ -42,6 +42,14 @@ public interface TokenLaunchHistoryMapper {
      * @return 今日新增数量
      */
     Long getTodayNewCount();
+
+    /**
+     * 根据智能条件筛选Token（用于Monitor V2目标同步）
+     * 
+     * @param conditions 筛选条件（chainType, minMarketCap, requireTwitter, maxTargets等）
+     * @return Token列表
+     */
+    List<TokenLaunchHistory> selectBySmartConditions(Map<String, Object> conditions);
 }
 
 

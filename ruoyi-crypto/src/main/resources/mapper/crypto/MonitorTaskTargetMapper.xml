@@ -4,13 +4,55 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.crypto.mapper.MonitorTaskTargetMapper">
     
+    <resultMap id="MonitorTaskTargetResult" type="com.ruoyi.crypto.domain.MonitorTaskTarget">
+        <id property="id" column="id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="ca" column="ca"/>
+        <result property="chainType" column="chain_type"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+    
     <insert id="insertTaskTarget">
         insert into monitor_task_target_v2 (task_id, chain_type, target_type, target_value, create_time)
         values (#{taskId}, #{chainType}, 'ca', #{targetAddress}, sysdate())
     </insert>
 
+    <insert id="insertMonitorTaskTarget" parameterType="com.ruoyi.crypto.domain.MonitorTaskTarget" useGeneratedKeys="true" keyProperty="id">
+        insert into monitor_task_target_v2
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="taskId != null">task_id,</if>
+            <if test="ca != null and ca != ''">ca,</if>
+            <if test="chainType != null and chainType != ''">chain_type,</if>
+            target_type,
+            <if test="ca != null and ca != ''">target_value,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="taskId != null">#{taskId},</if>
+            <if test="ca != null and ca != ''">#{ca},</if>
+            <if test="chainType != null and chainType != ''">#{chainType},</if>
+            'ca',
+            <if test="ca != null and ca != ''">#{ca},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <select id="selectByTaskId" parameterType="Long" resultMap="MonitorTaskTargetResult">
+        select id, task_id, ca, chain_type, status, create_time, update_time
+        from monitor_task_target_v2
+        where task_id = #{taskId}
+        order by create_time desc
+    </select>
+
     <delete id="deleteTaskTargetByTaskId" parameterType="Long">
         delete from monitor_task_target_v2 where task_id = #{taskId}
+    </delete>
+
+    <delete id="deleteByTaskIdAndCa">
+        delete from monitor_task_target_v2
+        where task_id = #{taskId} and ca = #{ca}
     </delete>
 
 </mapper>

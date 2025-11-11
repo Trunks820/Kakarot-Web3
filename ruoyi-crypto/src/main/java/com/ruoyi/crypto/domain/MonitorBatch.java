@@ -75,6 +75,22 @@ public class MonitorBatch extends BaseEntity
     /** 链类型（关联查询） */
     private String chainType;
 
+    /** Consumer ID（一致性哈希分配） */
+    @Excel(name = "Consumer ID")
+    private String consumerId;
+
+    /** 批次版本号（每次重新分配递增） */
+    @Excel(name = "批次版本号")
+    private Integer epoch;
+
+    /** 目标数量（本批次包含的CA数量） */
+    @Excel(name = "目标数量")
+    private Integer targetCount;
+
+    /** 归档时间（旧epoch批次标记归档） */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date archivedTime;
+
     public void setId(Long id) 
     {
         this.id = id;
@@ -223,6 +239,46 @@ public class MonitorBatch extends BaseEntity
     public void setChainType(String chainType) 
     {
         this.chainType = chainType;
+    }
+
+    public String getConsumerId() 
+    {
+        return consumerId;
+    }
+
+    public void setConsumerId(String consumerId) 
+    {
+        this.consumerId = consumerId;
+    }
+
+    public Integer getEpoch() 
+    {
+        return epoch;
+    }
+
+    public void setEpoch(Integer epoch) 
+    {
+        this.epoch = epoch;
+    }
+
+    public Integer getTargetCount() 
+    {
+        return targetCount;
+    }
+
+    public void setTargetCount(Integer targetCount) 
+    {
+        this.targetCount = targetCount;
+    }
+
+    public Date getArchivedTime() 
+    {
+        return archivedTime;
+    }
+
+    public void setArchivedTime(Date archivedTime) 
+    {
+        this.archivedTime = archivedTime;
     }
 
     @Override

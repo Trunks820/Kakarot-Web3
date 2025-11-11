@@ -150,3 +150,15 @@ xss:
   excludes: /system/notice
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+
+# Monitor V2配置
+monitor:
+  batch:
+    # 固定槽数（一致性哈希）
+    fixed-bucket-count: 256
+    # 虚拟节点数
+    virtual-nodes: 150
+    # 批次大小
+    batch-size: 99
+    # 单次同步最大目标数
+    max-targets: 10000

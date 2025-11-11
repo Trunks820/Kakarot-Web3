@@ -155,4 +155,44 @@
           AND source IN ('pump', 'bonk')
     </select>
 
+    <!-- ⭐ 根据智能条件筛选Token（用于Monitor V2目标同步） -->
+    <select id="selectBySmartConditions" resultMap="TokenLaunchHistoryResult">
+        SELECT id, ca, token_name, token_symbol, twitter_url, source,
+               launch_time, highest_market_cap, tg_msg_id, created_at,
+               del_flag, create_by, create_time, update_by, update_time
+        FROM token_launch_history
+        <where>
+            AND del_flag = '0'
+            <!-- 数据源筛选（source: pump/bonk，对应链类型） -->
+            <if test="chainType != null and chainType != ''">
+                <choose>
+                    <when test="chainType == 'sol'">
+                        AND source IN ('pump', 'bonk')
+                    </when>
+                    <when test="chainType == 'pump'">
+                        AND source = 'pump'
+                    </when>
+                    <when test="chainType == 'bonk'">
+                        AND source = 'bonk'
+                    </when>
+                    <otherwise>
+                        AND source = #{chainType}
+                    </otherwise>
+                </choose>
+            </if>
+            <!-- 最小市值筛选（使用 highest_market_cap 字段） -->
+            <if test="minMarketCap != null">
+                AND highest_market_cap &gt;= #{minMarketCap}
+            </if>
+            <!-- 是否需要推特 -->
+            <if test="requireTwitter != null and requireTwitter == true">
+                AND twitter_url IS NOT NULL 
+                AND twitter_url != ''
+            </if>
+            <!-- 其他筛选条件可以在这里扩展 -->
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{maxTargets}
+    </select>
+
 </mapper>

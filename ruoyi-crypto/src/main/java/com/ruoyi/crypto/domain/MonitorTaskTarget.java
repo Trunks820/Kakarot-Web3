@@ -8,35 +8,31 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import java.util.Date;
 
 /**
- * 批次项对象 monitor_batch_item_v2
+ * 监控任务目标对象 monitor_task_target_v2
  * 
  * @author ruoyi
  * @date 2025-11-11
  */
-public class MonitorBatchItem extends BaseEntity
+public class MonitorTaskTarget extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
     /** 主键ID */
     private Long id;
 
-    /** 批次ID */
-    @Excel(name = "批次ID")
-    private Long batchId;
-
     /** 任务ID */
     @Excel(name = "任务ID")
     private Long taskId;
-
-    /** 目标ID（关联monitor_task_target_v2） */
-    @Excel(name = "目标ID")
-    private Long targetId;
 
     /** 合约地址/目标标识 */
     @Excel(name = "合约地址")
     private String ca;
 
-    /** 状态：pending-待处理, processing-处理中, completed-已完成, failed-失败 */
+    /** 链类型 */
+    @Excel(name = "链类型")
+    private String chainType;
+
+    /** 状态：active-活跃, removed-已移除 */
     @Excel(name = "状态")
     private String status;
 
@@ -56,16 +52,6 @@ public class MonitorBatchItem extends BaseEntity
         return id;
     }
 
-    public void setBatchId(Long batchId) 
-    {
-        this.batchId = batchId;
-    }
-
-    public Long getBatchId() 
-    {
-        return batchId;
-    }
-
     public void setTaskId(Long taskId) 
     {
         this.taskId = taskId;
@@ -76,16 +62,6 @@ public class MonitorBatchItem extends BaseEntity
         return taskId;
     }
 
-    public void setTargetId(Long targetId) 
-    {
-        this.targetId = targetId;
-    }
-
-    public Long getTargetId() 
-    {
-        return targetId;
-    }
-
     public void setCa(String ca) 
     {
         this.ca = ca;
@@ -94,6 +70,16 @@ public class MonitorBatchItem extends BaseEntity
     public String getCa() 
     {
         return ca;
+    }
+
+    public void setChainType(String chainType) 
+    {
+        this.chainType = chainType;
+    }
+
+    public String getChainType() 
+    {
+        return chainType;
     }
 
     public void setStatus(String status) 
@@ -128,14 +114,15 @@ public class MonitorBatchItem extends BaseEntity
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
+        return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
             .append("id", getId())
-            .append("batchId", getBatchId())
             .append("taskId", getTaskId())
             .append("ca", getCa())
+            .append("chainType", getChainType())
             .append("status", getStatus())
             .append("createTime", getCreateTime())
             .append("updateTime", getUpdateTime())
             .toString();
     }
 }
+

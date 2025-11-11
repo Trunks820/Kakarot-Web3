@@ -1,18 +1,8 @@
 <template>
   <div class="app-container home">
-    <!-- 监控系统 V2.0 头部 -->
+
     <div class="dashboard-header">
-      <div class="header-left">
-        <h1>监控系统</h1>
-        <el-tag class="version-tag" type="primary">V2.0</el-tag>
-      </div>
-      
-      <div class="header-right">
-        <el-button icon="Refresh" @click="refreshAll" :loading="loading">刷新数据</el-button>
-        <el-badge :value="pendingAlerts" :hidden="pendingAlerts === 0">
-          <el-button icon="Bell" @click="goToAlerts">告警中心</el-button>
-        </el-badge>
-      </div>
+
     </div>
 
     <!-- 三个核心卡片 - 简洁版 -->

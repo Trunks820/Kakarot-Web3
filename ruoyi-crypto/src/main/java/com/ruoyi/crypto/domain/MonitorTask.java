@@ -92,6 +92,9 @@ public class MonitorTask extends BaseEntity
     /** 配置ID列表（用于创建/更新） */
     private List<Long> configIds;
 
+    /** 当前任务活跃的批次epoch版本号 */
+    private Integer currentEpoch;
+
     // Getters and Setters
 
     public void setId(Long id) {
@@ -292,6 +295,14 @@ public class MonitorTask extends BaseEntity
 
     public BigDecimal getCumulativeMinAmountUsd() {
         return cumulativeMinAmountUsd;
+    }
+
+    public void setCurrentEpoch(Integer currentEpoch) {
+        this.currentEpoch = currentEpoch;
+    }
+
+    public Integer getCurrentEpoch() {
+        return currentEpoch;
     }
 
     @Override

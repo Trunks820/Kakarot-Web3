@@ -138,6 +138,7 @@ import BatchStatusChart from './components/BatchStatusChart.vue'
 import TaskTypeChart from './components/TaskTypeChart.vue'
 import RecentAlerts from './components/RecentAlerts.vue'
 import { getConfigStats, getTaskStats, getBatchStats, getDashboardRelation } from '@/api/crypto/monitor-v2'
+import { monitorWS } from '@/utils/monitor-websocket'
 
 const router = useRouter()
 const loading = ref(false)
@@ -330,6 +331,28 @@ onMounted(() => {
   refreshTimer = setInterval(() => {
     loadAllData()
   }, 60000)
+
+  // 连接WebSocket实时推送
+  monitorWS
+    .onBatchStatus((data) => {
+      console.log('收到批次状态更新:', data)
+      // 刷新批次统计
+      loadBatchData()
+    })
+    .onTaskStatus((data) => {
+      console.log('收到任务状态更新:', data)
+      // 刷新任务统计
+      loadTaskData()
+    })
+    .onAlert((data) => {
+      console.log('收到告警通知:', data)
+      // 刷新最近告警
+      loadRecentAlerts()
+    })
+    .onConnected(() => {
+      console.log('✅ Monitor WebSocket 已连接')
+    })
+    .connect()
 })
 
 onUnmounted(() => {
@@ -337,6 +360,9 @@ onUnmounted(() => {
     clearInterval(refreshTimer)
     refreshTimer = null
   }
+  
+  // 关闭WebSocket连接
+  monitorWS.close()
 })
 </script>
 

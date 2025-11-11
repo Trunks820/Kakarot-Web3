@@ -112,5 +112,30 @@ public interface MonitorBatchMapper
      * @return 统计数据Map
      */
     public java.util.Map<String, Object> getBatchStats();
+
+    /**
+     * 归档旧epoch的批次（标记archived_time）
+     * 
+     * @param taskId 任务ID
+     * @param currentEpoch 当前epoch
+     * @return 归档数量
+     */
+    public int archiveOldEpochs(@Param("taskId") Long taskId, @Param("currentEpoch") Integer currentEpoch);
+
+    /**
+     * 删除任务的所有批次项
+     * 
+     * @param taskId 任务ID
+     * @return 删除数量
+     */
+    public int deleteBatchItemsByTaskId(@Param("taskId") Long taskId);
+
+    /**
+     * 删除任务的所有批次
+     * 
+     * @param taskId 任务ID
+     * @return 删除数量
+     */
+    public int deleteBatchesByTaskId(@Param("taskId") Long taskId);
 }
 

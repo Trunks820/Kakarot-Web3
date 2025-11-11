@@ -22,6 +22,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="taskName"        column="task_name"    />
         <result property="taskType"        column="task_type"    />
         <result property="chainType"       column="chain_type"    />
+        <result property="consumerId"      column="consumer_id"    />
+        <result property="epoch"           column="epoch"    />
+        <result property="targetCount"     column="target_count"    />
+        <result property="archivedTime"    column="archived_time"    />
     </resultMap>
 
     <resultMap type="MonitorBatchItem" id="MonitorBatchItemResult">
@@ -194,5 +198,26 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             COALESCE(sum(total_alerts), 0) as totalAlerts
         from monitor_batch_v2
     </select>
+
+    <!-- 归档旧epoch的批次（标记archived_time） -->
+    <update id="archiveOldEpochs">
+        update monitor_batch_v2
+        set archived_time = now()
+        where task_id = #{taskId}
+          and epoch &lt; #{currentEpoch}
+          and archived_time is null
+    </update>
+
+    <!-- 删除任务的所有批次项 -->
+    <delete id="deleteBatchItemsByTaskId">
+        delete from monitor_batch_item_v2
+        where task_id = #{taskId}
+    </delete>
+
+    <!-- 删除任务的所有批次 -->
+    <delete id="deleteBatchesByTaskId">
+        delete from monitor_batch_v2
+        where task_id = #{taskId}
+    </delete>
 </mapper>
 

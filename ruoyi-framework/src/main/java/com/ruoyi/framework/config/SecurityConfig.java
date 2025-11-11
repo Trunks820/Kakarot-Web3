@@ -116,6 +116,10 @@ public class SecurityConfig
                     .antMatchers("/ws/**").permitAll()
                     // WebSocket 推送 API 需要放行（Python 脚本调用，使用密钥验证）
                     .antMatchers("/api/notification/**").permitAll()
+                    // Redis锁测试接口（临时测试用，上线后可删除此行）
+                    .antMatchers("/crypto/test/redis-lock/**").permitAll()
+                    // 智能批次分配测试接口（临时测试用，上线后可删除此行）
+                    .antMatchers("/crypto/test/smart-batch/**").permitAll()
                     // 静态资源，可匿名访问
                     .antMatchers(HttpMethod.GET, "/", "/*.html", "/**/*.html", "/**/*.css", "/**/*.js", "/profile/**").permitAll()
                     .antMatchers("/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/*/api-docs", "/druid/**").permitAll()

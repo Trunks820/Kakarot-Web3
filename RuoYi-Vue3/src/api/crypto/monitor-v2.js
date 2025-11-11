@@ -339,6 +339,11 @@ export function listBatchItems(batchId, query) {
 }
 
 /**
+ * 获取批次项列表（别名）
+ */
+export const getBatchItems = listBatchItems
+
+/**
  * 重启批次
  */
 export function restartBatch(id) {
