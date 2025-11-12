@@ -54,6 +54,29 @@ public class SmartBatchTestController extends BaseController {
             return AjaxResult.error("测试失败: " + e.getMessage());
         }
     }
+
+    @PostMapping("/task/all/sync")
+    public AjaxResult testSyncTargetsAndAllocate() {
+        try {
+            logger.info("========================================");
+            logger.info("开始测试智能批次分配:");
+            logger.info("========================================");
+
+            // 执行同步
+            Map<String, Object> result = smartBatchService.syncTargetsAndAllocateBatches();
+
+            logger.info("========================================");
+            logger.info("智能批次分配测试完成");
+            logger.info("结果：{}", result);
+            logger.info("========================================");
+
+            return AjaxResult.success(result);
+
+        } catch (Exception e) {
+            logger.error("测试智能批次分配失败", e);
+            return AjaxResult.error("测试失败: " + e.getMessage());
+        }
+    }
     
     /**
      * 测试一致性哈希功能

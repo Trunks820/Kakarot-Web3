@@ -5,12 +5,17 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.crypto.domain.MonitorBatch;
 import com.ruoyi.crypto.domain.MonitorTask;
+import com.ruoyi.crypto.mapper.MonitorBatchMapper;
+import com.ruoyi.crypto.mapper.MonitorTaskMapper;
+import com.ruoyi.crypto.mapper.MonitorTaskTargetMapper;
 import com.ruoyi.crypto.service.IMonitorTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,17 +30,62 @@ import java.util.Map;
 @RequestMapping("/crypto/monitor-v2/task")
 public class MonitorTaskController extends BaseController
 {
-    @Autowired
+    @Resource
     private IMonitorTaskService monitorTaskService;
+    
+    @Resource
+    private MonitorTaskMapper monitorTaskMapper;
+    
+    @Resource
+    private MonitorTaskTargetMapper monitorTaskTargetMapper;
+
+    @Resource
+    private MonitorBatchMapper monitorBatchMapper;
 
     /**
-     * 查询监控任务列表
+     * 查询监控任务列表（增强版：包含统计信息）
      */
     @GetMapping("/list")
     public TableDataInfo list(MonitorTask monitorTask)
     {
         startPage();
         List<MonitorTask> list = monitorTaskService.selectMonitorTaskList(monitorTask);
+        
+        // ⭐ 增强：为每个任务填充统计信息
+        for (MonitorTask task : list) {
+            try {
+                // 1. 查询目标数量（对于智能任务和批量任务）
+                if (!"block".equals(task.getTaskType())) {
+                    int targetCount = monitorTaskTargetMapper.countByTaskId(task.getId());
+                    task.setTargetCount(targetCount);
+                }
+                
+                // 2. 查询配置数量
+                List<Long> configIds = monitorTaskMapper.selectConfigIdsByTaskId(task.getId());
+                task.setConfigCount(configIds != null ? configIds.size() : 0);
+
+                // 3. 查询批次数量
+                MonitorBatch monitorBatch = new MonitorBatch();
+                monitorBatch.setTaskId(task.getId());
+                List<MonitorBatch> batchIds = monitorBatchMapper.selectMonitorBatchList(monitorBatch);
+                Integer sumBatch = 0;
+                for (MonitorBatch batch : batchIds) {
+                    Integer itemCount = batch.getItemCount();
+                    sumBatch += itemCount;
+                }
+                task.setBatchCount(sumBatch);
+            } catch (Exception e) {
+                // 如果统计失败，设置为0，不影响主流程
+                logger.error("获取任务统计信息失败: taskId=" + task.getId(), e);
+                if (task.getTargetCount() == null) {
+                    task.setTargetCount(0);
+                }
+                if (task.getConfigCount() == null) {
+                    task.setConfigCount(0);
+                }
+            }
+        }
+        
         return getDataTable(list);
     }
 

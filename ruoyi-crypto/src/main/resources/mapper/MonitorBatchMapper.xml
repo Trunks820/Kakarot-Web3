@@ -126,7 +126,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="taskId != null">task_id,</if>
             <if test="batchNo != null">batch_no,</if>
+            <if test="consumerId != null and consumerId != ''">consumer_id,</if>
+            <if test="epoch != null">epoch,</if>
+            <if test="chainType != null and chainType != ''">chain_type,</if>
             <if test="itemCount != null">item_count,</if>
+            <if test="targetCount != null">target_count,</if>
             <if test="status != null and status != ''">status,</if>
             <if test="workerId != null and workerId != ''">worker_id,</if>
             <if test="workerPid != null">worker_pid,</if>
@@ -140,7 +144,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="taskId != null">#{taskId},</if>
             <if test="batchNo != null">#{batchNo},</if>
+            <if test="consumerId != null and consumerId != ''">#{consumerId},</if>
+            <if test="epoch != null">#{epoch},</if>
+            <if test="chainType != null and chainType != ''">#{chainType},</if>
             <if test="itemCount != null">#{itemCount},</if>
+            <if test="targetCount != null">#{targetCount},</if>
             <if test="status != null and status != ''">#{status},</if>
             <if test="workerId != null and workerId != ''">#{workerId},</if>
             <if test="workerPid != null">#{workerPid},</if>

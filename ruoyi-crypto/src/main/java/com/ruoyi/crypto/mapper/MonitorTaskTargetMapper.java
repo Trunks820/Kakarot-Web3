@@ -63,5 +63,13 @@ public interface MonitorTaskTargetMapper
      * @return 结果
      */
     public int deleteByTaskIdAndCa(@Param("taskId") Long taskId, @Param("ca") String ca);
+    
+    /**
+     * 统计任务的目标数量
+     * 
+     * @param taskId 任务ID
+     * @return 目标数量
+     */
+    public int countByTaskId(@Param("taskId") Long taskId);
 }
 

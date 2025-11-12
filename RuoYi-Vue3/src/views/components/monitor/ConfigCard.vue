@@ -92,7 +92,7 @@
           <el-radio-group v-model="form.marketType">
             <el-radio-button label="external">🌍 外盘</el-radio-button>
             <el-radio-button label="internal">🏠 内盘</el-radio-button>
-            <el-radio-button :label="null">不限</el-radio-button>
+            <el-radio-button label="all">不限</el-radio-button>
           </el-radio-group>
           <div class="form-tip">💡 限制只监控特定市场类型的Token</div>
         </el-form-item>
@@ -172,7 +172,7 @@
                   <el-input-number
                     v-model="events.holders.increasePercent"
                     :min="0"
-                    :max="1000"
+                    :max="100"
                     :precision="1"
                     style="width: 100%"
                     placeholder="100"
@@ -186,7 +186,7 @@
                   <el-input-number
                     v-model="events.holders.decreasePercent"
                     :min="0"
-                    :max="1000"
+                    :max="100"
                     :precision="1"
                     style="width: 100%"
                     placeholder="50"
@@ -685,11 +685,21 @@ const parseEventsConfig = (eventsConfigStr) => {
     const events = JSON.parse(eventsConfigStr)
     const rules = []
     
-    if (events.price?.enabled) {
-      rules.push(`价格监控: ${events.price.threshold}%`)
+    if (events.priceChange?.enabled) {
+      if(events.priceChange.risePercent){
+        rules.push(`价格监控: 涨幅${events.priceChange.risePercent}%`)
+      }
+      if(events.priceChange.fallPercent){
+        rules.push(`价格监控: 跌幅${events.priceChange.fallPercent}%`)
+      }
     }
-    if (events.holder?.enabled) {
-      rules.push(`持仓监控: 前${events.holder.topCount}名 > ${events.holder.threshold}%`)
+    if (events.holders?.enabled) {
+      if(events.holders.decreasePercent){
+        rules.push(`持仓人数跌幅: ${events.holders.decreasePercent}%`)
+      }
+      if(events.holders.increasePercent){
+        rules.push(`持仓人数涨幅: ${events.holders.increasePercent}%`)
+      }
     }
     if (events.volume?.enabled) {
       rules.push(`交易量监控: ${events.volume.threshold}`)
@@ -729,7 +739,7 @@ const handleEdit = async (row) => {
     })
     
     // 填充事件配置
-    if (eventsData.priceChange) {
+    if (eventsData.priceChange.enabled) {
       events.priceChange = {
         enabled: true,
         risePercent: eventsData.priceChange.risePercent || null,
@@ -739,7 +749,7 @@ const handleEdit = async (row) => {
       events.priceChange = { enabled: false, risePercent: null, fallPercent: null }
     }
     
-    if (eventsData.holders) {
+    if (eventsData.holders.enabled) {
       events.holders = {
         enabled: true,
         increasePercent: eventsData.holders.increasePercent || null,
@@ -749,7 +759,7 @@ const handleEdit = async (row) => {
       events.holders = { enabled: false, increasePercent: null, decreasePercent: null }
     }
     
-    if (eventsData.volume) {
+    if (eventsData.volume.enabled) {
       events.volume = {
         enabled: true,
         threshold: eventsData.volume.threshold || null

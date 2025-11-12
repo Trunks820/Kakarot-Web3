@@ -73,6 +73,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         delete from monitor_task_target_v2
         where task_id = #{taskId} and ca = #{ca}
     </delete>
+    
+    <select id="countByTaskId" parameterType="Long" resultType="int">
+        select count(*)
+        from monitor_task_target_v2
+        where task_id = #{taskId}
+    </select>
 
 </mapper>
 

@@ -89,5 +89,13 @@ public interface MonitorTaskMapper
      * @return 配置ID列表
      */
     public List<Long> selectConfigIdsByTaskId(Long taskId);
+
+    /**
+     * 查询配置关联的任务ID列表
+     *
+     * @param taskId 配置ID
+     * @return 任务ID列表
+     */
+    public List<Long> selectTaskIdByConfigId(Long configId);
 }
 

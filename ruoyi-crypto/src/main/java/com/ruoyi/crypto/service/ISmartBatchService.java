@@ -17,7 +17,9 @@ public interface ISmartBatchService {
      * @return 同步结果
      */
     Map<String, Object> syncTargetsAndAllocateBatches(Long taskId);
-    
+
+    Map<String, Object> syncTargetsAndAllocateBatches();
+
     /**
      * 归档旧epoch的批次数据
      * 

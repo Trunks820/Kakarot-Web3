@@ -97,7 +97,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import  { computed } from 'vue'
 import { Setting, List, Files, Warning } from '@element-plus/icons-vue'
 
 const props = defineProps({

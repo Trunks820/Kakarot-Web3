@@ -112,110 +112,12 @@
       />
     </el-card>
 
-    <!-- 新增/编辑对话框 -->
-    <el-dialog
+    <!-- 新增/编辑对话框 - 使用统一的ConfigFormDialog组件 -->
+    <ConfigFormDialog
       v-model="dialogVisible"
-      :title="dialogTitle"
-      width="800px"
-      append-to-body
-      @close="handleDialogClose"
-    >
-      <el-form
-        ref="configFormRef"
-        :model="configForm"
-        :rules="configRules"
-        label-width="120px"
-      >
-        <el-form-item label="配置名称" prop="configName">
-          <el-input v-model="configForm.configName" placeholder="请输入配置名称" />
-        </el-form-item>
-        
-        <el-form-item label="链类型" prop="chainType">
-          <el-select v-model="configForm.chainType" placeholder="请选择链类型">
-            <el-option label="Solana" value="sol" />
-            <el-option label="BSC" value="bsc" />
-            <el-option label="Ethereum" value="eth" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="配置类型" prop="configType">
-          <el-select v-model="configForm.configType" placeholder="请选择配置类型">
-            <el-option label="系统配置" value="system" />
-            <el-option label="自定义配置" value="custom" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="时间周期(分钟)" prop="timeInterval">
-          <el-input-number v-model="configForm.timeInterval" :min="1" :max="1440" />
-        </el-form-item>
-        
-        <el-form-item label="监控事件">
-          <el-checkbox-group v-model="selectedEvents">
-            <el-checkbox label="price">价格监控</el-checkbox>
-            <el-checkbox label="holder">持仓监控</el-checkbox>
-            <el-checkbox label="volume">交易量监控</el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-        
-        <!-- 价格监控配置 -->
-        <el-form-item v-if="selectedEvents.includes('price')" label="价格变化阈值(%)">
-          <el-input-number v-model="eventConfig.price.threshold" :min="0" :max="100" />
-        </el-form-item>
-        
-        <!-- 持仓监控配置 -->
-        <template v-if="selectedEvents.includes('holder')">
-          <el-form-item label="监控前N名">
-            <el-input-number v-model="eventConfig.holder.topCount" :min="1" :max="100" />
-          </el-form-item>
-          <el-form-item label="持仓占比阈值(%)">
-            <el-input-number v-model="eventConfig.holder.threshold" :min="0" :max="100" />
-          </el-form-item>
-        </template>
-        
-        <!-- 交易量监控配置 -->
-        <el-form-item v-if="selectedEvents.includes('volume')" label="交易量阈值">
-          <el-input-number v-model="eventConfig.volume.threshold" :min="0" />
-        </el-form-item>
-        
-        <el-form-item label="触发逻辑" prop="triggerLogic">
-          <el-radio-group v-model="configForm.triggerLogic">
-            <el-radio label="AND">所有条件都满足</el-radio>
-            <el-radio label="OR">任意条件满足</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        
-        <el-form-item label="通知方式" prop="notifyMethods">
-          <el-checkbox-group v-model="notifyMethods">
-            <el-checkbox label="email">邮件</el-checkbox>
-            <el-checkbox label="sms">短信</el-checkbox>
-            <el-checkbox label="webhook">Webhook</el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-        
-        <el-form-item label="描述">
-          <el-input
-            v-model="configForm.description"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入配置描述"
-          />
-        </el-form-item>
-        
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="configForm.status">
-            <el-radio :label="1">启用</el-radio>
-            <el-radio :label="0">停用</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
-      
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm" :loading="submitLoading">
-          确定
-        </el-button>
-      </template>
-    </el-dialog>
+      :configData="configForm"
+      @submit="handleFormSubmit"
+    />
 
     <!-- 详情对话框 -->
     <el-dialog
@@ -286,6 +188,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { listConfig, getConfig, addConfig, updateConfig, delConfig } from '@/api/crypto/monitor-v2'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import ConfigFormDialog from '@/views/components/monitor/ConfigFormDialog.vue'
 
 const loading = ref(false)
 const configList = ref([])
@@ -407,7 +310,11 @@ const handleEdit = async (row) => {
       timeInterval: config.timeInterval,
       triggerLogic: config.triggerLogic || 'OR',
       description: config.description,
-      status: config.status
+      status: config.status,
+      eventsConfig: config.eventsConfig,
+      marketType: config.marketType,
+      notifyMethods: config.notifyMethods,
+      topHoldersThreshold: config.topHoldersThreshold
     }
     
     // 解析事件配置
@@ -415,13 +322,13 @@ const handleEdit = async (row) => {
       try {
         const events = JSON.parse(config.eventsConfig)
         selectedEvents.value = []
-        if (events.price?.enabled) {
+        if (events.priceChange?.enabled) {
           selectedEvents.value.push('price')
-          eventConfig.value.price = events.price
+          eventConfig.value.price = events.priceChange
         }
-        if (events.holder?.enabled) {
+        if (events.holders?.enabled) {
           selectedEvents.value.push('holder')
-          eventConfig.value.holder = events.holder
+          eventConfig.value.holder = events.holders
         }
         if (events.volume?.enabled) {
           selectedEvents.value.push('volume')
@@ -431,12 +338,6 @@ const handleEdit = async (row) => {
         console.error('解析事件配置失败:', e)
       }
     }
-    
-    // 解析通知方式
-    if (config.notifyMethods) {
-      notifyMethods.value = config.notifyMethods.split(',')
-    }
-    
     dialogVisible.value = true
   } catch (error) {
     ElMessage.error('获取配置失败：' + error.message)
@@ -449,49 +350,39 @@ const handleEditFromDetail = () => {
   handleEdit(detailData.value)
 }
 
-// 提交表单
-const submitForm = async () => {
-  if (!configFormRef.value) return
-  
-  await configFormRef.value.validate(async (valid) => {
-    if (!valid) return
-    
+// 处理ConfigFormDialog提交
+const handleFormSubmit = async (formData) => {
+  try {
     submitLoading.value = true
-    try {
-      // 构建事件配置
-      const events = {}
-      if (selectedEvents.value.includes('price')) {
-        events.price = { ...eventConfig.value.price, enabled: true }
-      }
-      if (selectedEvents.value.includes('holder')) {
-        events.holder = { ...eventConfig.value.holder, enabled: true }
-      }
-      if (selectedEvents.value.includes('volume')) {
-        events.volume = { ...eventConfig.value.volume, enabled: true }
-      }
-      
-      const submitData = {
-        ...configForm.value,
-        eventsConfig: JSON.stringify(events),
-        notifyMethods: notifyMethods.value.join(',')
-      }
-      
-      if (submitData.id) {
-        await updateConfig(submitData)
-        ElMessage.success('更新成功')
-      } else {
-        await addConfig(submitData)
-        ElMessage.success('创建成功')
-      }
-      
-      dialogVisible.value = false
-      getList()
-    } catch (error) {
-      ElMessage.error('操作失败：' + error.message)
-    } finally {
-      submitLoading.value = false
+    
+    // 处理notifyMethods格式
+    const submitData = {
+      ...formData,
+      notifyMethods: Array.isArray(formData.notifyMethods) 
+        ? formData.notifyMethods.join(',') 
+        : formData.notifyMethods
     }
-  })
+    
+    if (submitData.id) {
+      await updateConfig(submitData)
+      ElMessage.success('更新成功')
+    } else {
+      await addConfig(submitData)
+      ElMessage.success('创建成功')
+    }
+    
+    dialogVisible.value = false
+    getList()
+  } catch (error) {
+    ElMessage.error('操作失败：' + error.message)
+  } finally {
+    submitLoading.value = false
+  }
+}
+
+// 提交表单（保留旧方法以防其他地方引用）
+const submitForm = async () => {
+  // 已由handleFormSubmit替代
 }
 
 // 重置表单
@@ -504,7 +395,7 @@ const resetForm = () => {
     timeInterval: 5,
     eventsConfig: '',
     triggerLogic: 'OR',
-    notifyMethods: '',
+    notifyMethods: [],
     description: '',
     status: 1
   }

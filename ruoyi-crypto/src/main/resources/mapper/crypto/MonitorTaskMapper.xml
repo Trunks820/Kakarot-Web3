@@ -175,5 +175,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by config_id
     </select>
 
+    <select id="selectTaskIdByConfigId" parameterType="Long" resultType="Long">
+        select task_id
+        from monitor_task_config_v2
+        where config_id = #{config_id}
+        order by task_id
+    </select>
+
 </mapper>
 

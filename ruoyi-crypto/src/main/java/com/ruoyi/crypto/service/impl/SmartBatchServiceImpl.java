@@ -249,6 +249,103 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
         
         return result;
     }
+
+    /**
+     * 批量同步所有智能任务（无事务，每个任务独立处理）
+     */
+    @Override
+    public Map<String, Object> syncTargetsAndAllocateBatches() {
+        long startTime = System.currentTimeMillis();
+        
+        // 1. 查询所有启用的智能任务
+        MonitorTask query = new MonitorTask();
+        query.setStatus(1);
+        query.setTaskType("smart");
+        List<MonitorTask> monitorTasks = monitorTaskMapper.selectMonitorTaskList(query);
+        
+        if (monitorTasks.isEmpty()) {
+            return createResult(false, "没有需要同步的智能任务", 0, 0, 0);
+        }
+        
+        logger.info("========================================");
+        logger.info("开始批量同步所有智能任务，共{}个任务", monitorTasks.size());
+        logger.info("========================================");
+        
+        // 2. 逐个任务执行同步（每个任务独立事务）
+        List<Map<String, Object>> taskResults = new ArrayList<>();
+        int successCount = 0;
+        int failCount = 0;
+        int skipCount = 0;
+        
+        for (MonitorTask task : monitorTasks) {
+            try {
+                logger.info("→ 开始同步任务：id={}, name={}", task.getId(), task.getTaskName());
+                
+                // ⭐ 调用单任务同步方法（独立事务）
+                Map<String, Object> taskResult = syncTargetsAndAllocateBatches(task.getId());
+                taskResults.add(taskResult);
+                
+                if (Boolean.TRUE.equals(taskResult.get("success"))) {
+                    successCount++;
+                    logger.info("✅ 任务同步成功：id={}, epoch={}", 
+                        task.getId(), taskResult.get("newEpoch"));
+                } else {
+                    String message = (String) taskResult.get("message");
+                    if (message != null && message.contains("分布式锁失败")) {
+                        skipCount++;
+                        logger.warn("⏭ 任务跳过（锁冲突）：id={}", task.getId());
+                    } else {
+                        failCount++;
+                        logger.error("❌ 任务同步失败：id={}, error={}", 
+                            task.getId(), message);
+                    }
+                }
+                
+            } catch (Exception e) {
+                failCount++;
+                logger.error("❌ 任务同步异常：id=" + task.getId(), e);
+                
+                Map<String, Object> errorResult = new HashMap<>();
+                errorResult.put("taskId", task.getId());
+                errorResult.put("taskName", task.getTaskName());
+                errorResult.put("success", false);
+                errorResult.put("message", "异常: " + e.getMessage());
+                taskResults.add(errorResult);
+            }
+        }
+        
+        // 3. 汇总结果
+        long totalDuration = System.currentTimeMillis() - startTime;
+        Map<String, Object> summaryResult = new HashMap<>();
+        summaryResult.put("success", failCount == 0);
+        summaryResult.put("totalTasks", monitorTasks.size());
+        summaryResult.put("successCount", successCount);
+        summaryResult.put("failCount", failCount);
+        summaryResult.put("skipCount", skipCount);
+        summaryResult.put("totalDuration", totalDuration + "ms");
+        summaryResult.put("taskResults", taskResults);
+        
+        logger.info("========================================");
+        logger.info("批量同步完成：总任务数={}, 成功={}, 失败={}, 跳过={}, 总耗时={}ms", 
+            monitorTasks.size(), successCount, failCount, skipCount, totalDuration);
+        logger.info("========================================");
+        
+        return summaryResult;
+    }
+    
+    /**
+     * 创建统一格式的结果对象
+     */
+    private Map<String, Object> createResult(boolean success, String message, 
+                                             int addedTargets, int removedTargets, int totalTargets) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", success);
+        result.put("message", message);
+        result.put("addedTargets", addedTargets);
+        result.put("removedTargets", removedTargets);
+        result.put("totalTargets", totalTargets);
+        return result;
+    }
     
     /**
      * 从token_launch_history筛选最新目标
@@ -279,6 +376,13 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
      */
     private int allocateBatches(Long taskId, Integer epoch, List<String> caList) {
         logger.info("开始批次分配：taskId={}, epoch={}, targetCount={}", taskId, epoch, caList.size());
+        
+        // 0. 查询任务信息（用于获取chainType）
+        MonitorTask task = monitorTaskMapper.selectMonitorTaskById(taskId);
+        if (task == null) {
+            logger.error("任务不存在：taskId={}", taskId);
+            return 0;
+        }
         
         // 1. 查询当前活跃的Consumer列表
         List<String> activeConsumers = getActiveConsumers(taskId);
@@ -321,6 +425,7 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
                 batch.setBatchNo(globalBatchNo++); // 设置批次编号并递增
                 batch.setConsumerId(consumerId);
                 batch.setEpoch(epoch);
+                batch.setChainType(task.getChainType()); // ⭐ 设置链类型
                 batch.setStatus("pending");
                 batch.setTargetCount(batchCAs.size());
                 batch.setItemCount(batchCAs.size()); // 设置item_count

@@ -11,6 +11,8 @@ import com.ruoyi.crypto.domain.MonitorConfig;
 import com.ruoyi.crypto.domain.MonitorTask;
 import com.ruoyi.crypto.domain.MonitorBatch;
 
+import javax.annotation.Resource;
+
 /**
  * 监控总览Dashboard服务实现
  * 
@@ -19,13 +21,13 @@ import com.ruoyi.crypto.domain.MonitorBatch;
 @Service
 public class MonitorDashboardServiceImpl implements IMonitorDashboardService
 {
-    @Autowired
+    @Resource
     private MonitorConfigMapper configMapper;
 
-    @Autowired
+    @Resource
     private MonitorTaskMapper taskMapper;
 
-    @Autowired
+    @Resource
     private MonitorBatchMapper batchMapper;
 
     /**
@@ -52,16 +54,13 @@ public class MonitorDashboardServiceImpl implements IMonitorDashboardService
             node.put("name", "配置：" + config.getConfigName());
             node.put("id", "config_" + config.getId());
             node.put("type", "config");
+            node.put("chainType", config.getChainType());
             nodes.add(node);
         }
 
-        // 2. 获取所有任务（性能优化：限制数量）
+        // 2. 获取所有任务
         MonitorTask taskQuery = new MonitorTask();
         List<MonitorTask> tasks = taskMapper.selectMonitorTaskList(taskQuery);
-        // 性能优化：只显示前10个任务
-        if (tasks.size() > 10) {
-            tasks = tasks.subList(0, 10);
-        }
 
         Map<Long, String> taskIdMap = new HashMap<>();
         for (MonitorTask task : tasks) {
@@ -92,14 +91,10 @@ public class MonitorDashboardServiceImpl implements IMonitorDashboardService
             }
         }
 
-        // 4. 获取批次（性能优化：减少数量）
+        // 4. 获取批次
         MonitorBatch batchQuery = new MonitorBatch();
-        batchQuery.setStatus("running");
+        // 不设置status限制，这样可以显示pending、running等所有状态的批次
         List<MonitorBatch> batches = batchMapper.selectMonitorBatchList(batchQuery);
-        // 性能优化：只显示前5个批次
-        if (batches.size() > 5) {
-            batches = batches.subList(0, 5);
-        }
 
         for (MonitorBatch batch : batches) {
             String batchName = "批次：" + batch.getBatchNo();

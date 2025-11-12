@@ -244,7 +244,8 @@
         style="width: 100%"
         max-height="500px"
       >
-        <el-table-column label="任务名称" prop="taskName" width="200" show-overflow-tooltip />
+        <el-table-column label="任务ID" prop="id" width="50" align="center" />
+        <el-table-column label="任务名称" prop="taskName" width="200" align="center" />
         <el-table-column label="任务类型" prop="taskType" width="100" align="center">
           <template #default="scope">
             <el-tag v-if="scope.row.taskType === 'smart'" type="primary" size="small">智能监控</el-tag>
@@ -275,7 +276,7 @@
         </el-table-column>
         <el-table-column label="最后运行" prop="lastRunTime" width="150" />
         <el-table-column label="描述" prop="description" min-width="150" show-overflow-tooltip />
-        <el-table-column label="操作" width="200" align="center" fixed="right">
+        <el-table-column label="操作" width="250" align="center" fixed="right">
           <template #default="scope">
             <el-button 
               v-hasPermi="['crypto:monitor-v2:task:query']"
@@ -285,6 +286,15 @@
               @click="handleTaskDetail(scope.row)"
             >
               详情
+            </el-button>
+            <el-button 
+              v-hasPermi="['crypto:monitor-v2:task:edit']"
+              text 
+              type="warning" 
+              size="small" 
+              @click="handleTaskEdit(scope.row)"
+            >
+              编辑
             </el-button>
             <el-button 
               v-hasPermi="['crypto:monitor-v2:task:start', 'crypto:monitor-v2:task:stop']"
@@ -397,7 +407,7 @@
 
 <script setup>
 import { ref, reactive, computed, getCurrentInstance, watch } from 'vue'
-import { addSmartTask, addBatchTask, addBlockTask, listTask, delTask, startTask, stopTask } from '@/api/crypto/monitor-v2'
+import { addSmartTask, addBatchTask, addBlockTask, listTask, updateTask, delTask, startTask, stopTask } from '@/api/crypto/monitor-v2'
 import { listConfig } from '@/api/crypto/monitor-v2'
 import { Plus, MagicStick, List as ListIcon, Histogram, Management, Star, Coin } from '@element-plus/icons-vue'
 
@@ -431,6 +441,7 @@ const manageLoading = ref(false)
 const taskList = ref([])
 
 const form = reactive({
+  id: null, // ⭐ 新增：任务ID（编辑时使用）
   taskName: '',
   chainType: 'sol',
   // 智能监控字段
@@ -463,12 +474,13 @@ const rules = {
 
 // 计算弹窗标题
 const getDialogTitle = computed(() => {
+  const isEdit = !!form.id
   const titles = {
-    'smart': '新建智能监控任务',
-    'batch': '新建批量监控任务',
-    'block': '新建区块监控任务'
+    'smart': isEdit ? '编辑智能监控任务' : '新建智能监控任务',
+    'batch': isEdit ? '编辑批量监控任务' : '新建批量监控任务',
+    'block': isEdit ? '编辑区块监控任务' : '新建区块监控任务'
   }
-  return titles[taskType.value] || '新建任务'
+  return titles[taskType.value] || (isEdit ? '编辑任务' : '新建任务')
 })
 
 // 计算CA数量
@@ -506,6 +518,43 @@ const handleTaskDetail = (row) => {
   console.log('查看任务详情:', row)
   taskDetail.value = row
   detailDialogVisible.value = true
+}
+
+// ⭐ 新增：编辑任务
+const handleTaskEdit = (row) => {
+  console.log('编辑任务:', row)
+  
+  // 设置任务类型
+  taskType.value = row.taskType
+  
+  // 填充表单数据
+  form.id = row.id  // ⭐ 设置ID表示编辑模式
+  form.taskName = row.taskName
+  form.chainType = row.chainType
+  form.description = row.description || ''
+  
+  // 根据任务类型填充特定字段
+  if (row.taskType === 'smart') {
+    form.minMarketCap = row.minMarketCap || 10000
+    form.maxMarketCap = row.maxMarketCap || null
+    form.hasTwitter = row.hasTwitter
+    form.autoSyncTargets = row.autoSyncTargets === 1
+    form.syncIntervalMinutes = row.syncIntervalMinutes || 30
+  } else if (row.taskType === 'batch') {
+    // 批量任务的CA列表（如果有）
+    form.caList = ''  // 编辑时不显示CA列表
+  }
+  
+  // 设置配置ID（从configs数组中获取第一个）
+  if (row.configs && row.configs.length > 0) {
+    form.configId = row.configs[0].id
+  } else {
+    form.configId = null
+  }
+  
+  // 打开弹窗
+  dialogVisible.value = true
+  loadConfigList(form.chainType)
 }
 
 const handleTaskToggle = async (row) => {
@@ -567,8 +616,9 @@ const handleSubmit = () => {
       submitting.value = true
       
       if (taskType.value === 'smart') {
-        // 创建智能监控任务
+        // 智能监控任务
         const data = {
+          id: form.id, // ⭐ 编辑时需要ID
           taskName: form.taskName,
           taskType: 'smart',
           chainType: form.chainType,
@@ -582,21 +632,27 @@ const handleSubmit = () => {
           status: 1
         }
         
-        addSmartTask(data).then(response => {
-          proxy.$modal.msgSuccess('智能监控任务创建成功，正在同步目标...')
+        // ⭐ 判断是编辑还是新增
+        const apiCall = form.id ? updateTask(data) : addSmartTask(data)
+        const successMsg = form.id ? '任务修改成功' : '智能监控任务创建成功，正在同步目标...'
+        
+        apiCall.then(response => {
+          proxy.$modal.msgSuccess(successMsg)
           dialogVisible.value = false
           emit('refresh')
+          openManageDialog() // 刷新任务列表
         }).finally(() => {
           submitting.value = false
         })
       } else if (taskType.value === 'batch') {
-        // 创建批量监控任务
+        // 批量监控任务
         const caArray = form.caList.split('\n')
           .map(line => line.trim())
           .filter(line => line)
           .slice(0, 99) // 限制最多99个
         
         const data = {
+          id: form.id, // ⭐ 编辑时需要ID
           taskName: form.taskName,
           taskType: 'batch',
           chainType: form.chainType,
@@ -606,16 +662,22 @@ const handleSubmit = () => {
           status: 1
         }
         
-        addBatchTask(data).then(response => {
-          proxy.$modal.msgSuccess(`批量监控任务创建成功，已添加 ${caArray.length} 个目标`)
+        // ⭐ 判断是编辑还是新增
+        const apiCall = form.id ? updateTask(data) : addBatchTask(data)
+        const successMsg = form.id ? '任务修改成功' : `批量监控任务创建成功，已添加 ${caArray.length} 个目标`
+        
+        apiCall.then(response => {
+          proxy.$modal.msgSuccess(successMsg)
           dialogVisible.value = false
           emit('refresh')
+          openManageDialog() // 刷新任务列表
         }).finally(() => {
           submitting.value = false
         })
       } else if (taskType.value === 'block') {
-        // 创建区块监控任务
+        // 区块监控任务
         const data = {
+          id: form.id, // ⭐ 编辑时需要ID
           taskName: form.taskName,
           taskType: 'block',
           chainType: form.chainType,
@@ -624,10 +686,15 @@ const handleSubmit = () => {
           status: 1
         }
         
-        addBlockTask(data).then(response => {
-          proxy.$modal.msgSuccess('区块监控任务创建成功')
+        // ⭐ 判断是编辑还是新增
+        const apiCall = form.id ? updateTask(data) : addBlockTask(data)
+        const successMsg = form.id ? '任务修改成功' : '区块监控任务创建成功'
+        
+        apiCall.then(response => {
+          proxy.$modal.msgSuccess(successMsg)
           dialogVisible.value = false
           emit('refresh')
+          openManageDialog() // 刷新任务列表
         }).finally(() => {
           submitting.value = false
         })
@@ -639,6 +706,7 @@ const handleSubmit = () => {
 const resetForm = () => {
   formRef.value?.resetFields()
   Object.assign(form, {
+    id: null, // ⭐ 重置ID
     taskName: '',
     chainType: 'sol',
     minMarketCap: 10000,

@@ -2,6 +2,8 @@ package com.ruoyi.crypto.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ruoyi.common.core.domain.BaseEntity;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -11,6 +13,7 @@ import java.util.Date;
  * @author ruoyi
  * @date 2025-11-09
  */
+@Data
 public class MonitorConfig extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -80,199 +83,6 @@ public class MonitorConfig extends BaseEntity
     /** 删除标志：0-未删除/1-已删除 */
     private Integer delFlag;
 
-    // Getters and Setters
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setConfigName(String configName) {
-        this.configName = configName;
-    }
-
-    public String getConfigName() {
-        return configName;
-    }
-
-    public void setConfigType(String configType) {
-        this.configType = configType;
-    }
-
-    public String getConfigType() {
-        return configType;
-    }
-
-    public void setChainType(String chainType) {
-        this.chainType = chainType;
-    }
-
-    public String getChainType() {
-        return chainType;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public void setMarketType(String marketType) {
-        this.marketType = marketType;
-    }
-
-    public String getMarketType() {
-        return marketType;
-    }
-
-    public void setMinTransactionUsd(BigDecimal minTransactionUsd) {
-        this.minTransactionUsd = minTransactionUsd;
-    }
-
-    public BigDecimal getMinTransactionUsd() {
-        return minTransactionUsd;
-    }
-
-    public void setCumulativeMinAmountUsd(BigDecimal cumulativeMinAmountUsd) {
-        this.cumulativeMinAmountUsd = cumulativeMinAmountUsd;
-    }
-
-    public BigDecimal getCumulativeMinAmountUsd() {
-        return cumulativeMinAmountUsd;
-    }
-
-    public void setTimeInterval(String timeInterval) {
-        this.timeInterval = timeInterval;
-    }
-
-    public String getTimeInterval() {
-        return timeInterval;
-    }
-
-    public void setTopHoldersThreshold(BigDecimal topHoldersThreshold) {
-        this.topHoldersThreshold = topHoldersThreshold;
-    }
-
-    public BigDecimal getTopHoldersThreshold() {
-        return topHoldersThreshold;
-    }
-
-    public void setEventsConfig(String eventsConfig) {
-        this.eventsConfig = eventsConfig;
-    }
-
-    public String getEventsConfig() {
-        return eventsConfig;
-    }
-
-    public void setTriggerLogic(String triggerLogic) {
-        this.triggerLogic = triggerLogic;
-    }
-
-    public String getTriggerLogic() {
-        return triggerLogic;
-    }
-
-    public void setNotifyMethods(String notifyMethods) {
-        this.notifyMethods = notifyMethods;
-    }
-
-    public String getNotifyMethods() {
-        return notifyMethods;
-    }
-
-    public void setVersion(Integer version) {
-        this.version = version;
-    }
-
-    public Integer getVersion() {
-        return version;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    @Override
-    public void setCreateBy(String createBy) {
-        this.createBy = createBy;
-    }
-
-    @Override
-    public String getCreateBy() {
-        return createBy;
-    }
-
-    @Override
-    public void setCreateTime(Date createTime) {
-        this.createTime = createTime;
-    }
-
-    @Override
-    public Date getCreateTime() {
-        return createTime;
-    }
-
-    @Override
-    public void setUpdateBy(String updateBy) {
-        this.updateBy = updateBy;
-    }
-
-    @Override
-    public String getUpdateBy() {
-        return updateBy;
-    }
-
-    @Override
-    public void setUpdateTime(Date updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    @Override
-    public Date getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setDelFlag(Integer delFlag) {
-        this.delFlag = delFlag;
-    }
-
-    public Integer getDelFlag() {
-        return delFlag;
-    }
-
-    @Override
-    public String toString() {
-        return "MonitorConfig{" +
-                "id=" + id +
-                ", configName='" + configName + '\'' +
-                ", configType='" + configType + '\'' +
-                ", chainType='" + chainType + '\'' +
-                ", source='" + source + '\'' +
-                ", marketType='" + marketType + '\'' +
-                ", timeInterval='" + timeInterval + '\'' +
-                ", version=" + version +
-                ", status=" + status +
-                ", createTime=" + createTime +
-                ", updateTime=" + updateTime +
-                '}';
-    }
+    private Integer taskCount;
 }
 

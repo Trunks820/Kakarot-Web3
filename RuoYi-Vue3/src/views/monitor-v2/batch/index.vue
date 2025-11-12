@@ -21,6 +21,25 @@
             @keyup.enter="handleQuery"
           />
         </el-form-item>
+
+        <el-form-item label="任务ID">
+          <el-input
+              v-model="queryParams.taskId"
+              placeholder="请输入任务ID"
+              clearable
+              @keyup.enter="handleQuery"
+          />
+        </el-form-item>
+
+        <el-form-item label="任务名称">
+          <el-input
+              v-model="queryParams.batchNo"
+              placeholder="请输入任务名称"
+              clearable
+              @keyup.enter="handleQuery"
+          />
+        </el-form-item>
+
         <el-form-item label="状态">
           <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
             <el-option label="运行中" value="running" />
@@ -255,7 +274,11 @@ const handleDetail = async (row) => {
 const loadBatchItems = async (batchId) => {
   itemsLoading.value = true
   try {
-    const response = await getBatchItems(batchId)
+    // ⭐ 修复：传递大的pageSize参数，获取所有批次项
+    const response = await getBatchItems(batchId, { 
+      pageNum: 1, 
+      pageSize: 10000  // 设置足够大的值，确保获取所有数据
+    })
     batchItems.value = response.rows || []
   } catch (error) {
     console.error('加载批次项失败:', error)

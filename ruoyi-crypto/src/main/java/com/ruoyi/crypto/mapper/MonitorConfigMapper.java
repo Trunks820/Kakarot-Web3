@@ -81,5 +81,13 @@ public interface MonitorConfigMapper
      * @return 统计数据Map
      */
     public java.util.Map<String, Object> getConfigStats();
+    
+    /**
+     * 统计某个配置被多少个任务使用
+     * 
+     * @param configId 配置ID
+     * @return 关联的任务数量
+     */
+    public int countTasksByConfigId(Long configId);
 }
 

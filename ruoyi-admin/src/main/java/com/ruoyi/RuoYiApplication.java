@@ -6,6 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Import;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * 启动程序
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.Import;
  */
 @SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
 @Import({CryptoMonitorConfig.class, WebSocketConfig.class})
+@EnableScheduling  // 启用定时任务
 public class RuoYiApplication
 {
     public static void main(String[] args)

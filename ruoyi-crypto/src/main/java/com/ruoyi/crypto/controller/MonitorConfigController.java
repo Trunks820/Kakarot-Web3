@@ -6,13 +6,20 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.crypto.domain.MonitorConfig;
+import com.ruoyi.crypto.domain.MonitorTask;
 import com.ruoyi.crypto.mapper.MonitorConfigMapper;
+import com.ruoyi.crypto.mapper.MonitorTaskMapper;
 import com.ruoyi.crypto.service.IMonitorConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 监控配置Controller
@@ -24,11 +31,14 @@ import java.util.List;
 @RequestMapping("/crypto/monitor-v2/config")
 public class MonitorConfigController extends BaseController
 {
-    @Autowired
+    @Resource
     private IMonitorConfigService monitorConfigService;
     
-    @Autowired
+    @Resource
     private MonitorConfigMapper monitorConfigMapper;
+
+    @Resource
+    private MonitorTaskMapper taskMapper;
 
     /**
      * 查询监控配置列表
@@ -38,6 +48,19 @@ public class MonitorConfigController extends BaseController
     {
         startPage();
         List<MonitorConfig> list = monitorConfigService.selectMonitorConfigList(monitorConfig);
+
+        // ⭐ 为每个配置填充关联的任务数量
+        list.forEach(config -> {
+            try {
+                // 查询该配置被多少个任务使用（通过中间表 monitor_task_config_v2）
+                int taskCount = monitorConfigMapper.countTasksByConfigId(config.getId());
+                config.setTaskCount(taskCount);
+            } catch (Exception e) {
+                logger.error("获取配置关联任务数失败: configId=" + config.getId(), e);
+                config.setTaskCount(0);
+            }
+        });
+
         return getDataTable(list);
     }
 

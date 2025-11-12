@@ -2,6 +2,8 @@ package com.ruoyi.crypto.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ruoyi.common.core.domain.BaseEntity;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.List;
  * @author ruoyi
  * @date 2025-11-09
  */
+@Data
 public class MonitorTask extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -45,6 +48,12 @@ public class MonitorTask extends BaseEntity
 
     /** 目标数量(仅batch) */
     private Integer targetCount;
+    
+    /** 配置数量（非数据库字段，仅用于列表展示） */
+    private Integer configCount;
+
+    /** 批次数量（非数据库字段，仅用于列表展示） */
+    private Integer batchCount;
 
     /** 市场类型(仅block)：internal-内盘/external-外盘 */
     private String marketType;
@@ -95,230 +104,6 @@ public class MonitorTask extends BaseEntity
     /** 当前任务活跃的批次epoch版本号 */
     private Integer currentEpoch;
 
-    // Getters and Setters
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setTaskName(String taskName) {
-        this.taskName = taskName;
-    }
-
-    public String getTaskName() {
-        return taskName;
-    }
-
-    public void setTaskType(String taskType) {
-        this.taskType = taskType;
-    }
-
-    public String getTaskType() {
-        return taskType;
-    }
-
-    public void setChainType(String chainType) {
-        this.chainType = chainType;
-    }
-
-    public String getChainType() {
-        return chainType;
-    }
-
-    public void setMinMarketCap(BigDecimal minMarketCap) {
-        this.minMarketCap = minMarketCap;
-    }
-
-    public BigDecimal getMinMarketCap() {
-        return minMarketCap;
-    }
-
-    public void setMaxMarketCap(BigDecimal maxMarketCap) {
-        this.maxMarketCap = maxMarketCap;
-    }
-
-    public BigDecimal getMaxMarketCap() {
-        return maxMarketCap;
-    }
-
-    public void setHasTwitter(Integer hasTwitter) {
-        this.hasTwitter = hasTwitter;
-    }
-
-    public Integer getHasTwitter() {
-        return hasTwitter;
-    }
-
-    public void setAutoSyncTargets(Integer autoSyncTargets) {
-        this.autoSyncTargets = autoSyncTargets;
-    }
-
-    public Integer getAutoSyncTargets() {
-        return autoSyncTargets;
-    }
-
-    public void setSyncIntervalMinutes(Integer syncIntervalMinutes) {
-        this.syncIntervalMinutes = syncIntervalMinutes;
-    }
-
-    public Integer getSyncIntervalMinutes() {
-        return syncIntervalMinutes;
-    }
-
-    public void setTargetCount(Integer targetCount) {
-        this.targetCount = targetCount;
-    }
-
-    public Integer getTargetCount() {
-        return targetCount;
-    }
-
-    public void setScheduleCron(String scheduleCron) {
-        this.scheduleCron = scheduleCron;
-    }
-
-    public String getScheduleCron() {
-        return scheduleCron;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public void setLastRunTime(Date lastRunTime) {
-        this.lastRunTime = lastRunTime;
-    }
-
-    public Date getLastRunTime() {
-        return lastRunTime;
-    }
-
-    public void setNextRunTime(Date nextRunTime) {
-        this.nextRunTime = nextRunTime;
-    }
-
-    public Date getNextRunTime() {
-        return nextRunTime;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    @Override
-    public void setCreateBy(String createBy) {
-        this.createBy = createBy;
-    }
-
-    @Override
-    public String getCreateBy() {
-        return createBy;
-    }
-
-    @Override
-    public void setCreateTime(Date createTime) {
-        this.createTime = createTime;
-    }
-
-    @Override
-    public Date getCreateTime() {
-        return createTime;
-    }
-
-    @Override
-    public void setUpdateBy(String updateBy) {
-        this.updateBy = updateBy;
-    }
-
-    @Override
-    public String getUpdateBy() {
-        return updateBy;
-    }
-
-    @Override
-    public void setUpdateTime(Date updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    @Override
-    public Date getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setConfigs(List<MonitorConfig> configs) {
-        this.configs = configs;
-    }
-
-    public List<MonitorConfig> getConfigs() {
-        return configs;
-    }
-
-    public void setConfigIds(List<Long> configIds) {
-        this.configIds = configIds;
-    }
-
-    public List<Long> getConfigIds() {
-        return configIds;
-    }
-
-    public void setMarketType(String marketType) {
-        this.marketType = marketType;
-    }
-
-    public String getMarketType() {
-        return marketType;
-    }
-
-    public void setMinTransactionUsd(BigDecimal minTransactionUsd) {
-        this.minTransactionUsd = minTransactionUsd;
-    }
-
-    public BigDecimal getMinTransactionUsd() {
-        return minTransactionUsd;
-    }
-
-    public void setCumulativeMinAmountUsd(BigDecimal cumulativeMinAmountUsd) {
-        this.cumulativeMinAmountUsd = cumulativeMinAmountUsd;
-    }
-
-    public BigDecimal getCumulativeMinAmountUsd() {
-        return cumulativeMinAmountUsd;
-    }
-
-    public void setCurrentEpoch(Integer currentEpoch) {
-        this.currentEpoch = currentEpoch;
-    }
-
-    public Integer getCurrentEpoch() {
-        return currentEpoch;
-    }
-
-    @Override
-    public String toString() {
-        return "MonitorTask{" +
-                "id=" + id +
-                ", taskName='" + taskName + '\'' +
-                ", taskType='" + taskType + '\'' +
-                ", chainType='" + chainType + '\'' +
-                ", minMarketCap=" + minMarketCap +
-                ", maxMarketCap=" + maxMarketCap +
-                ", targetCount=" + targetCount +
-                ", status=" + status +
-                ", createTime=" + createTime +
-                ", updateTime=" + updateTime +
-                '}';
-    }
 }
 
