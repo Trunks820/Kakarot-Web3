@@ -38,7 +38,7 @@ public class MonitorTask extends BaseEntity
     private BigDecimal maxMarketCap;
 
     /** 是否有Twitter(仅smart) */
-    private Integer hasTwitter;
+    private String hasTwitter;
 
     /** 是否自动同步目标(仅smart) */
     private Integer autoSyncTargets;
