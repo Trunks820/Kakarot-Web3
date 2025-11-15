@@ -219,13 +219,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <!-- 删除任务的所有批次项 -->
     <delete id="deleteBatchItemsByTaskId">
         delete from monitor_batch_item_v2
-        where task_id = #{taskId}
+        where batch_id in (
+            select id from monitor_batch_v2
+            where task_id = #{param1}
+            and epoch &lt; #{param2}
+        )
     </delete>
 
-    <!-- 删除任务的所有批次 -->
+    <!-- 删除任务的旧epoch批次 -->
     <delete id="deleteBatchesByTaskId">
         delete from monitor_batch_v2
-        where task_id = #{taskId}
+        where task_id = #{param1}
+        and epoch &lt; #{param2}
     </delete>
 </mapper>
 

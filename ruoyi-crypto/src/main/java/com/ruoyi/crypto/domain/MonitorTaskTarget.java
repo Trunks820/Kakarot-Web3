@@ -44,9 +44,9 @@ public class MonitorTaskTarget extends BaseEntity
     @Excel(name = "合约市值")
     private BigDecimal marketCap;
 
-    /** 状态：active-活跃, removed-已移除 */
+    /** 状态：1-活跃, 0-已移除 */
     @Excel(name = "状态")
-    private String status;
+    private Integer status;
 
     /** 创建时间 */
     private Date createTime;

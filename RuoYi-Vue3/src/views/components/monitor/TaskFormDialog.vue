@@ -59,11 +59,24 @@
         </el-form-item>
         
         <el-form-item label="Twitter筛选">
-          <el-radio-group v-model="formData.hasTwitter">
-            <el-radio :label="null">不限</el-radio>
-            <el-radio :label="1">有Twitter</el-radio>
-            <el-radio :label="0">无Twitter</el-radio>
-          </el-radio-group>
+          <el-select v-model="formData.hasTwitter" placeholder="请选择" clearable style="width: 100%">
+            <el-option label="不限" :value="null">
+              <span>不限</span>
+            </el-option>
+            <el-option label="推特主页" value="profile">
+              <span>推特主页</span>
+              <span style="color: var(--el-text-color-secondary); font-size: 12px; margin-left: 8px">
+              </span>
+            </el-option>
+            <el-option label="推文" value="tweet">
+              <span>推文</span>
+            </el-option>
+            <el-option label="社区" value="community">
+              <span>社区</span>
+            </el-option>
+            <el-option label="无推特" value="none" />
+          </el-select>
+          <div class="form-tip">💡 精确筛选Twitter类型，推特主页通常是官方账号</div>
         </el-form-item>
         
         <el-form-item label="自动同步">

@@ -200,26 +200,40 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
                 logger.info("目标更新完成：新增={}, 删除={}", addedCount, removedCount);
 
                 // 7. 重新分配批次（Epoch版本递增）
-                Integer newEpoch = (task.getCurrentEpoch() != null ? task.getCurrentEpoch() : 0) + 1;
+                Integer oldEpoch = task.getCurrentEpoch() != null ? task.getCurrentEpoch() : 0;
+                Integer newEpoch = oldEpoch + 1;
 
-                // 7.1 删除旧批次数据（避免唯一索引冲突）
-                // 由于 uk_task_batch(task_id, batch_no) 唯一索引限制，需要先删除旧批次
-                if (task.getCurrentEpoch() != null && task.getCurrentEpoch() > 0) {
-                    logger.info("删除旧批次数据：taskId={}, currentEpoch={}", taskId, task.getCurrentEpoch());
-                    // 先删除批次项
-                    monitorBatchMapper.deleteBatchItemsByTaskId(taskId);
-                    // 再删除批次
-                    monitorBatchMapper.deleteBatchesByTaskId(taskId);
-                }
-
+                // 7.1 先分配新批次（保证零停机）
+                // ⭐ 先创建新epoch批次，确保成功后再删除旧批次，避免中间状态无批次可用
                 int allocatedCount = allocateBatches(taskId, newEpoch, new ArrayList<>(latestCAs));
+                
+                if (allocatedCount == 0) {
+                    logger.warn("批次分配失败，保留旧批次数据，不更新epoch");
+                    result.put("success", false);
+                    result.put("message", "批次分配失败：没有可用的Consumer或分配异常");
+                    return result;
+                }
+                
+                logger.info("新批次分配成功：newEpoch={}, batchCount={}", newEpoch, allocatedCount);
 
-                // 8. 更新任务的current_epoch
+                // 7.2 更新任务的current_epoch（切换到新批次）
                 MonitorTask updateTask = new MonitorTask();
                 updateTask.setId(taskId);
                 updateTask.setCurrentEpoch(newEpoch);
                 updateTask.setUpdateTime(new Date());
                 monitorTaskMapper.updateMonitorTask(updateTask);
+                
+                logger.info("任务epoch已更新：taskId={}, oldEpoch={}, newEpoch={}", taskId, oldEpoch, newEpoch);
+
+                // 7.3 删除旧批次数据（在新批次创建成功后）
+                // ⭐ 此时新批次已生效，删除旧批次不影响消费者读取
+                // ⭐ 即使oldEpoch=0，也要删除旧批次（避免唯一索引冲突）
+                logger.info("删除旧批次数据：taskId={}, oldEpoch={}, beforeEpoch={}", taskId, oldEpoch, newEpoch);
+                // 先删除旧epoch的批次项（删除所有 epoch < newEpoch 的数据）
+                int deletedItems = monitorBatchMapper.deleteBatchItemsByTaskId(taskId, newEpoch);
+                // 再删除旧epoch的批次
+                int deletedBatches = monitorBatchMapper.deleteBatchesByTaskId(taskId, newEpoch);
+                logger.info("旧批次清理完成：deletedBatches={}, deletedItems={}", deletedBatches, deletedItems);
 
                 // 9. 通知Python端（通过WebSocket或Redis Pub/Sub）
                 notifyPythonClient(taskId, newEpoch);
@@ -353,7 +367,8 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
     private List<TokenLaunchHistory> fetchLatestTokens(MonitorTask task) {
         Map<String, Object> conditions = new HashMap<>();
         conditions.put("chainType", task.getChainType());
-        conditions.put("maxTargets", 20000);
+        // ⭐ 修复：使用@Value配置的maxTargets，而不是硬编码
+        conditions.put("maxTargets", this.maxTargets);
 
         // 从任务的智能条件中解析参数（如果有）
         if(StringUtils.isNotNull(task.getMinMarketCap())) {
@@ -364,8 +379,14 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
             conditions.put("maxMarketCap", task.getMaxMarketCap());
         }
 
+        // ⭐ 修复：根据hasTwitter的值设置不同的筛选逻辑
+        // null - 不限
+        // "profile" - 推特主页（不包含/status/、/communities/、/search）
+        // "tweet" - 推文（包含/status/）
+        // "community" - 社区（包含/communities/）
+        // "none" - 无推特
         if(StringUtils.isNotNull(task.getHasTwitter())) {
-            conditions.put("requireTwitter", true);
+            conditions.put("hasTwitter", task.getHasTwitter());
         }
 
         return tokenLaunchHistoryMapper.selectBySmartConditions(conditions);
@@ -394,11 +415,14 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
         // 2. 更新一致性哈希环
         consistentHashUtil.updateConsumers(activeConsumers);
         
-        // 3. 查询所有targets并建立CA到ID的映射（优化性能）
+        // 3. 查询所有targets并建立CA到target对象的映射（优化性能，避免O(n²)）
+        // ⭐ 修复：直接建立 Map<String, MonitorTaskTarget>，避免后续遍历查找
         List<MonitorTaskTarget> allTargets = monitorTaskTargetMapper.selectByTaskId(taskId);
         Map<String, Long> caToTargetIdMap = new HashMap<>();
+        Map<String, MonitorTaskTarget> caToTargetMap = new HashMap<>();
         for (MonitorTaskTarget target : allTargets) {
             caToTargetIdMap.put(target.getCa(), target.getId());
+            caToTargetMap.put(target.getCa(), target); // ⭐ 新增：CA到完整target对象的映射
         }
         
         // 4. 按Consumer分组CA
@@ -437,17 +461,9 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
                 List<MonitorBatchItem> itemsToInsert = new ArrayList<>();
                 int itemOrder = 0; // 批次内序号
                 for (String ca : batchCAs) {
-                    // 从映射中获取 target_id 和对应的 target 信息
+                    // ⭐ 修复O(n²)性能问题：直接从Map获取，时间复杂度O(1)
                     Long targetId = caToTargetIdMap.get(ca);
-                    MonitorTaskTarget target = null;
-                    if (targetId != null) {
-                        for (MonitorTaskTarget t : allTargets) {
-                            if (t.getId().equals(targetId)) {
-                                target = t;
-                                break;
-                            }
-                        }
-                    }
+                    MonitorTaskTarget target = caToTargetMap.get(ca); // ⭐ 直接从Map获取，不再遍历
                     
                     MonitorBatchItem item = new MonitorBatchItem();
                     item.setBatchId(batch.getId());

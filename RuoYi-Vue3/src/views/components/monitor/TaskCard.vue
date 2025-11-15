@@ -130,11 +130,22 @@
           </el-form-item>
           
           <el-form-item label="Twitter筛选">
-            <el-radio-group v-model="form.hasTwitter">
-              <el-radio :label="null">不限</el-radio>
-              <el-radio :label="1">有Twitter</el-radio>
-              <el-radio :label="0">无Twitter</el-radio>
-            </el-radio-group>
+            <el-select v-model="form.hasTwitter" placeholder="请选择" clearable style="width: 100%">
+              <el-option label="不限" :value="null">
+                <span>不限</span>
+              </el-option>
+              <el-option label="推特主页" value="profile">
+                <span>推特主页</span>
+              </el-option>
+              <el-option label="推文" value="tweet">
+                <span>推文</span>
+              </el-option>
+              <el-option label="社区" value="community">
+                <span>社区</span>
+              </el-option>
+              <el-option label="无推特" value="none" />
+            </el-select>
+            <div class="form-tip">💡 精确筛选Twitter类型，推特主页通常是官方账号</div>
           </el-form-item>
           
           <el-form-item label="自动同步">
@@ -197,13 +208,15 @@
             >
               <span>{{ config.configName }}</span>
               <el-tag size="small" style="margin-left: 8px">{{ config.chainType }}</el-tag>
-              <el-tag 
-                v-if="config.marketType" 
-                :type="config.marketType === 'external' ? 'success' : 'warning'" 
-                size="small" 
-                style="margin-left: 4px"
-              >
-                {{ config.marketType === 'external' ? '外盘' : '内盘' }}
+              <el-tag v-if="config.marketType" :type="config.marketType === 'external'
+                ? 'success': (config.marketType === 'internal'? 'warning': 'info')" size="small" style="margin-left: 4px">
+                      {{
+                        config.marketType === 'external'
+                            ? '外盘'
+                            : (config.marketType === 'internal'
+                                ? '内盘'
+                                : '不限')
+                      }}
               </el-tag>
             </el-option>
           </el-select>
@@ -354,8 +367,12 @@
             <el-descriptions-item label="最大市值">
               {{ taskDetail.maxMarketCap ? (taskDetail.maxMarketCap / 10000).toFixed(0) + '万' : '不限' }}
             </el-descriptions-item>
-            <el-descriptions-item label="Twitter要求">
-              {{ taskDetail.hasTwitter === 1 ? '必须有' : '不限制' }}
+            <el-descriptions-item label="Twitter筛选">
+              <el-tag v-if="taskDetail.hasTwitter === 'profile'" type="success">推特主页</el-tag>
+              <el-tag v-else-if="taskDetail.hasTwitter === 'tweet'" type="warning">推文</el-tag>
+              <el-tag v-else-if="taskDetail.hasTwitter === 'community'" type="info">社区</el-tag>
+              <el-tag v-else-if="taskDetail.hasTwitter === 'none'" type="danger">无推特</el-tag>
+              <el-tag v-else type="">不限</el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="自动同步">
               {{ taskDetail.autoSyncTargets === 1 ? '是' : '否' }}
@@ -453,7 +470,7 @@ const form = reactive({
   // 批量监控字段
   caList: '',
   // 通用字段
-  configId: null, // 配置ID（所有任务类型统一使用单选）
+  configId: null, // 配置ID
   description: ''
 })
 
@@ -546,8 +563,8 @@ const handleTaskEdit = (row) => {
   }
   
   // 设置配置ID（从configs数组中获取第一个）
-  if (row.configs && row.configs.length > 0) {
-    form.configId = row.configs[0].id
+  if (row.configIds && row.configIds.length > 0) {
+    form.configId = row.configIds[0]
   } else {
     form.configId = null
   }

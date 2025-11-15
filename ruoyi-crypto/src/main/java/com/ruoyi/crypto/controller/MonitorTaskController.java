@@ -63,6 +63,7 @@ public class MonitorTaskController extends BaseController
                 // 2. 查询配置数量
                 List<Long> configIds = monitorTaskMapper.selectConfigIdsByTaskId(task.getId());
                 task.setConfigCount(configIds != null ? configIds.size() : 0);
+                task.setConfigIds(configIds);
 
                 // 3. 查询批次数量
                 MonitorBatch monitorBatch = new MonitorBatch();

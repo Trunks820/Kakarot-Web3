@@ -188,10 +188,30 @@
             <if test="maxMarketCap != null">
                 AND highest_market_cap &lt;= #{maxMarketCap}
             </if>
-            <!-- 是否需要推特 -->
-            <if test="requireTwitter != null and requireTwitter == true">
-                AND twitter_url IS NOT NULL 
-                AND twitter_url != ''
+            <!-- Twitter筛选（支持4种选项） -->
+            <if test="hasTwitter != null and hasTwitter != ''">
+                <choose>
+                    <!-- 推特主页：不包含/status/、/communities/、/search -->
+                    <when test='hasTwitter == "profile"'>
+                        AND twitter_url IS NOT NULL 
+                        AND twitter_url != ''
+                        AND twitter_url NOT LIKE '%/status/%'
+                        AND twitter_url NOT LIKE '%/communities/%'
+                        AND twitter_url NOT LIKE '%/search%'
+                    </when>
+                    <!-- 推文：包含/status/ -->
+                    <when test='hasTwitter == "tweet"'>
+                        AND twitter_url LIKE '%/status/%'
+                    </when>
+                    <!-- 社区：包含/communities/ -->
+                    <when test='hasTwitter == "community"'>
+                        AND twitter_url LIKE '%/communities/%'
+                    </when>
+                    <!-- 无推特 -->
+                    <when test='hasTwitter == "none"'>
+                        AND (twitter_url IS NULL OR twitter_url = '')
+                    </when>
+                </choose>
             </if>
             <!-- 其他筛选条件可以在这里扩展 -->
         </where>

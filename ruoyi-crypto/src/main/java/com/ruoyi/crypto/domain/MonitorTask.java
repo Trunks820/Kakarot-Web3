@@ -37,8 +37,8 @@ public class MonitorTask extends BaseEntity
     /** 最大市值(仅smart) */
     private BigDecimal maxMarketCap;
 
-    /** 是否有Twitter(仅smart) */
-    private Integer hasTwitter;
+    /** Twitter筛选(仅smart): profile-推特主页/tweet-推文/community-社区/none-无推特 */
+    private String hasTwitter;
 
     /** 是否自动同步目标(仅smart) */
     private Integer autoSyncTargets;

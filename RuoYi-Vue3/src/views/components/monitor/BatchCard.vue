@@ -247,11 +247,21 @@
           style="width: 100%"
           max-height="300px"
         >
-          <el-table-column label="序号" prop="itemOrder" width="70" align="center" />
-          <el-table-column label="Token地址" prop="ca" min-width="200" show-overflow-tooltip />
-          <el-table-column label="Token名称" prop="tokenName" width="120" show-overflow-tooltip />
-          <el-table-column label="Token符号" prop="tokenSymbol" width="100" />
-          <el-table-column label="市值" prop="marketCap" width="120" align="right" />
+          <el-table-column label="序号" prop="itemOrder" width="80" />
+          <el-table-column label="代币地址" prop="ca" min-width="200" show-overflow-tooltip>
+            <template #default="scope">
+              <el-link :href="`https://gmgn.ai/sol/token/${scope.row.ca}`" target="_blank" type="primary">
+                {{ scope.row.ca }}
+              </el-link>
+            </template>
+          </el-table-column>
+          <el-table-column label="代币名称" prop="tokenName" width="150" show-overflow-tooltip />
+          <el-table-column label="代币符号" prop="tokenSymbol" width="120" />
+          <el-table-column label="市值" prop="marketCap" width="150">
+            <template #default="scope">
+              {{ scope.row.marketCap ? `$${formatNumber(scope.row.marketCap)}` : 'N/A' }}
+            </template>
+          </el-table-column>
         </el-table>
       </div>
       
@@ -428,6 +438,15 @@ const formatTime = (time) => {
   if (diff < 60) return `${diff}秒前`
   if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
   return `${Math.floor(diff / 3600)}小时前`
+}
+
+// 格式化数字
+const formatNumber = (num) => {
+  if (!num) return '0'
+  return new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    compactDisplay: 'short'
+  }).format(num)
 }
 
 // 批次状态相关

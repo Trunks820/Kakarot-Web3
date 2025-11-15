@@ -1,8 +1,10 @@
 # Python监控端适配V2方案
 
-> **文档版本**: v1.0  
+> **文档版本**: v1.1  
 > **创建日期**: 2025-11-10  
+> **最后更新**: 2025-11-13  
 > **目标**: 让Python监控端适配新的monitor_*_v2表结构
+> **最新更新**: 修正任务-配置关系（M:N → 1:N）
 
 ---
 
@@ -29,15 +31,28 @@
 | **目标表** | `sol_ws_batch_pool`（混合） | `monitor_task_target_v2` |
 | **批次表** | `sol_ws_batch_pool`（混合） | `monitor_batch_v2` + `monitor_batch_item_v2` |
 | **告警表** | 分散多处 | `monitor_alert_log_v2` |
-| **关联关系** | 1:N（配置→Token） | M:N（配置↔任务） + 1:N（任务→目标） |
+| **关联关系** | 1:N（配置→Token） | ~~M:N（配置↔任务）~~ 1:N（配置→任务） + 1:N（任务→目标） ⭐ |
 
 ### 关键概念变化
 
 ```
 旧系统：配置 → Token列表（batch_id分组）
 
-新系统：配置 ←→ 任务 → 目标列表 → 批次分配
+新系统：配置 → 任务 → 目标列表 → 批次分配
+         (1:N)  (1:1)  (1:N)
 ```
+
+### ⭐ 重要说明：任务-配置关系
+
+**架构设计**：
+- ✅ 一个任务只能绑定**一个配置**（1:1关系）
+- ✅ 一个配置可以被**多个任务**使用（1:N关系）
+- ✅ 单个配置足够一个任务使用（可包含价格+持仓+成交量等多个事件规则）
+
+**代码实现**：
+- Python代码中仍使用 `configs` 数组，但**实际只有1个元素**
+- 这样设计是为了代码兼容性和扩展性（未来如果需要支持多配置，改动最小）
+- 实际使用时：`config = task['configs'][0]`
 
 ---
 
@@ -1344,12 +1359,34 @@ class MonitorService:
 
 ---
 
+## 📝 版本更新记录
+
+### v1.1 (2025-11-13) - 架构关系修正
+
+**修正内容**：
+- ✅ 修正任务-配置关系：~~M:N（多对多）~~ → **1:N（一对多）**
+- ✅ 明确说明：一个任务只能绑定一个配置
+- ✅ 补充：Python代码中 `configs` 数组实际只有1个元素
+- ✅ 更新：关系图和说明文字
+
+**修改原因**：
+- 单个配置足够一个任务使用（可包含多个事件规则）
+- 前端实现采用单选（configId），而非多选（configIds）
+- 简化业务逻辑，降低复杂度
+
+**代码影响**：
+- ⚠️ Python代码中保持 `configs` 数组结构（兼容性）
+- ⚠️ 实际使用时取第一个元素：`config = task['configs'][0]`
+- ⚠️ SQL查询会只返回1条配置记录
+
+---
+
 ## 📝 总结
 
 ### 核心变更点
 
 1. ✅ **数据加载**：从 `sol_ws_batch_pool` → `monitor_task_v2` + `monitor_task_target_v2`
-2. ✅ **配置管理**：从单表 → 多对多关联（配置可复用）
+2. ✅ **配置管理**：从单表 → ~~多对多关联~~ 一对多关联（配置可复用）⭐
 3. ✅ **批次分配**：新增一致性哈希算法
 4. ✅ **配置感知**：Redis Pub/Sub + 轮询兜底
 5. ✅ **心跳上报**：独立线程，定时上报状态
@@ -1365,7 +1402,202 @@ class MonitorService:
 
 ---
 
+## 附录C：关键实现细节（FAQ）
+
+### Q1: Consumer ID 应该如何生成？
+
+**推荐：动态生成（hostname + pid）** ✅
+
+```python
+import socket
+import os
+
+# 启动时生成唯一的 consumer_id
+CONSUMER_ID = f"{socket.gethostname()}-{os.getpid()}"
+# 例如: "server-01-12345"
+```
+
+**配置示例**：
+
+```python
+# config.py
+CONSUMER_ID_PREFIX = os.getenv("CONSUMER_ID_PREFIX", socket.gethostname())
+CONSUMER_ID = f"{CONSUMER_ID_PREFIX}-{os.getpid()}"
+```
+
+**优势**：
+- ✅ 多实例部署时自动唯一
+- ✅ 重启后自动生成新ID（避免僵尸批次）
+- ✅ 便于运维排查（hostname + pid）
+
+---
+
+### Q2: 批次ID应该使用哪个字段？
+
+**关键变更**：使用 `monitor_batch_v2.id` 而不是 `batch_no` ⭐
+
+| 字段 | 类型 | 唯一性 | 用途 |
+|------|------|--------|------|
+| `id` | BIGINT | 全局唯一 ⭐ | Python端使用（心跳/状态上报） |
+| `batch_no` | INT | 任务内唯一 | 显示用（如"第3批"） |
+
+**Python端修改**：
+
+```python
+# ❌ 错误（batch_no只在任务内唯一，跨任务会冲突）
+batch_id = batch['batch_no']
+
+# ✅ 正确（id是全局唯一的主键）
+batch_id = batch['id']
+```
+
+**SQL查询修改**：
+
+```sql
+SELECT 
+    b.id AS batch_id,          -- 全局唯一ID，Python端使用 ⭐
+    b.task_id,
+    b.batch_no,                -- 任务内批次号，显示用（"第3批"）
+    b.epoch,
+    b.consumer_id,
+    b.status
+FROM monitor_batch_v2 b
+INNER JOIN monitor_task_v2 t ON b.task_id = t.id
+WHERE b.task_id = ? 
+  AND b.epoch = t.current_epoch
+ORDER BY b.batch_no;
+```
+
+---
+
+### Q3: Python端需要直接更新数据库心跳吗？
+
+**答案：不需要！** ❌
+
+**正确的心跳流程**：
+
+```
+Python端                Java端                 数据库
+  |                      |                      |
+  | 1. 执行批次          |                      |
+  |                      |                      |
+  | 2. WebSocket心跳 --->| 3. 接收心跳          |
+  |    (每30秒)          |                      |
+  |                      | 4. 更新数据库 -----> | 5. 持久化
+  |                      |                      |
+  |                      | 6. 广播给前端 -----> | (WebSocket推送)
+  |                      |    (实时展示)        |
+```
+
+**Python端实现**（只推送，不写库）：
+
+```python
+class MonitorTaskRunner:
+    def run_batch(self, batch):
+        batch_id = batch['id']  # 全局唯一ID
+        
+        # ✅ 只通过WebSocket上报
+        self.ws_client.update_batch_status(
+            batch_id=batch_id,
+            status="running",
+            progress=50
+        )
+        
+        # ❌ 不直接更新数据库
+        # self.db.update_batch_heartbeat(batch_id)  # 删除这行！
+```
+
+**WebSocket消息格式**：
+
+```json
+{
+  "type": "batch_heartbeat",
+  "data": {
+    "batchId": 12345,          // 全局唯一ID（monitor_batch_v2.id）⭐
+    "taskId": 4,               // 任务ID（可选，用于验证）
+    "consumerId": "server-01-12345",
+    "progress": 50,
+    "timestamp": 1731484800
+  }
+}
+```
+
+**优势**：
+- ✅ **单一写入点**：只有Java更新数据库，避免冲突
+- ✅ **实时性**：WebSocket推送，前端立即可见
+- ✅ **解耦**：Python无需关心数据库schema变更
+- ✅ **安全性**：Python无需数据库写权限
+
+---
+
+### Q4: 是否需要实现批次优先级？
+
+**当前版本：不实现** ⭐
+
+**理由**：
+1. ✅ 每个任务独立运行，不存在跨任务竞争
+2. ✅ Python端按顺序消费批次，全量处理
+3. ✅ 增加优先级会增加复杂度，收益不大
+
+**如果未来需要支持**：
+
+```sql
+-- 添加优先级字段
+ALTER TABLE monitor_batch_v2 
+ADD COLUMN priority INT DEFAULT 0 COMMENT '批次优先级（越大越优先）';
+
+-- Python端按优先级排序
+SELECT ... 
+FROM monitor_batch_v2 
+ORDER BY priority DESC, batch_no ASC;
+```
+
+**适用场景**：
+- 🎯 VIP任务优先处理
+- 🎯 高价值目标优先监控
+- 🎯 紧急任务插队
+
+---
+
+### Q5: 自动更新后，批次会立即切换吗？
+
+**答案：不会立即切换，采用零停机策略** ✅
+
+**流程**：
+
+```
+1. Java端检测到配置/筛选条件变更
+   ↓
+2. 智能同步：生成新的目标列表
+   ↓
+3. 分配新批次（epoch+1）
+   ↓
+4. 更新 monitor_task_v2.current_epoch = epoch+1
+   ↓
+5. Python端下次查询时自动获取新批次
+   ↓
+6. 旧批次继续运行，直到完成
+   ↓
+7. 10分钟后Java端清理旧批次数据
+```
+
+**关键点**：
+- ✅ Python端始终查询 `epoch = current_epoch` 的批次
+- ✅ 旧批次不会立即中断，完成当前轮次即可
+- ✅ 新批次和旧批次可短暂并存（grace period）
+- ✅ 10分钟窗口期，确保旧批次平滑退出
+
+**Python端代码**（无需修改）：
+
+```python
+# 每次查询都会自动获取最新epoch的批次
+batches = self.get_batches_for_task(task_id)
+# 查询条件：WHERE epoch = (SELECT current_epoch FROM monitor_task_v2 WHERE id = ?)
+```
+
+---
+
 **文档版本**: v1.1  
-**最后更新**: 2025-11-10  
+**最后更新**: 2025-11-13  
 **作者**: Kakarot Team
 

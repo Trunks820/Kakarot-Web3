@@ -1,8 +1,9 @@
 # Java批次分配与目标同步实现方案（精简版）
 
-> **版本**: v2.0 精简版  
-> **日期**: 2025-11-11  
+> **版本**: v2.1 精简版  
+> **日期**: 2025-11-13  
 > **状态**: 生产级方案（适配中小规模）
+> **最新更新**: 修复5个关键问题（零停机、Twitter筛选、配置化、性能优化）
 
 ---
 
@@ -581,11 +582,15 @@ ON monitor_batch_item_v2(task_id, ca);
 ### Q1: 为什么用固定256槽而不是动态batchCount？
 **A**: 动态batchCount会导致目标微增/微减时，大量CA被重新分配，Python消费者频繁重连。固定槽数确保80-90%的CA批次编号不变。
 
-### Q2: Epoch版本号机制如何工作？
-**A**: 先删除旧批次，再插入新epoch批次，最后更新current_epoch。Python只读current_epoch的批次，实现零中断切换。
+### Q2: Epoch版本号机制如何工作？（已优化）
+**A**: ⭐ **零停机策略**（v2.1修复）：
+1. 先创建新epoch批次（确保成功）
+2. 更新current_epoch（切换到新批次）
+3. 再删除旧epoch批次（epoch < newEpoch）
+4. Python只读current_epoch的批次，确保Consumer始终有批次可用
 
-### Q2.1: 为什么要自动删除旧批次？
-**A**: 避免唯一索引 `uk_task_batch(task_id, batch_no)` 冲突，支持重复执行。先删批次项，再删批次，保证数据一致性。
+### Q2.1: 为什么要分epoch删除旧批次？
+**A**: 避免唯一索引 `uk_task_batch(task_id, batch_no)` 冲突，支持重复执行。删除时只清理 `epoch < newEpoch` 的数据，确保新旧批次可以短暂共存。
 
 ### Q3: 为什么不需要Redisson？
 **A**: 你的场景单次分配 < 5秒，固定5分钟 + 动态超时完全够用，不需要自动续租。
@@ -600,4 +605,60 @@ ON monitor_batch_item_v2(task_id, ca);
 **文档行数**：~700行（删除了2300行冗余内容）
 
 **核心原则**：适配实际场景，别过度设计！
+
+---
+
+## 📝 版本更新记录
+
+### v2.1 (2025-11-13) - 关键问题修复
+
+修复了生产环境发现的5个关键问题：
+
+#### 🔴 P0: 零停机失败问题（已修复）
+- **问题**: 先删除旧批次再创建新批次，若Consumer为空或分配失败，任务进入"无批次"状态
+- **修复**: 调整顺序为"先创建新批次 → 更新epoch → 再删除旧批次"
+- **影响文件**:
+  - `SmartBatchServiceImpl.java`: 调整批次分配流程
+  - `MonitorBatchMapper.java`: 删除方法支持epoch过滤
+  - `MonitorBatchMapper.xml`: SQL只删除旧epoch批次
+- **效果**: Consumer始终能读取到批次，确保零停机
+
+#### 🟡 P1: Twitter筛选逻辑不正确（已修复）
+- **问题**: 后端只要 `hasTwitter != null` 就强制 `requireTwitter=true`，无法筛选"无Twitter"项目
+- **修复**: 支持4种精确筛选模式（对齐sol监控）
+  - `null` - 不限
+  - `"profile"` - 推特主页（不含 /status/、/communities/、/search）
+  - `"tweet"` - 推文（含 /status/）
+  - `"community"` - 社区（含 /communities/）
+  - `"none"` - 无推特
+- **影响文件**:
+  - `SmartBatchServiceImpl.java`: 传递 `hasTwitter` 值而非固定true
+  - `TokenLaunchHistoryMapper.xml`: 使用 `<choose>` 实现4种筛选SQL
+- **效果**: 用户可精确筛选所需的Twitter类型
+
+#### 🟡 P1: maxTargets硬编码（已修复）
+- **问题**: 代码写死 `maxTargets = 20000`，`@Value` 配置失效
+- **修复**: 改为 `conditions.put("maxTargets", this.maxTargets)`
+- **影响文件**: `SmartBatchServiceImpl.java`
+- **效果**: 运维可通过 `application.yml` 配置上限，无需改代码
+
+#### 🟠 P2: O(n²)性能问题（已修复）
+- **问题**: 为每个CA遍历 `allTargets` 列表查找，1万条数据需1亿次比较
+- **修复**: 使用 `Map<String, MonitorTaskTarget>` 直接查找，时间复杂度O(1)
+- **影响文件**: `SmartBatchServiceImpl.java`
+- **效果**: 性能从5-10分钟优化到5秒以内
+
+#### ❌ 架构澄清: 任务-配置关系
+- **结论**: 实际是 **1对多** 关系（一个配置可被多个任务使用），而非M:N
+- **说明**: 一个配置包含完整的监控规则（多个事件），足够一个任务使用
+- **无需修改**: 当前设计合理
+
+---
+
+### v2.0 (2025-11-11) - 精简版发布
+- 删除过度设计的复杂方案（临时表、Redisson、差异更新等）
+- 只保留3个必须修改：去重+唯一索引、动态锁超时、LIMIT配置化
+- 适配实际数据规模（6000条目标，<5秒分配）
+
+---
 

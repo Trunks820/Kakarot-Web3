@@ -128,14 +128,15 @@ public interface MonitorBatchMapper
      * @param taskId 任务ID
      * @return 删除数量
      */
-    public int deleteBatchItemsByTaskId(@Param("taskId") Long taskId);
+    public int deleteBatchItemsByTaskId(@Param("param1") Long taskId, @Param("param2") Integer beforeEpoch);
 
     /**
-     * 删除任务的所有批次
+     * 删除任务的旧epoch批次
      * 
      * @param taskId 任务ID
+     * @param beforeEpoch 删除小于此epoch的批次
      * @return 删除数量
      */
-    public int deleteBatchesByTaskId(@Param("taskId") Long taskId);
+    public int deleteBatchesByTaskId(@Param("param1") Long taskId, @Param("param2") Integer beforeEpoch);
 }
 
