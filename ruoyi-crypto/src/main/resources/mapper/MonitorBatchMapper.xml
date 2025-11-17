@@ -48,7 +48,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             b.worker_id, b.worker_pid, b.last_heartbeat, 
             b.total_alerts, b.last_alert_time, b.error_count, b.last_error,
             b.create_time, b.update_time,
-            t.task_name, t.task_type, t.chain_type
+            b.epoch, b.consumer_id, b.target_count, b.chain_type,
+            t.task_name, t.task_type
         from monitor_batch_v2 b
         left join monitor_task_v2 t on b.task_id = t.id
     </sql>
@@ -81,6 +82,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         and last_heartbeat >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
     </select>
 
+    <!-- 查询指定任务的最大epoch -->
+    <select id="selectMaxEpochByTaskId" parameterType="Long" resultType="Integer">
+        select max(epoch) from monitor_batch_v2
+        where task_id = #{taskId}
+    </select>
+
     <select id="selectErrorBatches" resultType="map">
         select 
             b.id as batchId,
@@ -109,6 +116,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="batchNo != null "> and b.batch_no = #{batchNo}</if>
             <if test="status != null  and status != ''"> and b.status = #{status}</if>
             <if test="workerId != null  and workerId != ''"> and b.worker_id = #{workerId}</if>
+            <if test="epoch != null "> and b.epoch = #{epoch}</if>
+            <!-- 如果没有指定epoch，默认只查询当前epoch的批次（通过JOIN task表） -->
+            <if test="epoch == null and taskId != null">
+                and b.epoch = t.current_epoch
+            </if>
         </where>
         order by b.create_time desc
     </select>

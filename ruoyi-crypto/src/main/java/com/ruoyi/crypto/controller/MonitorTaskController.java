@@ -11,10 +11,8 @@ import com.ruoyi.crypto.mapper.MonitorBatchMapper;
 import com.ruoyi.crypto.mapper.MonitorTaskMapper;
 import com.ruoyi.crypto.mapper.MonitorTaskTargetMapper;
 import com.ruoyi.crypto.service.IMonitorTaskService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;

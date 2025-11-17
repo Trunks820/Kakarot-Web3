@@ -127,8 +127,6 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
             String lockKey = "smart_batch:task:" + taskId;
             String requestId = UUID.randomUUID().toString();
 
-
-            
             boolean locked = redisLockUtil.tryLockWithDynamicTimeout(lockKey, requestId, latestCAs.size());
             if (!locked) {
                 result.put("success", false);
@@ -137,6 +135,14 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
             }
 
             try {
+                if (toAdd.isEmpty() && toRemove.isEmpty() && latestCAs.size() == currentCAs.size()) {
+                    logger.info("无目标变更，跳过批次重分配：taskId={}, epoch={}, targetCount={}", taskId, task.getCurrentEpoch(), latestCAs.size());
+                    long duration = System.currentTimeMillis() - startTime;
+                    result.put("success", true);
+                    result.put("message", "无变更，跳过重分配");
+                    return result;  // 直接返回，不再创建新批次
+                }
+
                 // 6. 更新monitor_task_target_v2
                 int addedCount = 0;
                 int removedCount = 0;
@@ -201,7 +207,13 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
 
                 // 7. 重新分配批次（Epoch版本递增）
                 Integer oldEpoch = task.getCurrentEpoch() != null ? task.getCurrentEpoch() : 0;
-                Integer newEpoch = oldEpoch + 1;
+                Integer existingMaxEpoch = monitorBatchMapper.selectMaxEpochByTaskId(taskId);
+                int baseEpoch = Math.max(oldEpoch, existingMaxEpoch != null ? existingMaxEpoch : 0);
+                Integer newEpoch = baseEpoch + 1;
+                
+                // ⭐ 防止epoch重复：使用 max(current_epoch, max(epoch in DB)) + 1
+                logger.info("Epoch计算：taskId={}, currentEpoch={}, existingMaxEpoch={}, baseEpoch={}, newEpoch={}", 
+                    taskId, oldEpoch, existingMaxEpoch, baseEpoch, newEpoch);
 
                 // 7.1 先分配新批次（保证零停机）
                 // ⭐ 先创建新epoch批次，确保成功后再删除旧批次，避免中间状态无批次可用
@@ -370,12 +382,15 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
         // ⭐ 修复：使用@Value配置的maxTargets，而不是硬编码
         conditions.put("maxTargets", this.maxTargets);
 
+
+        BigDecimal maxMarketCap = task.getMaxMarketCap();
+        BigDecimal minMarketCap = task.getMinMarketCap();
         // 从任务的智能条件中解析参数（如果有）
-        if(StringUtils.isNotNull(task.getMinMarketCap())) {
+        if(StringUtils.isNotNull(minMarketCap) && minMarketCap.compareTo(BigDecimal.ZERO) > 0) {
             conditions.put("minMarketCap", task.getMinMarketCap());
         }
 
-        if(StringUtils.isNotNull(task.getMaxMarketCap())) {
+        if(StringUtils.isNotNull(maxMarketCap) && maxMarketCap.compareTo(BigDecimal.ZERO) > 0) {
             conditions.put("maxMarketCap", task.getMaxMarketCap());
         }
 

@@ -634,6 +634,9 @@ const handleSubmit = () => {
       
       if (taskType.value === 'smart') {
         // 智能监控任务
+        if(form.maxMarketCap === '' || form.maxMarketCap === null) {
+          form.maxMarketCap = 0
+        }
         const data = {
           id: form.id, // ⭐ 编辑时需要ID
           taskName: form.taskName,

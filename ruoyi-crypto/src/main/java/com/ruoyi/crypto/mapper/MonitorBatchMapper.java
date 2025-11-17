@@ -138,5 +138,13 @@ public interface MonitorBatchMapper
      * @return 删除数量
      */
     public int deleteBatchesByTaskId(@Param("param1") Long taskId, @Param("param2") Integer beforeEpoch);
+
+    /**
+     * 查询指定任务已存在的最大epoch（用于防止重复epoch导致唯一索引冲突）
+     *
+     * @param taskId 任务ID
+     * @return 最大epoch，若不存在则返回null
+     */
+    public Integer selectMaxEpochByTaskId(@Param("taskId") Long taskId);
 }
 

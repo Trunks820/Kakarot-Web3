@@ -42,6 +42,33 @@ ADD UNIQUE INDEX ux_target_task_ca (task_id, ca);
 SHOW INDEX FROM monitor_task_target_v2 WHERE Key_name = 'ux_target_task_ca';
 ```
 
+**⚠️ 重要**：还需要修改 `monitor_batch_v2` 的唯一索引以支持零停机批次切换：
+
+```sql
+-- 执行 sql/fix_batch_unique_index.sql 中的DDL
+-- 或手动执行以下SQL：
+
+-- 1. 删除外键约束（必须先删除，才能删除索引）
+ALTER TABLE monitor_batch_v2 DROP FOREIGN KEY monitor_batch_v2_ibfk_1;
+
+-- 2. 删除旧唯一索引
+ALTER TABLE monitor_batch_v2 DROP INDEX uk_task_batch;
+
+-- 3. 创建新唯一索引（包含 epoch）
+ALTER TABLE monitor_batch_v2 
+ADD UNIQUE KEY uk_task_batch_epoch (task_id, epoch, batch_no);
+
+-- 4. 重新创建外键约束
+ALTER TABLE monitor_batch_v2 
+ADD CONSTRAINT monitor_batch_v2_ibfk_1 
+FOREIGN KEY (task_id) REFERENCES monitor_task_v2(id) ON DELETE CASCADE;
+
+-- 5. 验证
+SHOW INDEX FROM monitor_batch_v2 WHERE Key_name = 'uk_task_batch_epoch';
+```
+
+**说明**：新索引 `uk_task_batch_epoch(task_id, epoch, batch_no)` 允许同一任务的不同 epoch 有相同的 batch_no，支持零停机批次切换。
+
 ---
 
 ### 2️⃣ 动态锁超时（10行代码）
@@ -89,23 +116,31 @@ public void syncTargetsForTask(Long taskId) {
 
 ---
 
-## ⭐ 核心改进：自动删除旧批次（支持重复执行）
+## ⭐ 核心改进：零停机批次切换（支持新旧epoch并存）
 
-**问题**：唯一索引 `uk_task_batch(task_id, batch_no)` 导致重复执行时冲突
+**问题**：唯一索引 `uk_task_batch(task_id, batch_no)` 不包括 `epoch`，导致零停机批次切换时冲突
 
-**解决方案**：
+**解决方案**（v2.2）：
+1. **修改唯一索引**：`uk_task_batch_epoch(task_id, epoch, batch_no)` - 允许新旧epoch并存
+2. **零停机流程**：先创建新epoch批次 → 更新current_epoch → 再删除旧epoch批次
+
 ```java
-// 在分配新批次前，先删除旧批次
-if (currentEpoch != null && currentEpoch > 0) {
-    batchItemMapper.deleteBatchItemsByTaskId(taskId);  // 先删批次项
-    batchMapper.deleteBatchesByTaskId(taskId);         // 再删批次
-}
+// ⭐ 零停机策略（先创建新批次，再删除旧批次）
+// 1. 先分配新epoch批次（确保成功）
+int allocatedCount = allocateBatches(taskId, newEpoch, latestCAs);
+
+// 2. 更新任务的current_epoch（切换到新批次）
+taskMapper.updateCurrentEpoch(taskId, newEpoch);
+
+// 3. 删除旧epoch批次（epoch < newEpoch）
+batchItemMapper.deleteBatchItemsByTaskId(taskId, newEpoch);  // 先删批次项
+batchMapper.deleteBatchesByTaskId(taskId, newEpoch);         // 再删批次
 ```
 
 **优势**：
-- ✅ 支持重复执行（不会因唯一索引冲突失败）
-- ✅ 数据一致性（先删批次项，再删批次）
-- ✅ 简化逻辑（不需要手动清理归档数据）
+- ✅ 零停机切换（Consumer始终有批次可用）
+- ✅ 支持重复执行（新旧epoch可短暂并存）
+- ✅ 批次号逻辑清晰（每个epoch从1开始）
 
 ---
 
@@ -248,33 +283,26 @@ public class MonitorBatchServiceImpl implements IMonitorBatchService {
         
         try {
             // 1. 查询当前epoch
-            Integer currentEpoch = batchMapper.selectMaxEpochByTaskId(taskId);
-            int newEpoch = (currentEpoch == null ? 0 : currentEpoch) + 1;
+            Integer oldEpoch = task.getCurrentEpoch() != null ? task.getCurrentEpoch() : 0;
+            int newEpoch = oldEpoch + 1;
             
-            // 1.1 删除旧批次数据（避免唯一索引冲突，支持重复执行）⭐
-            if (currentEpoch != null && currentEpoch > 0) {
-                logger.info("删除旧批次数据：taskId={}, currentEpoch={}", taskId, currentEpoch);
-                batchItemMapper.deleteBatchItemsByTaskId(taskId);  // 先删批次项
-                batchMapper.deleteBatchesByTaskId(taskId);         // 再删批次
-            }
-            
-            // 2. 获取目标并分配
+            // 2. ⭐ 先分配新epoch批次（零停机策略：确保成功后再切换）
             List<MonitorTaskTarget> targets = targetMapper.selectActiveByTaskId(taskId);
             Map<Integer, List<MonitorTaskTarget>> allocation = 
                 consistentHashUtil.allocate(targets);
             
-            // 3. 插入新批次头
+            // 2.1 插入新批次头
             for (Map.Entry<Integer, List<MonitorTaskTarget>> entry : allocation.entrySet()) {
                 MonitorBatch batch = new MonitorBatch();
                 batch.setTaskId(taskId);
                 batch.setBatchNo(entry.getKey());
-                batch.setEpoch(newEpoch);
+                batch.setEpoch(newEpoch);  // ⭐ 新epoch
                 batch.setStatus("active");
                 batch.setItemCount(entry.getValue().size());
                 
                 batchMapper.insertMonitorBatch(batch);  // useGeneratedKeys=true
                 
-                // 4. 批量插入批次项（500条一批）
+                // 2.2 批量插入批次项（500条一批）
                 List<MonitorBatchItem> items = new ArrayList<>();
                 for (MonitorTaskTarget target : entry.getValue()) {
                     MonitorBatchItem item = new MonitorBatchItem();
@@ -295,11 +323,18 @@ public class MonitorBatchServiceImpl implements IMonitorBatchService {
                 }
             }
             
-            // 5. 更新current_epoch
+            // 3. ⭐ 更新current_epoch（切换到新批次）
             taskMapper.updateCurrentEpoch(taskId, newEpoch);
             
-            logger.info("任务 {} 批次重分配完成：epoch {} -> {}, 批次数 {}, 支持重复执行 ⭐", 
-                        taskId, currentEpoch, newEpoch, allocation.size());
+            // 4. ⭐ 删除旧epoch批次（epoch < newEpoch，支持新旧epoch短暂并存）
+            if (oldEpoch > 0) {
+                logger.info("删除旧批次数据：taskId={}, oldEpoch={}, newEpoch={}", taskId, oldEpoch, newEpoch);
+                batchItemMapper.deleteBatchItemsByTaskId(taskId, newEpoch);  // 先删批次项
+                batchMapper.deleteBatchesByTaskId(taskId, newEpoch);         // 再删批次
+            }
+            
+            logger.info("任务 {} 批次重分配完成：epoch {} -> {}, 批次数 {}, 零停机切换 ⭐", 
+                        taskId, oldEpoch, newEpoch, allocation.size());
             
         } finally {
             redisLockUtil.releaseLock(lockKey, requestId);
@@ -590,7 +625,11 @@ ON monitor_batch_item_v2(task_id, ca);
 4. Python只读current_epoch的批次，确保Consumer始终有批次可用
 
 ### Q2.1: 为什么要分epoch删除旧批次？
-**A**: 避免唯一索引 `uk_task_batch(task_id, batch_no)` 冲突，支持重复执行。删除时只清理 `epoch < newEpoch` 的数据，确保新旧批次可以短暂共存。
+**A**: ⭐ **索引设计变更**（v2.2）：
+- **旧索引**：`uk_task_batch(task_id, batch_no)` - 不支持零停机（新旧epoch批次冲突）
+- **新索引**：`uk_task_batch_epoch(task_id, epoch, batch_no)` - 支持零停机（新旧epoch可并存）
+- 删除时只清理 `epoch < newEpoch` 的数据，确保新旧批次可以短暂共存
+- 批次号每个epoch从1开始递增，逻辑清晰
 
 ### Q3: 为什么不需要Redisson？
 **A**: 你的场景单次分配 < 5秒，固定5分钟 + 动态超时完全够用，不需要自动续租。
@@ -609,6 +648,26 @@ ON monitor_batch_item_v2(task_id, ca);
 ---
 
 ## 📝 版本更新记录
+
+### v2.2 (2025-11-13) - 唯一索引优化（支持零停机）
+
+#### 🔴 P0: 唯一索引冲突问题（已修复）
+- **问题**: 唯一索引 `uk_task_batch(task_id, batch_no)` 不包括 `epoch`，导致零停机批次切换时冲突
+  - 新批次（`epoch=2, batch_no=1`）插入时，旧批次（`epoch=1, batch_no=1`）仍存在，违反唯一索引
+  - 错误：`Duplicate entry 'taskId-1' for key 'monitor_batch_v2.uk_task_batch'`
+- **修复**: 修改唯一索引为 `uk_task_batch_epoch(task_id, epoch, batch_no)`
+  - 允许同一 `task_id` 的不同 `epoch` 有相同的 `batch_no`
+  - 支持零停机：先创建新epoch批次，再删除旧epoch批次
+  - 批次号每个epoch从1开始递增，逻辑清晰
+- **影响文件**:
+  - `sql/fix_batch_unique_index.sql`: DDL脚本（删除旧索引，创建新索引）
+  - `MonitorBatchMapper.xml`: SQL查询添加epoch字段和过滤逻辑
+- **效果**: 
+  - ✅ 零停机批次切换不再冲突
+  - ✅ 批次号逻辑清晰（每个epoch独立）
+  - ✅ 代码无需修改（保持先插入新批次再删除旧批次的顺序）
+
+---
 
 ### v2.1 (2025-11-13) - 关键问题修复
 
