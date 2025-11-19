@@ -48,6 +48,9 @@ public class MonitorTask extends BaseEntity
 
     /** 目标数量(仅batch) */
     private Integer targetCount;
+
+    /** 目标列表(仅batch) */
+    private List<String> targetList;
     
     /** 配置数量（非数据库字段，仅用于列表展示） */
     private Integer configCount;

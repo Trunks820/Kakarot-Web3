@@ -7,7 +7,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <resultMap id="MonitorTaskTargetResult" type="com.ruoyi.crypto.domain.MonitorTaskTarget">
         <id property="id" column="id"/>
         <result property="taskId" column="task_id"/>
-        <result property="ca" column="ca"/>
+        <result property="ca" column="target_value"/>
         <result property="chainType" column="chain_type"/>
         <result property="tokenName" column="token_name"/>
         <result property="tokenSymbol" column="token_symbol"/>
@@ -26,7 +26,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         insert into monitor_task_target_v2
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="taskId != null">task_id,</if>
-            <if test="ca != null and ca != ''">ca,</if>
             <if test="chainType != null and chainType != ''">chain_type,</if>
             <if test="tokenName != null">token_name,</if>
             <if test="tokenSymbol != null">token_symbol,</if>
@@ -37,7 +36,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="taskId != null">#{taskId},</if>
-            <if test="ca != null and ca != ''">#{ca},</if>
             <if test="chainType != null and chainType != ''">#{chainType},</if>
             <if test="tokenName != null">#{tokenName},</if>
             <if test="tokenSymbol != null">#{tokenSymbol},</if>
@@ -47,7 +45,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="createTime != null">#{createTime},</if>
         </trim>
     </insert>
-    
+
     <insert id="insertBatchTargets" parameterType="java.util.List">
         insert into monitor_task_target_v2 
         (task_id, ca, chain_type, token_name, token_symbol, market_cap, target_type, target_value, create_time)
@@ -59,7 +57,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </insert>
 
     <select id="selectByTaskId" parameterType="Long" resultMap="MonitorTaskTargetResult">
-        select id, task_id, ca, chain_type, token_name, token_symbol, market_cap, status, create_time, update_time
+        select id, task_id, target_value, chain_type, token_name, token_symbol, market_cap, status, create_time, update_time
         from monitor_task_target_v2
         where task_id = #{taskId}
         order by create_time desc

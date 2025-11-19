@@ -7,6 +7,7 @@ import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.crypto.domain.MonitorBatch;
 import com.ruoyi.crypto.domain.MonitorTask;
+import com.ruoyi.crypto.domain.MonitorTaskTarget;
 import com.ruoyi.crypto.mapper.MonitorBatchMapper;
 import com.ruoyi.crypto.mapper.MonitorTaskMapper;
 import com.ruoyi.crypto.mapper.MonitorTaskTargetMapper;
@@ -57,6 +58,16 @@ public class MonitorTaskController extends BaseController
                     int targetCount = monitorTaskTargetMapper.countByTaskId(task.getId());
                     task.setTargetCount(targetCount);
                 }
+
+                // 1-2 查询目标（对于批量任务）
+                if("batch".equals(task.getTaskType())){
+                    List<MonitorTaskTarget> currentTargets = monitorTaskTargetMapper.selectByTaskId(task.getId());
+                    List<String> targetList = new ArrayList<>();
+                    currentTargets.forEach(target -> {
+                            targetList.add(target.getCa());
+                    });
+                    task.setTargetList(targetList);
+                }
                 
                 // 2. 查询配置数量
                 List<Long> configIds = monitorTaskMapper.selectConfigIdsByTaskId(task.getId());
@@ -67,12 +78,13 @@ public class MonitorTaskController extends BaseController
                 MonitorBatch monitorBatch = new MonitorBatch();
                 monitorBatch.setTaskId(task.getId());
                 List<MonitorBatch> batchIds = monitorBatchMapper.selectMonitorBatchList(monitorBatch);
-                Integer sumBatch = 0;
-                for (MonitorBatch batch : batchIds) {
-                    Integer itemCount = batch.getItemCount();
-                    sumBatch += itemCount;
-                }
-                task.setBatchCount(sumBatch);
+//                System.err.println(batchIds.size());
+//                Integer sumBatch = 0;
+//                for (MonitorBatch batch : batchIds) {
+//                    Integer itemCount = batch.getItemCount();
+//                    sumBatch += itemCount;
+//                }
+                task.setBatchCount(batchIds.size());
             } catch (Exception e) {
                 // 如果统计失败，设置为0，不影响主流程
                 logger.error("获取任务统计信息失败: taskId=" + task.getId(), e);
@@ -173,7 +185,7 @@ public class MonitorTaskController extends BaseController
      * 修改监控任务
      */
     @PreAuthorize("@ss.hasPermi('crypto:monitor-v2:task:edit')")
-    @Log(title = "监控任务", businessType = BusinessType.UPDATE)
+    @Log(title = "编辑监控任务", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody MonitorTask monitorTask)
     {

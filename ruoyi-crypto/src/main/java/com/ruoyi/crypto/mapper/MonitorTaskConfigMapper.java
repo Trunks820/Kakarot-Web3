@@ -19,6 +19,8 @@ public interface MonitorTaskConfigMapper
      */
     public int insertTaskConfig(@Param("taskId") Long taskId, @Param("configId") Long configId);
 
+    public int updateTaskConfig(@Param("taskId") Long taskId, @Param("configId") Long configId);
+
     /**
      * 删除任务配置关联
      * 

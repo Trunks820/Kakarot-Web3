@@ -28,5 +28,13 @@ public interface ISmartBatchService {
      * @return 归档数量
      */
     int archiveOldBatches(Long taskId, Integer currentEpoch);
+
+    /**
+     * 为任务分配批次（通用方法，适用于智能/批量任务）
+     *
+     * @param taskId 任务ID
+     * @return 分配结果
+     */
+    Map<String, Object> allocateBatchesForTask(Long taskId);
 }
 

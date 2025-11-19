@@ -9,7 +9,7 @@ import com.ruoyi.crypto.service.IMonitorTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 
@@ -22,7 +22,7 @@ import java.util.List;
 @Service
 public class MonitorTaskServiceImpl implements IMonitorTaskService 
 {
-    @Autowired
+    @Resource
     private MonitorTaskMapper monitorTaskMapper;
 
     @Autowired(required = false)
@@ -72,7 +72,10 @@ public class MonitorTaskServiceImpl implements IMonitorTaskService
         if (monitorTask.getStatus() == null) {
             monitorTask.setStatus(1); // 默认启用
         }
-        
+
+        // 初始化 current_epoch = 0
+        monitorTask.setCurrentEpoch(0);
+
         int result = monitorTaskMapper.insertMonitorTask(monitorTask);
         
         // 关联配置
@@ -121,7 +124,8 @@ public class MonitorTaskServiceImpl implements IMonitorTaskService
             if (targetAddresses != null && !targetAddresses.isEmpty() 
                 && monitorTaskTargetMapper != null) {
                 for (String address : targetAddresses) {
-                    monitorTaskTargetMapper.insertTaskTarget(monitorTask.getId(), 
+                    //
+                    monitorTaskTargetMapper.insertTaskTarget(monitorTask.getId(),
                         monitorTask.getChainType(), address);
                 }
             }
@@ -172,7 +176,29 @@ public class MonitorTaskServiceImpl implements IMonitorTaskService
     {
         monitorTask.setUpdateBy(SecurityUtils.getUsername());
         monitorTask.setUpdateTime(new Date());
-        return monitorTaskMapper.updateMonitorTask(monitorTask);
+        int result = monitorTaskMapper.updateMonitorTask(monitorTask);
+        if("batch".equals(monitorTask.getTaskType())){
+            if (result > 0) {
+                // 关联配置
+                if (monitorTask.getConfigIds() != null && !monitorTask.getConfigIds().isEmpty()) {
+                    for (Long configId : monitorTask.getConfigIds()) {
+                        monitorTaskConfigMapper.updateTaskConfig(monitorTask.getId(), configId);
+                    }
+                }
+
+                // 修改目标地址
+                List<String> targetList = monitorTask.getTargetList();
+                if (targetList != null && !targetList.isEmpty()) {
+                    // 应该先删除在插入
+                    monitorTaskTargetMapper.deleteTaskTargetByTaskId(monitorTask.getId());
+                    for (String address : targetList) {
+                        monitorTaskTargetMapper.insertTaskTarget(monitorTask.getId(),
+                                monitorTask.getChainType(), address);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     /**

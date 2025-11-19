@@ -547,7 +547,72 @@ public class SmartBatchServiceImpl implements ISmartBatchService {
         logger.info("归档完成：taskId={}, 归档批次数={}", taskId, count);
         return count;
     }
-    
+
+    /**
+     * 为任务分配批次（通用方法，适用于智能/批量任务）
+     */
+    @Override
+    public Map<String, Object> allocateBatchesForTask(Long taskId) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            // 1. 查询任务信息
+            MonitorTask task = monitorTaskMapper.selectMonitorTaskById(taskId);
+            if (task == null) {
+                result.put("success", false);
+                result.put("message", "任务不存在");
+                return result;
+            }
+
+            if (task.getStatus() != 1) {
+                result.put("success", false);
+                result.put("message", "任务未启用");
+                return result;
+            }
+
+            // 2. 查询目标
+            List<MonitorTaskTarget> targets = monitorTaskTargetMapper.selectByTaskId(taskId);
+            if (targets.isEmpty()) {
+                result.put("success", false);
+                result.put("message", "任务无目标");
+                return result;
+            }
+
+            // 3. 提取CA列表
+            List<String> caList = targets.stream()
+                    .map(MonitorTaskTarget::getCa)
+                    .collect(Collectors.toList());
+
+            // 4. 确定epoch（如果是新任务，epoch=1；如果已有批次，epoch+1）
+            Integer currentEpoch = task.getCurrentEpoch();
+            if (currentEpoch == null || currentEpoch == 0) {
+                currentEpoch = 1;
+                task.setCurrentEpoch(currentEpoch);
+                monitorTaskMapper.updateMonitorTask(task);
+            }
+
+            // 5. 调用批次分配（复用现有的 private 方法）
+            int batchCount = allocateBatches(taskId, currentEpoch, caList);
+
+            result.put("success", true);
+            result.put("message", "批次分配成功");
+            result.put("batchCount", batchCount);
+            result.put("targetCount", caList.size());
+            result.put("epoch", currentEpoch);
+
+            logger.info("批量任务批次分配完成：taskId={}, targetCount={}, batchCount={}, epoch={}",
+                    taskId, caList.size(), batchCount, currentEpoch);
+
+            return result;
+
+        }catch (Exception e){
+            logger.error("批次分配失败：taskId={}", taskId, e);
+            result.put("success", false);
+            result.put("message", "批次分配失败：" + e.getMessage());
+            return result;
+        }
+    }
+
     /**
      * 通知Python客户端（通过WebSocket或Redis Pub/Sub）
      */

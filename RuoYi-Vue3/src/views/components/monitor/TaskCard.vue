@@ -503,7 +503,7 @@ const getDialogTitle = computed(() => {
 // 计算CA数量
 const caCount = computed(() => {
   if (!form.caList) return 0
-  return form.caList.split('\n').filter(line => line.trim()).length
+  return form.caList.split('\,').filter(line => line.trim()).length
 })
 
 // 监听链类型变化，过滤配置列表
@@ -559,7 +559,8 @@ const handleTaskEdit = (row) => {
     form.syncIntervalMinutes = row.syncIntervalMinutes || 30
   } else if (row.taskType === 'batch') {
     // 批量任务的CA列表（如果有）
-    form.caList = ''  // 编辑时不显示CA列表
+    form.caList = row.targetList.toString()
+    form.caCount = row.targetCount
   }
   
   // 设置配置ID（从configs数组中获取第一个）
@@ -666,10 +667,12 @@ const handleSubmit = () => {
         })
       } else if (taskType.value === 'batch') {
         // 批量监控任务
-        const caArray = form.caList.split('\n')
+        const caArray = form.caList.split('\,')
           .map(line => line.trim())
           .filter(line => line)
           .slice(0, 99) // 限制最多99个
+
+        const targetCount = caArray.length
         
         const data = {
           id: form.id, // ⭐ 编辑时需要ID
@@ -678,10 +681,11 @@ const handleSubmit = () => {
           chainType: form.chainType,
           configIds: form.configId ? [form.configId] : [], // 转换为数组
           targetList: caArray,
+          targetCount: targetCount,
           description: form.description,
           status: 1
         }
-        
+
         // ⭐ 判断是编辑还是新增
         const apiCall = form.id ? updateTask(data) : addBatchTask(data)
         const successMsg = form.id ? '任务修改成功' : `批量监控任务创建成功，已添加 ${caArray.length} 个目标`

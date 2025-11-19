@@ -17,6 +17,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="targetCount"    column="target_count"    />
         <result property="scheduleCron"    column="schedule_cron"    />
         <result property="status"    column="status"    />
+        <result property="currentEpoch"    column="current_epoch"    />
         <result property="lastRunTime"    column="last_run_time"    />
         <result property="nextRunTime"    column="next_run_time"    />
         <result property="description"    column="description"    />
@@ -136,6 +137,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="targetCount != null">target_count = #{targetCount},</if>
             <if test="scheduleCron != null">schedule_cron = #{scheduleCron},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="currentEpoch != null">current_epoch = #{currentEpoch},</if>
             <if test="lastRunTime != null">last_run_time = #{lastRunTime},</if>
             <if test="nextRunTime != null">next_run_time = #{nextRunTime},</if>
             <if test="description != null">description = #{description},</if>

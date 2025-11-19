@@ -9,6 +9,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         values (#{taskId}, #{configId}, sysdate())
     </insert>
 
+    <update id="updateTaskConfig">
+        update monitor_task_config_v2
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="configId != null">config_id = #{configId},</if>
+        </trim>
+        where task_id = #{taskId}
+    </update>
+
     <delete id="deleteTaskConfigByTaskId" parameterType="Long">
         delete from monitor_task_config_v2 where task_id = #{taskId}
     </delete>
