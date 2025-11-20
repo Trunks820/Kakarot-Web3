@@ -1,9 +1,7 @@
 <template>
   <div class="app-container home">
 
-    <div class="dashboard-header">
 
-    </div>
 
     <!-- 三个核心卡片 - 简洁版 -->
     <el-row :gutter="20" class="mt20 widget-row">
