@@ -273,13 +273,6 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="目标数量" prop="targetCount" width="90" align="center">
-          <template #default="scope">
-            <span v-if="scope.row.taskType !== 'block'">{{ scope.row.targetCount || 0 }}</span>
-            <span v-else style="color: #909399;">-</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="配置数量" prop="configCount" width="90" align="center" />
         <el-table-column label="状态" prop="status" width="80" align="center">
           <template #default="scope">
             <el-tag :type="scope.row.status === 1 ? 'success' : scope.row.status === 0 ? 'info' : 'danger'" size="small">
@@ -287,7 +280,6 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="最后运行" prop="lastRunTime" width="150" />
         <el-table-column label="描述" prop="description" min-width="150" show-overflow-tooltip />
         <el-table-column label="操作" width="250" align="center" fixed="right">
           <template #default="scope">
@@ -380,6 +372,15 @@
             <el-descriptions-item label="同步间隔" v-if="taskDetail.autoSyncTargets === 1">
               {{ taskDetail.syncIntervalMinutes }}分钟
             </el-descriptions-item>
+            <el-descriptions-item label="批次数量">
+              {{ taskDetail.batchCount || 0 }}
+            </el-descriptions-item>
+            <el-descriptions-item label="最后运行时间">
+              {{ taskDetail.lastRunTime || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="下次运行时间">
+              {{ taskDetail.nextRunTime || '-' }}
+            </el-descriptions-item>
           </template>
           
           <!-- 区块监控特有字段 -->
@@ -400,12 +401,7 @@
               {{ taskDetail.status === 1 ? '运行中' : '已暂停' }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="最后运行时间">
-            {{ taskDetail.lastRunTime || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="下次运行时间">
-            {{ taskDetail.nextRunTime || '-' }}
-          </el-descriptions-item>
+
           <el-descriptions-item label="创建时间">
             {{ taskDetail.createTime }}
           </el-descriptions-item>
