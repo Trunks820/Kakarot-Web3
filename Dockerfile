@@ -44,4 +44,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /app/ruoyi-admin/target/*.jar /app/app.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java","-Xms512m","-Xmx1024m","-jar","/app/app.jar","--spring.profiles.active=druid"]
+ENTRYPOINT ["java","-Xms1024m","-Xmx2048m","-jar","/app/app.jar","--spring.profiles.active=druid"]
