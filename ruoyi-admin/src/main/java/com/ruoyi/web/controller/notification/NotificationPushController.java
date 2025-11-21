@@ -61,7 +61,7 @@ public class NotificationPushController extends BaseController {
             notification.put("module", data.getOrDefault("module", "token-monitor"));
             notification.put("moduleName", data.getOrDefault("moduleName", "Token监控"));
             notification.put("type", data.getOrDefault("type", "alert"));
-            notification.put("title", data.get("tokenSymbol") + " 触发监控预警");
+            notification.put("title", data.get("tokenSymbol"));
             notification.put("content", data.getOrDefault("triggerEvents", "触发监控条件"));
             
             // 支持自定义跳转链接（如果 Python 传了 actionUrl 就用它的，否则默认跳转到监控页面）

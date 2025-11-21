@@ -88,12 +88,12 @@ public class MonitorAlertController extends BaseController
             Map<String, Object> notification = new HashMap<>();
             notification.put("id", "alert_" + alert.get("id"));
             notification.put("module", "token-monitor");
-            notification.put("moduleName", "Token监控");
+            notification.put("moduleName", "bsc监控");
             notification.put("type", "alert");
             
             // 构建标题
             String tokenSymbol = (String) alert.get("token_symbol");
-            String title = tokenSymbol + " 触发监控预警";
+            String title = tokenSymbol;
             notification.put("title", title);
             
             // 解析trigger_events获取详情

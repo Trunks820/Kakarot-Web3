@@ -6,31 +6,81 @@
         <span class="icon">📊</span>
         <h3>监控配置</h3>
       </div>
-      <el-button 
-        size="small" 
-        icon="Refresh" 
-        :loading="loading"
-        circle
-        @click="$emit('refresh')"
-      />
+      <el-tooltip :content="`最后更新：${formatTime(stats.lastUpdate)}`" placement="top">
+        <el-button 
+          size="small" 
+          icon="Refresh" 
+          :loading="loading"
+          :disabled="refreshDisabled"
+          circle
+          @click="handleRefresh"
+        />
+      </el-tooltip>
     </div>
     
     <div class="card-body">
-      <!-- 配置数量显示 -->
-      <div class="count-display">
-        <div class="count-number">{{ stats.total || 0 }}</div>
-        <div class="count-label">个配置</div>
+      <!-- 配置数量小标签 -->
+      <div class="config-summary">
+        <span class="summary-label">当前配置</span>
+        <el-tag type="info" size="small" class="count-badge">
+          总计 {{ stats.total || 0 }} 个
+        </el-tag>
       </div>
       
-      <!-- 分类统计 -->
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="label">系统预设</span>
-          <span class="value">{{ stats.preset || 0 }} 个</span>
+      <!-- 链类型分布柱图 -->
+      <div class="distribution-chart">
+        <div class="chart-title-row">
+          <span class="chart-title">链类型分布</span>
+          <el-tag type="primary" size="small" effect="light" class="distribution-tag">
+            {{ stats.total || 0 }}
+          </el-tag>
         </div>
-        <div class="stat-item">
-          <span class="label">用户自定义</span>
-          <span class="value">{{ stats.custom || 0 }} 个</span>
+        
+        <div class="bars-container">
+          <!-- SOL -->
+          <div class="bar-item">
+            <div class="bar-wrapper">
+              <div 
+                class="bar sol-bar" 
+                :style="{ height: calculateBarHeight('sol') + '%' }"
+                :title="`SOL: ${stats.sol || 0}`"
+              ></div>
+            </div>
+            <div class="bar-label">
+              <span class="label-name">SOL</span>
+              <span class="label-value">{{ stats.sol || 0 }}</span>
+            </div>
+          </div>
+
+          <!-- BSC -->
+          <div class="bar-item">
+            <div class="bar-wrapper">
+              <div 
+                class="bar bsc-bar" 
+                :style="{ height: calculateBarHeight('bsc') + '%' }"
+                :title="`BSC: ${stats.bsc || 0}`"
+              ></div>
+            </div>
+            <div class="bar-label">
+              <span class="label-name">BSC</span>
+              <span class="label-value">{{ stats.bsc || 0 }}</span>
+            </div>
+          </div>
+
+          <!-- ETH -->
+          <div class="bar-item">
+            <div class="bar-wrapper">
+              <div 
+                class="bar eth-bar" 
+                :style="{ height: calculateBarHeight('eth') + '%' }"
+                :title="`ETH: ${stats.eth || 0}`"
+              ></div>
+            </div>
+            <div class="bar-label">
+              <span class="label-name">ETH</span>
+              <span class="label-value">{{ stats.eth || 0 }}</span>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -61,12 +111,17 @@
     <!-- 新建配置弹窗 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="form.id ? '编辑监控配置' : '新建监控配置'"
-      width="700px"
+      :title="`${form.id ? '编辑' : '新建'}监控配置`"
+      width="800px"
       append-to-body
+      destroy-on-close
       @close="resetForm"
+      @keydown.enter="handleSubmit"
+      @keydown.esc="dialogVisible = false"
+      class="dialog-md config-dialog"
+      aria-label="监控配置编辑对话框"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" class="dialog-form">
         <!-- 基础信息 -->
         <el-divider content-position="left">
           <span style="font-weight: 600;">📋 基础信息</span>
@@ -308,15 +363,19 @@
     <el-dialog
       v-model="manageDialogVisible"
       title="配置列表"
-      width="900px"
+      width="1000px"
       append-to-body
+      destroy-on-close
+      class="dialog-lg manage-dialog"
     >
       <el-table
+        v-if="configList.length > 0"
         v-loading="manageLoading"
         :data="configList"
         stripe
         style="width: 100%"
         max-height="500px"
+        class="dialog-table"
       >
         <el-table-column label="配置名称" prop="configName" width="200" show-overflow-tooltip />
         <el-table-column label="链类型" prop="chainType" width="80" align="center">
@@ -388,7 +447,18 @@
         </el-table-column>
       </el-table>
       
-      <template #footer>
+      <!-- 空态提示 -->
+      <div v-else class="dialog-empty">
+        <div class="empty-icon">📋</div>
+        <div class="empty-text">暂无配置</div>
+        <div class="empty-action">
+          <el-button type="primary" size="small" @click="manageDialogVisible = false; openCreateDialog()">
+            创建第一个配置
+          </el-button>
+        </div>
+      </div>
+      
+      <template #footer class="dialog-footer">
         <el-button @click="manageDialogVisible = false">关闭</el-button>
       </template>
     </el-dialog>
@@ -399,6 +469,8 @@
       title="配置详情"
       width="800px"
       append-to-body
+      destroy-on-close
+      class="dialog-md detail-dialog"
     >
       <el-descriptions v-if="configDetail" :column="2" border>
         <el-descriptions-item label="配置ID">{{ configDetail.id }}</el-descriptions-item>
@@ -451,7 +523,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, getCurrentInstance } from 'vue'
+import { ref, reactive, getCurrentInstance, computed, watch } from 'vue'
 import { addConfig, listConfig, delConfig, updateConfig } from '@/api/crypto/monitor-v2'
 import { 
   Star, Coin, TrendCharts, UserFilled, DataAnalysis, Bell 
@@ -473,6 +545,18 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['refresh'])
+
+// 防止高频刷新
+const refreshDisabled = ref(false)
+const handleRefresh = () => {
+  if (refreshDisabled.value) return
+  emit('refresh')
+  refreshDisabled.value = true
+  setTimeout(() => {
+    refreshDisabled.value = false
+  }, 1500) // 1.5秒内禁用
+}
+
 const dialogVisible = ref(false)
 const submitting = ref(false)
 const formRef = ref(null)
@@ -532,6 +616,28 @@ const rules = {
   notifyMethods: [
     { type: 'array', required: true, message: '请至少选择一种通知方式', trigger: 'change' }
   ]
+}
+
+// 计算柱子高度百分比
+const calculateBarHeight = (chainType) => {
+  const counts = {
+    sol: props.stats.sol || 0,
+    bsc: props.stats.bsc || 0,
+    eth: props.stats.eth || 0
+  }
+  
+  
+  const max = Math.max(...Object.values(counts))
+  
+  // 如果都是 0，返回相等的高度
+  if (max === 0) {
+    return 30
+  }
+  
+  // 否则计算比例，最小 15%
+  const height = Math.round((counts[chainType] / max) * 100)
+  const result = Math.max(height, 15)
+  return result
 }
 
 const formatTime = (time) => {
@@ -601,14 +707,11 @@ const openCreateDialog = () => {
 }
 
 const openManageDialog = async () => {
-  console.log('打开管理配置弹窗')
   manageDialogVisible.value = true
   manageLoading.value = true
   try {
     const response = await listConfig({ pageNum: 1, pageSize: 100 })
-    console.log('配置列表响应:', response)
     configList.value = response.rows || []
-    console.log('配置列表数据:', configList.value)
   } catch (error) {
     console.error('加载配置列表失败:', error)
     
@@ -674,7 +777,6 @@ const configDetail = ref(null)
 
 // 查看详情
 const handleDetail = (row) => {
-  console.log('查看配置详情:', row)
   configDetail.value = row
   detailDialogVisible.value = true
 }
@@ -713,7 +815,6 @@ const parseEventsConfig = (eventsConfigStr) => {
 
 const handleEdit = async (row) => {
   try {
-    console.log('编辑配置:', row)
     
     // 解析eventsConfig JSON
     let eventsData = {}
@@ -939,22 +1040,24 @@ const resetForm = () => {
   justify-content: center;
 }
 
-.count-display {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.count-number {
-  font-size: 48px;
-  font-weight: 700;
-  color: #409EFF;
-  line-height: 1;
-}
-
-.count-label {
-  font-size: 14px;
-  color: var(--el-text-color-secondary);
-  margin-top: 8px;
+/* 配置数量小标签 */
+.config-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  
+  .summary-label {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+    font-weight: 500;
+  }
+  
+  .count-badge {
+    font-size: 12px;
+    padding: 2px 8px;
+  }
 }
 
 .stats-grid {
@@ -986,6 +1089,189 @@ const resetForm = () => {
   color: var(--el-text-color-primary);
 }
 
+/* 链类型分布柱图 */
+.distribution-chart {
+  width: 100%;
+  margin: 8px 0;
+  padding: 12px;
+  background: var(--el-fill-color-light);
+  border-radius: 8px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 链类型分布标题行 */
+.chart-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  
+  .chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+  }
+  
+  .distribution-tag {
+    font-size: 12px;
+    padding: 2px 8px;
+  }
+}
+
+.bars-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  gap: 12px;
+  height: 180px;
+}
+
+.bar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 8px;
+  height: 100%;
+  justify-content: flex-end;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+    
+    .bar-label .label-value {
+      transform: scale(1.1);
+      font-weight: 700;
+    }
+  }
+}
+
+.bar-wrapper {
+  height: 100%;
+  width: 100%;
+  background: var(--el-fill-color);
+  border-radius: 4px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.bar {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.1));
+  transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  position: relative;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  }
+}
+
+.bar:hover {
+  filter: brightness(1.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.bar.sol-bar {
+  background: linear-gradient(180deg, #9945FF, #7B2FBF);
+}
+
+.bar.bsc-bar {
+  background: linear-gradient(180deg, #F3BA2F, #C99B23);
+}
+
+.bar.eth-bar {
+  background: linear-gradient(180deg, #627EEA, #4C63D2);
+}
+
+.bar-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.bar-label .label-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.bar-label .label-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--el-text-color-regular);
+}
+
+.bar.sol-bar ~ .bar-label .label-name {
+  color: #9945FF;
+}
+
+.bar.bsc-bar ~ .bar-label .label-name {
+  color: #F3BA2F;
+}
+
+.bar.eth-bar ~ .bar-label .label-name {
+  color: #627EEA;
+}
+
+/* 预设/自定义统计 */
+.preset-custom {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.preset-item,
+.custom-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: var(--el-fill-color-light);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.preset-dot {
+  background: #67C23A;
+}
+
+.custom-dot {
+  background: #409EFF;
+}
+
+.preset-item .label,
+.custom-item .label {
+  color: var(--el-text-color-secondary);
+  flex: 1;
+}
+
+.preset-item .value,
+.custom-item .value {
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+}
+
 .last-update {
   font-size: 12px;
   color: var(--el-text-color-secondary);
@@ -995,11 +1281,15 @@ const resetForm = () => {
 .card-footer {
   display: flex;
   gap: 12px;
-  margin-top: 20px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--el-border-color-light);
 }
 
-.card-footer .el-button {
+.card-footer .el-button,
+.card-footer .el-dropdown {
   flex: 1;
+  height: 32px;
 }
 
 /* 事件卡片样式 */
@@ -1072,6 +1362,44 @@ const resetForm = () => {
   font-size: 13px;
   color: #606266;
   line-height: 1.8;
+}
+
+/* 弹窗特定样式 */
+.config-dialog,
+.manage-dialog,
+.detail-dialog {
+  :deep(.el-dialog__body) {
+    padding: 20px;
+    
+    .el-form {
+      max-height: calc(100vh - 220px);
+      overflow-y: auto;
+      padding-right: 8px;
+      
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: #d9d9d9;
+        border-radius: 2px;
+        
+        &:hover {
+          background: #b3b3b3;
+        }
+      }
+    }
+  }
+  
+  :deep(.dialog-footer) {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 12px 20px;
+    border-top: 1px solid var(--el-border-color-light);
+    margin: 0 -20px -20px;
+    background: var(--el-fill-color-light);
+  }
 }
 </style>
 

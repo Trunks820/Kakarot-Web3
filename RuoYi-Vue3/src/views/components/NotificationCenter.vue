@@ -1,46 +1,59 @@
 <template>
   <div class="notification-center">
-    <el-card shadow="never">
+    <el-card shadow="hover" class="panel-card">
       <template #header>
         <div class="notification-header">
           <div class="header-left">
-            <el-icon class="bell-icon"><Bell /></el-icon>
-            <span class="title">BSC区块监控</span>
-            <el-badge 
-              v-if="unreadCount > 0" 
-              :value="unreadCount" 
-              :max="99"
-              class="badge"
-            />
+            <div class="icon-box">
+              <img :src="BNBIcon" alt="BNB" class="chain-icon" />
+            </div>
+            <span class="title">BSC 链上动态</span>
+            <!-- 未读数胶囊 -->
+            <el-tag 
+              v-if="notifications.length > 0" 
+              :type="unreadCount > 0 ? 'danger' : ''"
+              :effect="unreadCount > 0 ? 'dark' : 'light'"
+              size="small"
+              class="unread-badge"
+            >
+              <span v-if="unreadCount > 0">{{ unreadCount }} 条未读</span>
+              <span v-else>共 {{ notifications.length }} 条</span>
+            </el-tag>
           </div>
           <div class="header-right">
-            <el-button 
-              text 
-              size="small" 
-              @click="handleMarkAllRead"
-              :disabled="unreadCount === 0"
-            >
-              标记已读
-            </el-button>
-            <el-button 
-              text 
-              size="small" 
-              @click="handleViewAll"
-            >
-              查看全部
-            </el-button>
+            <el-tooltip content="标记全部已读" placement="top">
+              <el-button 
+                text 
+                circle
+                size="small" 
+                @click="handleMarkAllRead"
+                :disabled="unreadCount === 0"
+              >
+                <el-icon><Check /></el-icon>
+              </el-button>
+            </el-tooltip>
+            <el-tooltip content="查看全部历史" placement="top">
+              <el-button 
+                text 
+                circle
+                size="small" 
+                @click="handleViewAll"
+              >
+                <el-icon><More /></el-icon>
+              </el-button>
+            </el-tooltip>
           </div>
         </div>
       </template>
 
-      <div v-loading="loading" class="notification-content">
+      <div v-loading="loading" class="notification-content custom-scrollbar">
         <el-empty 
           v-if="notifications.length === 0" 
-          description="暂无通知"
-          :image-size="120"
+          :description="loading ? '' : '暂无BSC链上告警/持续监听中'"
+          :image-size="80"
         >
-          <template #image>
-            <el-icon :size="120" color="#C0C4CC"><MessageBox /></el-icon>
+          <template #default v-if="!loading">
+            <el-button type="primary" link @click="loadNotifications">刷新</el-button>
           </template>
         </el-empty>
 
@@ -49,71 +62,54 @@
             v-for="item in notifications"
             :key="item.id"
             class="notification-item"
-            :class="{ unread: !item.isRead }"
+            :class="{ unread: !item.isRead && !readIds.has(item.id), read: item.isRead || readIds.has(item.id) }"
             @click="handleNotificationClick(item)"
           >
-            <!-- 左侧图标和时间线 -->
-            <div class="notification-left">
-              <div 
-                class="notification-dot"
-                :class="`type-${item.type}`"
-              >
-                <el-icon :size="14">
-                  <component :is="getNotificationIcon(item.type)" />
-                </el-icon>
-              </div>
-              <div v-if="!isLast(item)" class="notification-line"></div>
-            </div>
+            <!-- 左侧指示器 - BSC 黄色 -->
+            <div v-if="!item.isRead" class="item-indicator bsc-indicator"></div>
 
-            <!-- 右侧内容 -->
-            <div class="notification-right">
-              <div class="notification-time">
-                <span>{{ formatExactTime(item.createTime) }}</span>
-                <div style="display: flex; gap: 4px; align-items: center;">
+            <!-- 右侧内容主体 -->
+            <div class="item-body">
+              <div class="item-header">
+                <div class="meta-tags">
                   <el-tag 
                     :type="getModuleTagType(item.module)" 
                     size="small"
-                    effect="plain"
+                    effect="dark"
+                    class="module-tag"
                   >
                     {{ item.moduleName }}
                   </el-tag>
-                  <el-tag 
-                    v-if="item.notifyError === '冷静期内不播报'" 
-                    type="info" 
-                    size="small"
-                    effect="plain"
-                  >
-                    🧊 冷静期
-                  </el-tag>
+                  <span class="time-label">{{ formatTimeWithDetails(item.createTime) }}</span>
                 </div>
+                
+                <!-- 右上角链接 -->
+                <el-tooltip content="在GMGN查看" placement="top" :show-after="500" v-if="item.ca">
+                   <el-link :underline="false" class="gmgn-link" @click.stop="handleOpenGMGN(item.ca, item.chainType)">
+                     <el-icon><Link /></el-icon>
+                   </el-link>
+                </el-tooltip>
               </div>
-              <div class="notification-title">{{ item.title }}</div>
-              <div class="notification-content-text">{{ item.content }}</div>
               
-              <!-- Token监控专属信息：CA、市值、GMGN链接 -->
-              <div v-if="item.module === 'token-monitor' && item.ca" class="notification-extra">
-                <div class="extra-item ca-item">
-                  <span class="extra-label">CA:</span>
-                  <span class="extra-value ca-address" @click.stop="handleCopyCA(item.ca)">
-                    {{ item.ca }}
-                    <el-icon class="copy-icon"><CopyDocument /></el-icon>
-                  </span>
-                </div>
-                <div v-if="item.marketCap" class="extra-item">
-                  <span class="extra-label">市值:</span>
-                  <span class="extra-value">${{ formatNumber(item.marketCap) }}</span>
-                </div>
-                <div class="extra-item">
-                  <el-button 
-                    type="primary" 
-                    size="small" 
-                    link
-                    @click.stop="handleOpenGMGN(item.ca, item.chainType)"
-                  >
-                    <el-icon><Link /></el-icon>
-                    在GMGN查看
-                  </el-button>
-                </div>
+              <div class="item-main-content">
+                 <span class="title-text strong-text">{{ item.title }}</span>
+                 <span class="separator" v-if="item.content">-</span>
+                 <span class="desc-text">{{ item.content }}</span>
+              </div>
+
+              <!-- 底部信息：市值 + CA -->
+              <div class="item-footer" v-if="item.marketCap || item.ca">
+                 <span class="stat-item" v-if="item.marketCap">
+                   <span class="label">市值:</span>
+                   <span class="value strong-text">${{ formatNumber(item.marketCap) }}</span>
+                 </span>
+                 
+                 <!-- CA 地址：点击复制并标记已读 -->
+                 <span class="stat-item ca-item clickable" v-if="item.ca" @click.stop="handleCopyCAAndMarkRead(item)">
+                   <span class="label">CA:</span>
+                   <span class="value strong-text">{{ item.ca }}</span>
+                   <el-icon class="copy-icon"><CopyDocument /></el-icon>
+                 </span>
               </div>
             </div>
           </div>
@@ -134,17 +130,20 @@ import {
   InfoFilled,
   Warning,
   CopyDocument,
-  Link
+  Link,
+  Check,
+  More
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import request from '@/utils/request'
 import { useNotificationStore } from '@/store/modules/notification'
+import BNBIcon from '@/assets/crypto-icons/BNB.png'
 
 const router = useRouter()
 const notificationStore = useNotificationStore()
 
-// 获取最新通知（从token_monitor_alert_log表）
-const getRecentNotifications = (limit = 10) => {
+// 获取最新通知
+const getRecentNotifications = (limit = 20) => {
   return request({
     url: '/crypto/monitorAlert/recent',
     method: 'get',
@@ -152,19 +151,19 @@ const getRecentNotifications = (limit = 10) => {
   })
 }
 
-// 通知列表（从 Pinia store 获取）
+// 通知列表
 const loading = ref(false)
-const notifications = computed(() => notificationStore.list.slice(0, 10))
+const notifications = computed(() => notificationStore.list.slice(0, 20))
 
-// 已读ID集合（使用localStorage持久化）
+// 已读ID集合
 const readIds = ref(new Set(JSON.parse(localStorage.getItem('readNotificationIds') || '[]')))
 
-// 保存已读ID到localStorage
+// 保存已读ID
 const saveReadIds = () => {
   localStorage.setItem('readNotificationIds', JSON.stringify([...readIds.value]))
 }
 
-// 未读数量（结合 store 和 localStorage）
+// 未读数量
 const unreadCount = computed(() => {
   return notifications.value.filter(item => !item.isRead && !readIds.value.has(item.id)).length
 })
@@ -183,77 +182,52 @@ const getNotificationIcon = (type) => {
 
 // 获取模块标签类型
 const getModuleTagType = (module) => {
-  const typeMap = {
-    'token-monitor': 'warning',
-    'twitter': 'primary',
-    'system': 'info',
-    'wechat-bot': 'success',
-    'global-monitor': 'danger'
-  }
-  return typeMap[module] || 'info'
+  // BSC 统一用币安黄色
+  return 'warning'
 }
 
-// 格式化时间（相对时间，保留用于tooltip）
-const formatTime = (timeStr) => {
+// 格式化时间（相对时间 + 完整时间戳）
+const formatTimeWithDetails = (timeStr) => {
   if (!timeStr) return ''
   
   const time = new Date(timeStr)
   const now = new Date()
   const diff = Math.floor((now - time) / 1000) // 秒
   
-  if (diff < 60) return '刚刚'
-  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
-  if (diff < 259200) return `${Math.floor(diff / 86400)}天前`
-  
-  // 超过3天显示具体日期
-  const month = time.getMonth() + 1
-  const date = time.getDate()
-  const hour = time.getHours().toString().padStart(2, '0')
-  const minute = time.getMinutes().toString().padStart(2, '0')
-  return `${month}月${date}日 ${hour}:${minute}`
-}
-
-// 格式化精确时间（用于显示）
-const formatExactTime = (timeStr) => {
-  if (!timeStr) return ''
-  
-  const time = new Date(timeStr)
-  const now = new Date()
-  const isToday = time.toDateString() === now.toDateString()
-  const isYesterday = new Date(now.getTime() - 86400000).toDateString() === time.toDateString()
-  
+  // 获取完整时间戳 YYYY-MM-DD HH:MM:SS
+  const year = time.getFullYear()
+  const month = (time.getMonth() + 1).toString().padStart(2, '0')
+  const date = time.getDate().toString().padStart(2, '0')
   const hour = time.getHours().toString().padStart(2, '0')
   const minute = time.getMinutes().toString().padStart(2, '0')
   const second = time.getSeconds().toString().padStart(2, '0')
+  const detailTime = `${year}-${month}-${date} ${hour}:${minute}:${second}`
   
-  if (isToday) {
-    return `今天 ${hour}:${minute}:${second}`
-  } else if (isYesterday) {
-    return `昨天 ${hour}:${minute}:${second}`
-  } else {
-    const month = (time.getMonth() + 1).toString().padStart(2, '0')
-    const date = time.getDate().toString().padStart(2, '0')
-    return `${month}-${date} ${hour}:${minute}:${second}`
+  // 相对时间
+  let relativeTime = ''
+  if (diff < 60) relativeTime = '刚刚'
+  else if (diff < 3600) relativeTime = `${Math.floor(diff / 60)}分钟前`
+  else if (diff < 86400) relativeTime = `${Math.floor(diff / 3600)}小时前`
+  else {
+    // 昨天/前天/其他日期
+    const isYesterday = new Date(now.getTime() - 86400000).toDateString() === time.toDateString()
+    const isDayBefore = new Date(now.getTime() - 86400000 * 2).toDateString() === time.toDateString()
+    
+    if (isYesterday) relativeTime = '昨天'
+    else if (isDayBefore) relativeTime = '前天'
+    else relativeTime = `${Math.floor(diff / 86400)}天前`
   }
-}
-
-// 判断是否最后一项
-const isLast = (item) => {
-  return notifications.value.indexOf(item) === notifications.value.length - 1
+  
+  return `${relativeTime} ${detailTime}`
 }
 
 // 加载通知列表
 const loadNotifications = async () => {
   loading.value = true
   try {
-    // 调用真实API获取系统通知和预警记录
-    const response = await getRecentNotifications(10)
+    const response = await getRecentNotifications(20)
     if (response.code === 200 && response.data) {
-      // 将数据设置到 Pinia store
       notificationStore.setNotifications(response.data)
-      
-      // 应用本地已读状态
       notificationStore.list.forEach(item => {
         if (readIds.value.has(item.id)) {
           item.isRead = 1
@@ -272,22 +246,15 @@ const loadNotifications = async () => {
 
 // 点击通知
 const handleNotificationClick = async (item) => {
-  // 标记为已读（前端状态 + localStorage持久化）
   if (!item.isRead) {
     item.isRead = 1
     readIds.value.add(item.id)
     saveReadIds()
   }
-  
-  // 不跳转，只标记已读
-  // if (item.actionUrl) {
-  //   router.push(item.actionUrl)
-  // }
 }
 
 // 标记全部已读
 const handleMarkAllRead = async () => {
-  // 前端标记所有为已读 + localStorage持久化
   notifications.value.forEach(item => {
     item.isRead = 1
     readIds.value.add(item.id)
@@ -298,19 +265,16 @@ const handleMarkAllRead = async () => {
 
 // 查看全部
 const handleViewAll = () => {
-  // 跳转到历史播报页面
   router.push('/crypto/blockMonitor')
 }
 
 // 复制 CA 地址
 const handleCopyCA = async (ca) => {
   try {
-    // 尝试使用 Clipboard API
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(ca)
-      ElMessage.success('CA地址已复制')
+      ElMessage.success('CA已复制')
     } else {
-      // 降级方案：使用 textarea
       const textarea = document.createElement('textarea')
       textarea.value = ca
       textarea.style.position = 'fixed'
@@ -319,20 +283,28 @@ const handleCopyCA = async (ca) => {
       textarea.select()
       try {
         document.execCommand('copy')
-        ElMessage.success('CA地址已复制')
+        ElMessage.success('CA已复制')
       } catch (err) {
-        console.error('复制失败:', err)
-        ElMessage.error('复制失败，请手动复制')
+        ElMessage.error('复制失败')
       }
       document.body.removeChild(textarea)
     }
   } catch (error) {
-    console.error('复制失败:', error)
-    ElMessage.error('复制失败，请手动复制')
+    ElMessage.error('复制失败')
   }
 }
 
-// 格式化数字（市值）
+// 复制 CA 并标记为已读
+const handleCopyCAAndMarkRead = async (item) => {
+  await handleCopyCA(item.ca)
+  if (!item.isRead) {
+    item.isRead = 1
+    readIds.value.add(item.id)
+    saveReadIds()
+  }
+}
+
+// 格式化数字
 const formatNumber = (num) => {
   if (!num) return '0'
   const value = Number(num)
@@ -344,31 +316,22 @@ const formatNumber = (num) => {
 
 // 打开 GMGN 链接
 const handleOpenGMGN = (ca, chainType = 'sol') => {
-  // GMGN 链接格式：https://gmgn.ai/{chain}/token/{CA}
   const chain = chainType ? chainType.toLowerCase() : 'sol'
   const url = `https://gmgn.ai/${chain}/token/${ca}`
   window.open(url, '_blank')
 }
 
-// 定时器
 let refreshTimer = null
 
 onMounted(() => {
   loadNotifications()
-  
-  // 每30秒刷新（只刷新数据库的历史通知，WebSocket 会实时推送新通知）
   refreshTimer = setInterval(loadNotifications, 30000)
 })
 
 onUnmounted(() => {
-  // 清理定时器
-  if (refreshTimer) {
-    clearInterval(refreshTimer)
-    refreshTimer = null
-  }
+  if (refreshTimer) clearInterval(refreshTimer)
 })
 
-// 暴露方法供外部调用
 defineExpose({
   loadNotifications
 })
@@ -376,12 +339,21 @@ defineExpose({
 
 <style scoped lang="scss">
 .notification-center {
-  :deep(.el-card__header) {
-    padding: 16px 20px;
-  }
+  height: 100%;
   
-  :deep(.el-card__body) {
-    padding: 0;
+  .panel-card {
+    border: none;
+    background: #fff;
+    border-radius: 8px;
+    
+    :deep(.el-card__header) {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    
+    :deep(.el-card__body) {
+      padding: 0;
+    }
   }
 }
 
@@ -395,15 +367,41 @@ defineExpose({
     align-items: center;
     gap: 8px;
     
-    .bell-icon {
-      font-size: 20px;
-      color: #409EFF;
+    .icon-box {
+      width: 28px;
+      height: 28px;
+      background: transparent;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      
+      .chain-icon {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
     }
     
     .title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
-      color: var(--el-text-color-primary);
+      color: #303133;
+    }
+    
+    /* 未读数胶囊 */
+    .unread-badge {
+      height: 20px;
+      line-height: 20px;
+      padding: 0 6px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 10px;
+      
+      &:deep(.el-tag__content) {
+        font-weight: 600;
+      }
     }
   }
   
@@ -414,173 +412,340 @@ defineExpose({
 }
 
 .notification-content {
-  min-height: 400px;
-  max-height: 500px;
+  height: 400px;
   overflow-y: auto;
+  background: #ffffff;
 }
 
+/* 紧凑模式列表 */
 .notification-list {
-  padding: 20px;
+  padding: 0;
   
   .notification-item {
     display: flex;
-    gap: 16px;
+    gap: 8px;
+    padding: 6px 16px;
+    border-bottom: 1px solid #f5f7fa;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.2s ease;
     position: relative;
     
-    &.unread {
-      .notification-right {
-        .notification-title {
-          font-weight: 600;
-          color: var(--el-text-color-primary);
-        }
-      }
-      
-      &::before {
-        content: '';
-        position: absolute;
-        left: -12px;
-        top: 8px;
-        width: 6px;
-        height: 6px;
-        background: #F56C6C;
-        border-radius: 50%;
-      }
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    /* 分组间隔 */
+    &:nth-child(5n) {
+      margin-bottom: 8px;
+      border-bottom: 1px solid #e8eaed !important;
     }
     
     &:hover {
-      .notification-right {
-        background: var(--el-fill-color-light);
-      }
+      background: #fffbf7;
+      transform: translateX(2px);
+      box-shadow: -2px 0 8px rgba(243, 186, 47, 0.15);
+      transition: all 0.2s ease;
     }
     
-    .notification-left {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      
-      .notification-dot {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        
-        &.type-alert {
-          background: #FEF0F0;
-          color: #F56C6C;
-        }
-        
-        &.type-warning {
-          background: #FDF6EC;
-          color: #E6A23C;
-        }
-        
-        &.type-success {
-          background: #F0F9FF;
-          color: #67C23A;
-        }
-        
-        &.type-info {
-          background: #F4F4F5;
-          color: #909399;
-        }
-        
-        &.type-error {
-          background: #FEF0F0;
-          color: #F56C6C;
-        }
-      }
-      
-      .notification-line {
-        flex: 1;
-        width: 2px;
-        background: var(--el-border-color);
-        min-height: 40px;
-      }
+    &.read {
+      background: #fafbfc;
+      opacity: 0.75;
     }
     
-    .notification-right {
+    &.unread {
+      background: #fffbf7;
+    }
+
+    // 左侧指示器 - 仅未读显示
+    .item-indicator {
+      flex-shrink: 0;
+      width: 3px;
+      height: 100%;
+      border-radius: 2px;
+      transition: all 0.2s ease;
+      background: transparent;
+      
+      &.bsc-indicator {
+        background: #F3BA2F;
+      }
+    }
+
+    // 右侧主体
+    .item-body {
       flex: 1;
-      padding: 8px 12px;
-      border-radius: 8px;
-      transition: all 0.3s;
-      
-      .notification-time {
+      min-width: 0;
+      margin-left: 8px;
+
+      .item-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 8px;
+        margin-bottom: 1px;
+        height: 20px;
         
-        span {
-          font-size: 12px;
-          color: var(--el-text-color-secondary);
+        .meta-tags {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          
+          .module-tag {
+            height: 18px;
+            line-height: 16px;
+            padding: 0 4px;
+            border: none;
+            font-weight: 600;
+            background: #F3BA2F !important;
+            color: #fff !important;
+          }
+          
+          :deep(.module-tag) {
+            background: #F3BA2F !important;
+            color: #fff !important;
+          }
+          
+          .time-label {
+            font-size: 12px;
+            color: #606266;
+            font-family: monospace;
+            font-weight: 500;
+          }
+        }
+        
+        .gmgn-link {
+          font-size: 16px;
+          color: #F3BA2F;
+          cursor: pointer;
+          transition: all 0.2s;
+          
+          &:hover {
+            color: #FFC947;
+            transform: scale(1.1);
+          }
         }
       }
       
-      .notification-title {
-        font-size: 14px;
-        color: var(--el-text-color-regular);
-        margin-bottom: 4px;
-      }
-      
-      .notification-content-text {
+      .item-main-content {
         font-size: 13px;
-        color: var(--el-text-color-secondary);
-        line-height: 1.6;
-        margin-bottom: 8px;
+        color: #606266;
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 1px;
+        
+        .title-text {
+          font-weight: 600;
+          color: #303133;
+          
+          &.strong-text {
+            font-weight: 700;
+            color: #000;
+          }
+        }
+        
+        .separator {
+          margin: 0 6px;
+          color: #dcdfe6;
+        }
+        
+        .desc-text {
+          color: #606266;
+        }
       }
       
-      .notification-extra {
+      .item-footer {
         display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
         align-items: center;
-        padding-top: 8px;
-        border-top: 1px solid var(--el-border-color-lighter);
-        margin-top: 8px;
+        gap: 12px;
+        font-size: 12px;
+        margin-bottom: 0;
         
-        .extra-item {
+        .stat-item {
           display: flex;
           align-items: center;
           gap: 4px;
-          font-size: 12px;
+          background: #f5f7fa;
+          padding: 2px 8px;
+          border-radius: 4px;
           
-          .extra-label {
-            color: var(--el-text-color-secondary);
-            font-weight: 500;
+          .label { color: #606266; font-weight: 500; }
+          .value { 
+              color: #303133; 
+              font-family: monospace;
+              
+              &.strong-text {
+                  font-weight: 700;
+                  color: #000;
+              }
           }
           
-          .extra-value {
-            color: var(--el-text-color-regular);
+          &.ca-item {
+            cursor: pointer;
+            background: #FEF5E7;
+            transition: all 0.2s;
             
-            &.ca-address {
-              display: inline-flex;
-              align-items: center;
-              gap: 4px;
-              padding: 2px 8px;
-              background: var(--el-fill-color-light);
-              border-radius: 4px;
-              cursor: pointer;
-              transition: all 0.3s;
-              
-              &:hover {
-                background: var(--el-fill-color);
-                color: #409EFF;
-                
-                .copy-icon {
-                  opacity: 1;
-                }
-              }
+            &:hover {
+              background: #FCECD1;
+              color: #F3BA2F;
+            }
+          }
+          
+          &.clickable {
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #FEF5E7;
+            position: relative;
+            
+            &:hover {
+              background: #FCECD1;
+              transform: scale(1.03);
+              box-shadow: 0 2px 8px rgba(243, 186, 47, 0.2);
               
               .copy-icon {
-                font-size: 12px;
-                opacity: 0.6;
-                transition: opacity 0.3s;
+                opacity: 1;
+                color: #F3BA2F;
+                animation: copyPulse 0.3s ease-out;
+              }
+            }
+            
+            &:active {
+              transform: scale(0.98);
+            }
+            
+            .copy-icon {
+              font-size: 12px;
+              opacity: 0.5;
+              transition: all 0.2s;
+              display: inline-block;
+            }
+          }
+        }
+      }
+      
+    }
+  }
+}
+
+/* 暗黑模式适配 */
+:root[class~="dark"] {
+  .notification-center {
+    .panel-card {
+      background: #1d1e1f;
+      border: 1px solid #363637;
+      
+      :deep(.el-card__header) {
+        border-bottom: 1px solid #363637;
+      }
+    }
+  }
+  
+  .notification-header {
+    .header-left {
+      .icon-box {
+        background: transparent;
+      }
+      .title {
+        color: #E5EAF3;
+      }
+    }
+  }
+  
+  .notification-content {
+    background: #1d1e1f;
+  }
+  
+  .notification-list {
+    .notification-item {
+      border-bottom: 1px solid #363637;
+      
+      &:hover {
+        background: #3d3230;
+      }
+      
+      &.read {
+        background: #262727;
+        opacity: 0.7;
+      }
+      
+      &.unread {
+        background: #3d3230;
+      }
+      
+      .item-actions {
+        display: none;
+      }
+      
+      .item-icon .dot {
+        &.type-alert, &.type-error { background: #2b1d1d; color: #f56c6c; }
+        &.type-warning { background: #292218; color: #e6a23c; }
+        &.type-success { background: #1e2b1a; color: #67c23a; }
+        &.type-info { background: #202121; color: #909399; }
+      }
+      
+      .item-body {
+        .item-header {
+          .meta-tags {
+            .time-label {
+              color: #A3A6AD;
+            }
+          }
+          
+          .gmgn-link {
+            color: #FFC947;
+            
+            &:hover {
+              color: #FFD966;
+            }
+          }
+        }
+        
+        .item-main-content {
+          color: #A3A6AD;
+          .title-text {
+            color: #E5EAF3;
+            
+            &.strong-text {
+              color: #ffffff;
+            }
+          }
+          .separator { color: #4C4D4F; }
+          .desc-text { color: #A3A6AD; }
+        }
+        
+        .item-footer {
+          .stat-item {
+            background: #262727;
+            .label { color: #A3A6AD; }
+            .value { 
+               color: #E5EAF3;
+               
+               &.strong-text {
+                   color: #ffffff;
+               }
+            }
+            
+            &.clickable {
+              background: #3d3320;
+              
+              &:hover {
+                background: #4d4330;
+                
+                .copy-icon {
+                  color: #FFC947;
+                }
+              }
+            }
+          }
+        }
+        
+        .item-actions {
+          :deep(.el-button) {
+            &:not(:disabled) {
+              color: #FFC947;
+              
+              &:hover {
+                color: #FFD966;
+                background: rgba(255, 201, 71, 0.1);
               }
             }
           }
@@ -590,42 +755,60 @@ defineExpose({
   }
 }
 
-// 响应式设计
-@media (max-width: 768px) {
-  .notification-content {
-    max-height: 400px;
+/* 自定义滚动条 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e4e7ed;
+  border-radius: 2px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 复制按钮脉冲动画 */
+@keyframes copyPulse {
+  0% {
+    transform: scale(1);
   }
-  
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
   .notification-list {
-    padding: 16px;
-    
     .notification-item {
-      gap: 12px;
-      
-      .notification-left {
-        .notification-dot {
-          width: 28px;
-          height: 28px;
-          
-          .el-icon {
-            font-size: 12px;
+      .item-body {
+        .item-footer {
+          .stat-item.ca-item {
+            /* CA 项改成紧凑胶囊样式 */
+            background: transparent;
+            padding: 0;
+            gap: 2px;
+            
+            .label {
+              display: none; /* 隐藏"CA:"前缀 */
+            }
+            
+            .value {
+              display: none; /* 隐藏 CA 地址本身 */
+            }
+            
+            .copy-icon {
+              font-size: 14px;
+              opacity: 1;
+              color: #F3BA2F;
+            }
           }
-        }
-      }
-      
-      .notification-right {
-        padding: 6px 10px;
-        
-        .notification-title {
-          font-size: 13px;
-        }
-        
-        .notification-content-text {
-          font-size: 12px;
         }
       }
     }
   }
 }
 </style>
-

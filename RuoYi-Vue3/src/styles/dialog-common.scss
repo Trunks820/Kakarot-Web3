@@ -1,0 +1,385 @@
+/**
+ * 弹窗通用样式
+ * 统一所有业务弹窗的宽度、圆角、阴影、动画、内边距
+ */
+
+// 弹窗标准宽度
+$dialog-width-sm: 600px;    // 小 (表单/详情)
+$dialog-width-md: 800px;    // 中 (列表/复杂表单)
+$dialog-width-lg: 1000px;   // 大 (数据表格/图表)
+
+// 弹窗标准圆角和阴影
+$dialog-border-radius: 8px;
+$dialog-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+$dialog-animation-duration: 0.3s;
+
+// 应用到所有 el-dialog
+:deep(.el-dialog) {
+  border-radius: $dialog-border-radius;
+  box-shadow: $dialog-shadow;
+  background: var(--el-bg-color);
+  
+  // 弹窗进入/退出动画
+  animation: dialogIn $dialog-animation-duration ease-out;
+  
+  .el-dialog__header {
+    padding: 16px 20px;
+    border-bottom: 2px solid var(--el-border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(90deg, var(--el-bg-color) 0%, rgba(64, 158, 255, 0.02) 100%);
+    
+    .el-dialog__title {
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--el-text-color-primary);
+      letter-spacing: 0.5px;
+    }
+    
+    .el-dialog__close {
+      font-size: 18px;
+      color: var(--el-text-color-secondary);
+      transition: all 0.2s ease;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      
+      &:hover {
+        background: var(--el-fill-color-light);
+        color: var(--el-color-danger);
+        transform: rotate(90deg);
+      }
+    }
+  }
+  
+  .el-dialog__body {
+    padding: 20px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    background: var(--el-bg-color);
+    
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: var(--el-color-primary-light-5);
+      border-radius: 3px;
+      
+      &:hover {
+        background: var(--el-color-primary-light-3);
+      }
+    }
+  }
+  
+  // 弹窗 footer 按钮区统一样式
+  .dialog-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 12px 20px;
+    border-top: 2px solid var(--el-border-color);
+    background: linear-gradient(90deg, var(--el-fill-color-light) 0%, rgba(64, 158, 255, 0.02) 100%);
+    margin: 0 -20px -20px;
+    border-bottom-left-radius: $dialog-border-radius;
+    border-bottom-right-radius: $dialog-border-radius;
+    
+    .el-button {
+      min-width: 88px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      
+      &.primary {
+        font-weight: 700;
+      }
+    }
+  }
+}
+
+// 弹窗宽度类
+.dialog-sm {
+  :deep(.el-dialog) {
+    width: $dialog-width-sm !important;
+  }
+}
+
+.dialog-md {
+  :deep(.el-dialog) {
+    width: $dialog-width-md !important;
+  }
+}
+
+.dialog-lg {
+  :deep(.el-dialog) {
+    width: $dialog-width-lg !important;
+  }
+}
+
+// 移动端自适应
+@media (max-width: 768px) {
+  :deep(.el-dialog) {
+    width: 90% !important;
+    max-width: calc(100vw - 32px) !important;
+    
+    .el-dialog__header {
+      padding: 12px 16px;
+    }
+    
+    .el-dialog__body {
+      padding: 16px;
+      max-height: calc(100vh - 160px);
+    }
+    
+    .dialog-footer {
+      padding: 12px 16px;
+      margin: 0 -16px -16px;
+      
+      .el-button {
+        flex: 1;
+        min-width: auto;
+      }
+    }
+  }
+}
+
+// 弹窗进入动画
+@keyframes dialogIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// Loading 加载动画增强
+:deep(.el-loading-mask) {
+  backdrop-filter: blur(2px);
+  background: rgba(255, 255, 255, 0.7);
+  
+  .el-loading-spinner {
+    .circular {
+      animation: rotating 2s linear infinite;
+      filter: drop-shadow(0 0 2px rgba(64, 158, 255, 0.4));
+    }
+  }
+}
+
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 无障碍增强 - ARIA 标签支持
+:deep(.el-dialog) {
+  [aria-label] {
+    outline-offset: 2px;
+  }
+  
+  .el-dialog__title {
+    // 标题包含操作提示
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+// 暗色模式适配
+:root[class~="dark"] {
+  :deep(.el-dialog) {
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.6);
+    
+    .el-dialog__header {
+      border-bottom-color: var(--el-border-color);
+      background: linear-gradient(90deg, var(--el-bg-color) 0%, rgba(64, 158, 255, 0.1) 100%);
+    }
+    
+    .el-dialog__body {
+      &::-webkit-scrollbar-thumb {
+        background: rgba(64, 158, 255, 0.4);
+        
+        &:hover {
+          background: rgba(64, 158, 255, 0.6);
+        }
+      }
+    }
+    
+    .dialog-footer {
+      border-top-color: var(--el-border-color);
+      background: linear-gradient(90deg, var(--el-fill-color) 0%, rgba(64, 158, 255, 0.08) 100%);
+    }
+  }
+  
+  .dialog-table {
+    :deep(.el-table__header th) {
+      background: linear-gradient(135deg, var(--el-fill-color) 0%, rgba(64, 158, 255, 0.1) 100%);
+    }
+    
+    :deep(.el-table__body tr:hover > td) {
+      background-color: rgba(64, 158, 255, 0.2) !important;
+    }
+  }
+  
+  .dialog-form {
+    .el-form-item {
+      background: var(--el-fill-color-light);
+      
+      &:hover {
+        background: linear-gradient(90deg, var(--el-fill-color-light) 0%, rgba(64, 158, 255, 0.1) 100%);
+      }
+    }
+  }
+  
+  .dialog-empty {
+    background: linear-gradient(135deg, transparent 0%, rgba(64, 158, 255, 0.1) 100%);
+    border-color: var(--el-border-color);
+  }
+}
+
+// 表单通用样式
+.dialog-form {
+  .el-form-item {
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 4px;
+    background: var(--el-fill-color-light);
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: linear-gradient(90deg, var(--el-fill-color-light) 0%, rgba(64, 158, 255, 0.05) 100%);
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    &.is-error {
+      background: rgba(245, 108, 108, 0.05);
+      border-left: 3px solid #F56C6C;
+    }
+  }
+  
+  .el-form-item__label {
+    color: var(--el-text-color-primary);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  
+  // 必填标记
+  .is-required .el-form-item__label::before {
+    color: #F56C6C;
+    font-weight: 700;
+  }
+  
+  // 输入框焦点效果
+  :deep(.el-input__wrapper),
+  :deep(.el-select),
+  :deep(.el-textarea__inner) {
+    transition: all 0.2s ease;
+    
+    &:focus-within {
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+    }
+  }
+}
+
+// 表格通用样式
+.dialog-table {
+  :deep(.el-table) {
+    font-size: 13px;
+    border-radius: 4px;
+    overflow: hidden;
+    
+    .el-table__header th {
+      background: linear-gradient(135deg, var(--el-fill-color-light) 0%, var(--el-fill-color) 100%);
+      font-weight: 700;
+      color: var(--el-text-color-primary);
+      border-bottom: 2px solid var(--el-border-color);
+    }
+    
+    .el-table__body tr {
+      transition: all 0.2s ease;
+      border-bottom: 1px solid var(--el-border-color-lighter);
+      
+      &:hover > td {
+        background-color: var(--el-color-primary-light-9) !important;
+        box-shadow: inset 2px 0 0 0 var(--el-color-primary);
+      }
+      
+      &.el-table__row--striped td {
+        background-color: var(--el-fill-color-light);
+      }
+      
+      td {
+        transition: all 0.2s ease;
+      }
+    }
+    
+    .el-table__row.current-row > td {
+      background-color: var(--el-color-primary-light-9) !important;
+    }
+  }
+}
+
+// 列表空态
+.dialog-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  background: linear-gradient(135deg, transparent 0%, rgba(64, 158, 255, 0.05) 100%);
+  border-radius: 8px;
+  border: 2px dashed var(--el-border-color-light);
+  
+  .empty-icon {
+    font-size: 64px;
+    opacity: 0.4;
+    margin-bottom: 16px;
+    animation: floatEmpty 3s ease-in-out infinite;
+  }
+  
+  .empty-text {
+    font-size: 14px;
+    color: var(--el-text-color-secondary);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  
+  .empty-action {
+    margin-top: 20px;
+    
+    .el-button {
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+      }
+    }
+  }
+}
+
+@keyframes floatEmpty {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+

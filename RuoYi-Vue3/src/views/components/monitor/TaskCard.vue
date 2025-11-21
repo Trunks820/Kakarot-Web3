@@ -6,46 +6,99 @@
         <span class="icon">🎯</span>
         <h3>监控任务</h3>
       </div>
-      <el-button 
-        size="small" 
-        icon="Refresh" 
-        :loading="loading"
-        circle
-        @click="$emit('refresh')"
-      />
+      <el-tooltip content="刷新数据（1.5秒内只能刷新一次）" placement="top">
+        <el-button 
+          size="small" 
+          icon="Refresh" 
+          :loading="loading"
+          :disabled="refreshDisabled"
+          circle
+          @click="handleRefresh"
+        />
+      </el-tooltip>
     </div>
     
     <div class="card-body">
-      <!-- 任务数量显示 -->
-      <div class="count-display">
-        <div class="count-number">{{ stats.total || 0 }}</div>
-        <div class="count-label">个任务</div>
+      <!-- 同心圆进度环 -->
+      <div class="concentric-circles">
+        <svg class="circles-svg" viewBox="0 0 200 200">
+          <!-- 外层圆（总任务） -->
+          <circle cx="100" cy="100" r="90" class="circle-bg outer"></circle>
+          <circle 
+            cx="100" cy="100" r="90" 
+            class="circle-progress outer"
+            :style="{ strokeDashoffset: calculateDashOffset('outer') }"
+          ></circle>
+          
+          <!-- 中层圆（运行中） -->
+          <circle cx="100" cy="100" r="60" class="circle-bg middle"></circle>
+          <circle 
+            cx="100" cy="100" r="60" 
+            class="circle-progress middle"
+            :style="{ strokeDashoffset: calculateDashOffset('middle') }"
+          ></circle>
+          
+          <!-- 内层圆（异常） -->
+          <circle cx="100" cy="100" r="30" class="circle-bg inner"></circle>
+          <circle 
+            cx="100" cy="100" r="30" 
+            class="circle-progress inner"
+            :class="stats.error > 0 ? 'has-error' : ''"
+            :style="{ strokeDashoffset: calculateDashOffset('inner') }"
+          ></circle>
+        </svg>
+
+        <!-- 中心显示 -->
+        <div class="circles-center">
+          <div class="center-running">
+            <div class="center-value">{{ stats.running || 0 }}</div>
+            <div class="center-label">运行中</div>
+          </div>
+          
+          <!-- 状态徽章 -->
+          <div class="status-badge" :class="{ 'error-state': stats.error > 0, 'normal-state': stats.error === 0 }">
+            <span class="badge-text" v-if="stats.error > 0">{{ stats.error }} 异常</span>
+            <span class="badge-text" v-else>✓ 全部正常</span>
+          </div>
+        </div>
       </div>
-      
-      <!-- 状态统计 -->
-      <div class="stats-list">
-        <div class="stat-row">
-          <span class="status-dot running"></span>
-          <span class="label">运行中</span>
-          <span class="value">{{ stats.running || 0 }} 个</span>
+
+      <!-- 右侧统计信息 -->
+      <div class="task-stats">
+        <!-- 状态指标 -->
+        <div class="status-indicators">
+          <div class="indicator-box running">
+            <div class="indicator-dot"></div>
+            <span class="indicator-label">运行</span>
+            <span class="indicator-value">{{ stats.running || 0 }}</span>
+          </div>
+          <div class="indicator-box paused">
+            <div class="indicator-dot"></div>
+            <span class="indicator-label">暂停</span>
+            <span class="indicator-value">{{ stats.paused || 0 }}</span>
+          </div>
+          <div v-if="stats.error > 0" class="indicator-box error">
+            <div class="indicator-dot"></div>
+            <span class="indicator-label">异常</span>
+            <span class="indicator-value">{{ stats.error }}</span>
+          </div>
         </div>
-        <div class="stat-row">
-          <span class="status-dot paused"></span>
-          <span class="label">已暂停</span>
-          <span class="value">{{ stats.paused || 0 }} 个</span>
+
+        <!-- 类型分布 -->
+        <div class="type-distribution">
+          <div class="type-item smart-type">
+            <span class="type-name">智能</span>
+            <span class="type-count">{{ stats.smart || 0 }}</span>
+          </div>
+          <div class="type-item batch-type">
+            <span class="type-name">批量</span>
+            <span class="type-count">{{ stats.batch || 0 }}</span>
+          </div>
+          <div class="type-item block-type">
+            <span class="type-name">区块</span>
+            <span class="type-count">{{ stats.block || 0 }}</span>
+          </div>
         </div>
-        <div class="stat-row" v-if="stats.error > 0">
-          <span class="status-dot error"></span>
-          <span class="label">异常</span>
-          <span class="value error-text">{{ stats.error }} 个</span>
-        </div>
-      </div>
-      
-      <!-- 类型统计 -->
-      <div class="type-stats">
-        <el-tag size="small">智能监控 {{ stats.smart || 0 }}</el-tag>
-        <el-tag size="small" type="success">批量监控 {{ stats.batch || 0 }}</el-tag>
-        <el-tag size="small" type="warning">区块监控 {{ stats.block || 0 }}</el-tag>
       </div>
     </div>
     
@@ -87,12 +140,27 @@
     <!-- 新建任务弹窗 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="getDialogTitle"
+      :title="`${getDialogTitle}`"
       width="800px"
       append-to-body
+      destroy-on-close
       @close="resetForm"
+      @keydown.enter="handleSubmit"
+      @keydown.esc="dialogVisible = false"
+      class="dialog-md task-dialog"
+      aria-label="任务编辑对话框"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
+      <!-- 状态标签 -->
+      <div v-if="form.id" class="task-status-badge">
+        <el-tag 
+          :type="form.status === 1 ? 'success' : 'info'" 
+          size="small"
+        >
+          {{ form.status === 1 ? '启用中' : '已停用' }}
+        </el-tag>
+      </div>
+      
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" class="dialog-form">
         <el-form-item label="任务名称" prop="taskName">
           <el-input v-model="form.taskName" placeholder="请输入任务名称" />
         </el-form-item>
@@ -249,13 +317,17 @@
       title="任务列表"
       width="1000px"
       append-to-body
+      destroy-on-close
+      class="dialog-lg task-list-dialog"
     >
       <el-table
+        v-if="taskList.length > 0"
         v-loading="manageLoading"
         :data="taskList"
         stripe
         style="width: 100%"
         max-height="500px"
+        class="dialog-table"
       >
         <el-table-column label="任务ID" prop="id" width="50" align="center" />
         <el-table-column label="任务名称" prop="taskName" width="200" align="center" />
@@ -323,7 +395,18 @@
         </el-table-column>
       </el-table>
       
-      <template #footer>
+      <!-- 空态提示 -->
+      <div v-else class="dialog-empty">
+        <div class="empty-icon">📋</div>
+        <div class="empty-text">暂无任务</div>
+        <div class="empty-action">
+          <el-button type="primary" size="small" @click="manageDialogVisible = false; openCreateDialog('smart')">
+            创建第一个任务
+          </el-button>
+        </div>
+      </div>
+      
+      <template #footer class="dialog-footer">
         <el-button @click="manageDialogVisible = false">关闭</el-button>
       </template>
     </el-dialog>
@@ -332,8 +415,10 @@
     <el-dialog
       v-model="detailDialogVisible"
       title="任务详情"
-      width="700px"
+      width="800px"
       append-to-body
+      destroy-on-close
+      class="dialog-md task-detail-dialog"
     >
       <div v-if="taskDetail" class="task-detail">
         <el-descriptions :column="2" border>
@@ -442,11 +527,53 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['refresh'])
+
+// 防止高频刷新
+const refreshDisabled = ref(false)
+const handleRefresh = () => {
+  if (refreshDisabled.value) return
+  emit('refresh')
+  refreshDisabled.value = true
+  setTimeout(() => {
+    refreshDisabled.value = false
+  }, 1500)
+}
+
 const dialogVisible = ref(false)
 const submitting = ref(false)
 const taskType = ref('smart')
 const formRef = ref(null)
 const configList = ref([])
+
+// 计算同心圆进度条的偏移值
+const calculateDashOffset = (layer) => {
+  let percent = 0
+  let circumference = 0
+  
+  const total = props.stats.total || 0
+  const running = props.stats.running || 0
+  const error = props.stats.error || 0
+  
+  console.log(`【${layer} 层圆】 total=${total}, running=${running}, error=${error}`)
+  
+  if (layer === 'outer') {
+    // 外层圆：总任务数 (100%)
+    percent = total > 0 ? 1 : 0
+    circumference = 2 * Math.PI * 90
+  } else if (layer === 'middle') {
+    // 中层圆：运行中 / 总任务
+    percent = total > 0 ? running / total : 0
+    circumference = 2 * Math.PI * 60
+  } else if (layer === 'inner') {
+    // 内层圆：异常 / 运行中
+    percent = running > 0 ? error / running : 0
+    circumference = 2 * Math.PI * 30
+  }
+  
+  console.log(`【${layer} 层圆】 percent=${percent}, dashOffset=${circumference * (1 - Math.max(0, Math.min(1, percent)))}`)
+  
+  return circumference * (1 - Math.max(0, Math.min(1, percent)))
+}
 
 // 任务列表管理弹窗
 const manageDialogVisible = ref(false)
@@ -860,6 +987,264 @@ const resetForm = () => {
   color: #F56C6C;
 }
 
+/* 同心圆进度环 */
+.concentric-circles {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin-bottom: 12px;
+}
+
+.circles-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.1));
+}
+
+.circle-bg {
+  fill: none;
+  stroke: var(--el-fill-color);
+  stroke-width: 14;
+}
+
+.circle-progress {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50%;  /* 改为相对值，更稳定 */
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.circle-progress.outer {
+  stroke: #67C23A;
+  stroke-dasharray: 565.49; /* 2*PI*90 */
+  filter: drop-shadow(0 0 6px rgba(103, 194, 58, 0.3));
+}
+
+.circle-progress.middle {
+  stroke: #409EFF;
+  stroke-dasharray: 376.99; /* 2*PI*60 */
+  filter: drop-shadow(0 0 6px rgba(64, 158, 255, 0.3));
+}
+
+.circle-progress.inner {
+  stroke: #E6A23C;
+  stroke-dasharray: 188.50; /* 2*PI*30 */
+  filter: drop-shadow(0 0 6px rgba(230, 162, 60, 0.3));
+}
+
+.circle-progress.inner.has-error {
+  stroke: #F56C6C;
+  filter: drop-shadow(0 0 8px rgba(245, 108, 108, 0.5));
+  animation: pulse-error 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-error {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(245, 108, 108, 0.5)); }
+  50% { filter: drop-shadow(0 0 12px rgba(245, 108, 108, 0.8)); }
+}
+
+/* 中心显示 */
+.circles-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  background: var(--el-bg-color);
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.center-running {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.center-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: #67C23A;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.center-label {
+  font-size: 10px;
+  color: var(--el-text-color-secondary);
+  font-weight: 500;
+}
+
+/* 错误徽章 */
+.status-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  transition: all 0.3s;
+  
+  &.error-state {
+    background: #F56C6C;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(245, 108, 108, 0.3);
+  }
+  
+  &.normal-state {
+    background: #67C23A;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(103, 194, 58, 0.3);
+  }
+}
+
+.badge-text {
+  white-space: nowrap;
+}
+
+/* 右侧统计 */
+.task-stats {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 状态指标 */
+.status-indicators {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.indicator-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--el-fill-color-light);
+  transition: all 0.3s;
+  min-width: 50px;
+}
+
+.indicator-box:hover {
+  transform: translateY(-2px);
+}
+
+.indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.indicator-box.running .indicator-dot {
+  background: #67C23A;
+  box-shadow: 0 0 6px rgba(103, 194, 58, 0.6);
+}
+
+.indicator-box.paused .indicator-dot {
+  background: #E6A23C;
+}
+
+.indicator-box.error .indicator-dot {
+  background: #F56C6C;
+  box-shadow: 0 0 6px rgba(245, 108, 108, 0.6);
+}
+
+.indicator-label {
+  font-size: 11px;
+  color: var(--el-text-color-secondary);
+  font-weight: 500;
+}
+
+.indicator-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+}
+
+.indicator-box.running .indicator-value {
+  color: #67C23A;
+}
+
+.indicator-box.paused .indicator-value {
+  color: #E6A23C;
+}
+
+.indicator-box.error .indicator-value {
+  color: #F56C6C;
+}
+
+/* 类型分布 */
+.type-distribution {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.type-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  transition: all 0.3s;
+}
+
+.type-item:hover {
+  transform: scale(1.05);
+}
+
+.type-name {
+  color: var(--el-text-color-secondary);
+  font-weight: 500;
+}
+
+.type-count {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.smart-type {
+  background: rgba(103, 194, 58, 0.1);
+  border: 1px solid rgba(103, 194, 58, 0.3);
+}
+
+.smart-type .type-count {
+  color: #67C23A;
+}
+
+.batch-type {
+  background: rgba(64, 158, 255, 0.1);
+  border: 1px solid rgba(64, 158, 255, 0.3);
+}
+
+.batch-type .type-count {
+  color: #409EFF;
+}
+
+.block-type {
+  background: rgba(230, 162, 60, 0.1);
+  border: 1px solid rgba(230, 162, 60, 0.3);
+}
+
+.block-type .type-count {
+  color: #E6A23C;
+}
+
 .type-stats {
   display: flex;
   gap: 8px;
@@ -869,12 +1254,15 @@ const resetForm = () => {
 .card-footer {
   display: flex;
   gap: 12px;
-  margin-top: 20px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--el-border-color-light);
 }
 
 .card-footer .el-button,
 .card-footer .el-dropdown {
   flex: 1;
+  height: 32px;
 }
 
 /* 弹窗表单样式 */
@@ -882,6 +1270,42 @@ const resetForm = () => {
   margin-left: 10px;
   font-size: 12px;
   color: var(--el-text-color-secondary);
+}
+
+/* TaskCard 弹窗样式 */
+.task-dialog {
+  :deep(.el-dialog__body) {
+    position: relative;
+    
+    .task-status-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      padding: 0;
+      margin-bottom: 16px;
+    }
+  }
+  
+  :deep(.dialog-form) {
+    margin-top: 12px;
+  }
+}
+
+.task-list-dialog,
+.task-detail-dialog {
+  :deep(.el-dialog__body) {
+    padding: 20px;
+  }
+  
+  :deep(.dialog-footer) {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 12px 20px;
+    border-top: 1px solid var(--el-border-color-light);
+    margin: 0 -20px -20px;
+    background: var(--el-fill-color-light);
+  }
 }
 </style>
 
